@@ -31,6 +31,6 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     keywords=['Bayesian', 'deep learning', 'Monte Carlo', 'neural networks'],
-    package_dir={'': 'src'},
-    install_requires=['pytorch',]
+    package_dir={'eeyore': 'eeyore'},
+    install_requires=['numpy', 'torch',]
 )
