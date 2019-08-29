@@ -38,9 +38,7 @@ class MLP(BayesianModel):
     def set_fc_layers(self):
         fc = []
         for i in range(len(self.hp.dims)-1):
-            fc.append(
-                nn.Linear(self.hp.dims[i], self.hp.dims[i+1]).to(dtype=self.dtype)
-            )
+            fc.append(nn.Linear(self.hp.dims[i], self.hp.dims[i+1]).to(dtype=self.dtype))
         return nn.ModuleList(fc)
 
     def forward(self, x):

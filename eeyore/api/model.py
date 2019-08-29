@@ -62,11 +62,11 @@ class BayesianModel(Model):
             for idx, hashvalue in enumerate(self.hashsummary()):
                 print(f"{idx}: {hashvalue}")
 
-    def get_grad(self):
-        return torch.cat([p.grad.view(-1) for p in self.parameters()])
-
     def get_params(self):
         return torch.cat([p.view(-1) for p in self.parameters()])
+
+    def get_grad(self):
+        return torch.cat([p.grad.view(-1) for p in self.parameters()])
 
     def set_params(self, theta, grad_val=None):
         """ Set model parameters with theta. """

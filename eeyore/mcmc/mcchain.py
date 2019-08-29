@@ -34,7 +34,6 @@ class MCChain:
         """ Update the chain """
         for key in self.keys:
             self.vals[key].append(state[key])
-            # self.vals[key].append(state[key].clone().detach() if isinstance(state[key], torch.Tensor) else state[key])
 
     def mean(self):
         """ Get the mean of the chain's samples """
