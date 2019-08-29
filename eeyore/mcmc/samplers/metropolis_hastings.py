@@ -10,16 +10,18 @@ class MetropolisHastings(SerialSampler):
         self.model = model
         self.dataloader = dataloader
 
-        self.kernel = kernel or \
-            NormalTransitionKernel(
-                torch.zeros(self.model.num_params(), dtype=self.model.dtype),
-                torch.ones(self.model.num_params(), dtype=self.model.dtype)
-            )
+        self.kernel = kernel or self.default_kernel()
         self.keys = ['theta', 'target_val']
         self.current = {key : None for key in self.keys}
         self.chain = MCChain(keys)
 
         self.reset(theta0)
+
+    def default_kernel(self):
+        return NormalTransitionKernel(
+            torch.zeros(self.model.num_params(), dtype=self.model.dtype),
+            torch.ones(self.model.num_params(), dtype=self.model.dtype)
+        )
 
     def reset(self, theta):
         data, label = next(iter(self.dataloader))

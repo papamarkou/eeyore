@@ -1,8 +1,11 @@
 import torch
 import torch.nn as nn
+# import torch.nn.functional as F
+
 from torch.distributions import Normal
 
 from eeyore.api import BayesianModel
+from eeyore.stats import binary_cross_entropy
 
 class Hyperparameters:
     def __init__(self, dims=[1, 2, 1], activations=2*[torch.sigmoid]):
@@ -16,20 +19,24 @@ class Hyperparameters:
             raise ValueError
 
 class MLP(BayesianModel):
-    def __init__(self, hparams=Hyperparameters(), savefile=None, dtype=torch.float64):
-        super().__init__(dtype=dtype)
+    def __init__(self, loss=lambda x, y: binary_cross_entropy(x, y, reduction='sum'), prior=None,
+    hparams=Hyperparameters(), savefile=None, dtype=torch.float64):
+    # Use the built-in binarry cross entropy 'F.binary_cross_entropy' once the relevant PyTorch issue is resolved
+    # https://github.com/pytorch/pytorch/issues/18945
+    # def __init__(self, loss=lambda x, y: F.binary_cross_entropy(x, y, reduction='sum'), prior=None,
+    # hparams=Hyperparameters(), savefile=None, dtype=torch.float64):
+        super().__init__(loss=loss, dtype=dtype)
         self.hp = hparams
         self.fc_layers = self.set_fc_layers()
-        self.prior = self.default_prior()
+        self.prior = prior or self.default_prior()
         if savefile:
             self.load_state_dict(savefile, strict=False)
 
     def default_prior(self):
-        distro = Normal(
+        return Normal(
             torch.zeros(self.num_params(), dtype=self.dtype),
             torch.ones(self.num_params(), dtype=self.dtype)
         )
-        return distro
 
     def set_fc_layers(self):
         fc = []
