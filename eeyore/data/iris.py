@@ -167,6 +167,7 @@ class Iris(Dataset):
             [6.2, 3.4, 5.4, 2.3],
             [5.9, 3.0, 5.1, 1.8]
         ], dtype=self.dtype)
+
         self.labels = torch.cat([
             torch.tensor(50*[[1, 0, 0]], dtype=self.dtype),
             torch.tensor(50*[[0, 1, 0]], dtype=self.dtype),

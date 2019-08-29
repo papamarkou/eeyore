@@ -16,6 +16,7 @@ class XOR(Dataset):
 
     def load_data(self):
         self.data = torch.tensor([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=self.dtype)
+
         self.labels = torch.tensor([[0], [1], [1], [0]], dtype=self.dtype)
 
     def __getitem__(self, idx):
