@@ -19,7 +19,7 @@ class SerialSampler(Sampler):
     def draw(self):
         raise NotImplementedError
 
-    def run(self, num_iterations, num_burnin, dtype=torch.float64, verbose=False):
+    def run(self, num_iterations, num_burnin, verbose=False):
         """ Run the sampler for num_iterations """
         verbose_msg = "Iteration {:" + str(len(str(num_iterations))) + "}, duration {}"
 

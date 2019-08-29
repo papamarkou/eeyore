@@ -82,7 +82,8 @@ class SMMALA(SerialSampler):
 
             if savestate:
                 self.chain.update(
-                    {k: v.clone().detach() if isinstance(v, torch.Tensor) else v for k, v in self.current.items()})
+                    {k: v.clone().detach() if isinstance(v, torch.Tensor) else v for k, v in self.current.items()}
+                )
 
             self.current['theta'].detach_()
             self.current['target_val'].detach_()

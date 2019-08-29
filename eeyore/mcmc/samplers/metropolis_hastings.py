@@ -1,6 +1,7 @@
 import torch
 
 from eeyore.api import SerialSampler
+from eeyore.kernels import NormalTransitionKernel
 from eeyore.mcmc import MCChain
 
 class MetropolisHastings(SerialSampler):
@@ -10,7 +11,10 @@ class MetropolisHastings(SerialSampler):
         self.dataloader = dataloader
 
         self.kernel = kernel or \
-            NormalTransitionKernel(torch.zeros(self.model.num_params()), torch.ones(self.model.num_params()))
+            NormalTransitionKernel(
+                torch.zeros(self.model.num_params(), dtype=self.model.dtype),
+                torch.ones(self.model.num_params(), dtype=self.model.dtype)
+            )
         self.keys = ['theta', 'target_val']
         self.current = {key : None for key in self.keys}
         self.chain = MCChain(keys)
@@ -48,7 +52,8 @@ class MetropolisHastings(SerialSampler):
 
             if savestate:
                 self.chain.update(
-                    {k: v.clone().detach() if isinstance(v, torch.Tensor) else v for k, v in self.current.items()})
+                    {k: v.clone().detach() if isinstance(v, torch.Tensor) else v for k, v in self.current.items()}
+                )
 
             self.current['theta'].detach_()
             self.current['target_val'].detach_()

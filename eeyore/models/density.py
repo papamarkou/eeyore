@@ -2,18 +2,18 @@ import torch
 
 from torch.autograd import grad
 
-
 class Density:
-
-    def __init__(self, log_target, theta=None):
+    def __init__(self, log_target, theta=None, dtype=torch.float64):
         self.theta = theta
+        self.dtype = dtype
+
         self._log_target = log_target
 
     def get_grad(self):
         return self.theta.grad
 
     def set_params(self, theta):
-        self.theta = theta.detach()
+        self.theta = theta
 
     def num_params(self):
         return len(self.theta)

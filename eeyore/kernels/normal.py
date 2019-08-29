@@ -3,7 +3,6 @@ from torch.distributions import Normal
 
 from eeyore.api import TransitionKernel
 
-
 class NormalTransitionKernel(TransitionKernel):
     """ Gaussian Distributed Transition Kernel """
 
