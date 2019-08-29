@@ -1,2 +1,2 @@
-from .softabs import softabs
-from .softabs_np import softabs_np
+from .loss import binary_cross_entropy
+from .metrics import softabs

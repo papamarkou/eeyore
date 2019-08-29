@@ -2,9 +2,11 @@ import hashlib
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+# import torch.nn.functional as F
 
 from torch.autograd import grad
+
+from eeyore.stats import binary_cross_entropy
 
 class Model(nn.Module):
     """ Class representing sampleable neural network model """
@@ -40,7 +42,10 @@ class Model(nn.Module):
 
 class BayesianModel(Model):
     """ Class representing a Bayesian Net """
-    def __init__(self, loss=lambda x, y: F.binary_cross_entropy(x, y, reduction='sum'), dtype=torch.float64):
+    def __init__(self, loss=lambda x, y: binary_cross_entropy(x, y, reduction='sum'), dtype=torch.float64):
+    # Use the built-in binarry cross entropy 'F.binary_cross_entropy' once the relevant PyTorch issue is resolved
+    # https://github.com/pytorch/pytorch/issues/18945
+    # def __init__(self, loss=lambda x, y: F.binary_cross_entropy(x, y, reduction='sum'), dtype=torch.float64):
         super().__init__(dtype=dtype)
         self.loss = loss
 
