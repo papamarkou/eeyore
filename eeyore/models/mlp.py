@@ -4,9 +4,7 @@ from torch.distributions import Normal
 
 from eeyore.api import BayesianModel
 
-
 class Hyperparameters:
-
     def __init__(self, dims=[1, 2, 1], activations=2*[torch.sigmoid]):
         self.dims = dims
         self.activations = activations
@@ -17,9 +15,7 @@ class Hyperparameters:
         if (len(self.dims) != len(self.activations)+1):
             raise ValueError
 
-
 class MLP(BayesianModel):
-
     def __init__(self, hparams=Hyperparameters(), savefile=None, dtype=torch.float64):
         super().__init__(dtype=dtype)
         self.hp = hparams

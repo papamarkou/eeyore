@@ -38,11 +38,11 @@ class Model(nn.Module):
 
         return result
 
-
 class BayesianModel(Model):
     """ Class representing a Bayesian Net """
-    def __init__(self, dtype=torch.float64):
+    def __init__(self, loss=lambda x, y: F.binary_cross_entropy(x, y, reduction='sum'), dtype=torch.float64):
         super().__init__(dtype=dtype)
+        self.loss = loss
 
     def default_prior(self):
         """ Prior distribution """
@@ -78,24 +78,24 @@ class BayesianModel(Model):
                 p.grad = grad_val[i:i+j].view(p.size())
             i += j
 
-    def log_lik(self, x, y, reduction='sum'):
+    def log_lik(self, x, y):
         """ Log-likelihood """
-        return -F.binary_cross_entropy_with_logits(self(x), y, reduction=reduction)
+        return -self.loss(self(x), y)
 
     def log_prior(self):
         return torch.sum(self.prior.log_prob(self.get_params()))
 
-    def log_target(self, theta, x, y, reduction='sum'):
+    def log_target(self, theta, x, y):
         self.set_params(theta)
-        return self.log_lik(x, y, reduction) + self.log_prior()
+        return self.log_lik(x, y) + self.log_prior()
 
     def grad_log_target(self, log_target_val):
         grad_log_target_val = grad(log_target_val, self.parameters(), create_graph=True)
         grad_log_target_val = torch.cat([g.view(-1) for g in grad_log_target_val])
         return grad_log_target_val
 
-    def upto_grad_log_target(self, theta, x, y, reduction='sum'):
-        log_target_val = self.log_target(theta, x, y, reduction)
+    def upto_grad_log_target(self, theta, x, y):
+        log_target_val = self.log_target(theta, x, y)
         grad_log_target_val = self.grad_log_target(log_target_val)
         return log_target_val, grad_log_target_val
 
@@ -113,12 +113,12 @@ class BayesianModel(Model):
     def metric_log_target(self, grad_log_target_val):
         return -self.hess_log_target(grad_log_target_val)
 
-    def upto_hess_log_target(self, theta, x, y, reduction='sum'):
-        log_target_val, grad_log_target_val = self.upto_grad_log_target(theta, x, y, reduction)
+    def upto_hess_log_target(self, theta, x, y):
+        log_target_val, grad_log_target_val = self.upto_grad_log_target(theta, x, y)
         hess_log_target_val = self.hess_log_target(grad_log_target_val)
 
         return log_target_val, grad_log_target_val, hess_log_target_val
 
-    def upto_metric_log_target(self, theta, x, y, reduction='sum'):
-        log_target_val, grad_log_target_val, hess_log_target_val = self.upto_hess_log_target(theta, x, y, reduction)
+    def upto_metric_log_target(self, theta, x, y):
+        log_target_val, grad_log_target_val, hess_log_target_val = self.upto_hess_log_target(theta, x, y)
         return log_target_val, grad_log_target_val, -hess_log_target_val
