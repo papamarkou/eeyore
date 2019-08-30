@@ -4,8 +4,9 @@ from torch.utils.data import Dataset
 
 class Iris(Dataset):
 
-    def __init__(self, dtype=torch.float64):
+    def __init__(self, dtype=torch.float64, device='cpu'):
         self.dtype = dtype
+        self.device = device
         self.load_data()
 
     def __repr__(self):
@@ -166,12 +167,12 @@ class Iris(Dataset):
             [6.5, 3.0, 5.2, 2.0],
             [6.2, 3.4, 5.4, 2.3],
             [5.9, 3.0, 5.1, 1.8]
-        ], dtype=self.dtype)
+        ], dtype=self.dtype, device=self.device)
 
         self.labels = torch.cat([
-            torch.tensor(50*[[1, 0, 0]], dtype=self.dtype),
-            torch.tensor(50*[[0, 1, 0]], dtype=self.dtype),
-            torch.tensor(50*[[0, 0, 1]], dtype=self.dtype)
+            torch.tensor(50*[[1, 0, 0]], dtype=self.dtype, device=self.device),
+            torch.tensor(50*[[0, 1, 0]], dtype=self.dtype, device=self.device),
+            torch.tensor(50*[[0, 0, 1]], dtype=self.dtype, device=self.device)
         ])
 
     def __getitem__(self, idx):

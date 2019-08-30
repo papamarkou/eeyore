@@ -20,12 +20,12 @@ class Hyperparameters:
 
 class MLP(BayesianModel):
     def __init__(self, loss=lambda x, y: binary_cross_entropy(x, y, reduction='sum'), prior=None,
-    hparams=Hyperparameters(), savefile=None, dtype=torch.float64):
+    hparams=Hyperparameters(), savefile=None, dtype=torch.float64, device='cpu'):
     # Use the built-in binarry cross entropy 'F.binary_cross_entropy' once the relevant PyTorch issue is resolved
     # https://github.com/pytorch/pytorch/issues/18945
     # def __init__(self, loss=lambda x, y: F.binary_cross_entropy(x, y, reduction='sum'), prior=None,
-    # hparams=Hyperparameters(), savefile=None, dtype=torch.float64):
-        super().__init__(loss=loss, dtype=dtype)
+    # hparams=Hyperparameters(), savefile=None, dtype=torch.float64, device='cpu'):
+        super().__init__(loss=loss, dtype=dtype, device=device)
         self.hp = hparams
         self.fc_layers = self.set_fc_layers()
         self.prior = prior or self.default_prior()
@@ -34,14 +34,14 @@ class MLP(BayesianModel):
 
     def default_prior(self):
         return Normal(
-            torch.zeros(self.num_params(), dtype=self.dtype),
-            torch.ones(self.num_params(), dtype=self.dtype)
+            torch.zeros(self.num_params(), dtype=self.dtype, device=self.device),
+            torch.ones(self.num_params(), dtype=self.dtype, device=self.device)
         )
 
     def set_fc_layers(self):
         fc = []
         for i in range(len(self.hp.dims)-1):
-            fc.append(nn.Linear(self.hp.dims[i], self.hp.dims[i+1]).to(dtype=self.dtype))
+            fc.append(nn.Linear(self.hp.dims[i], self.hp.dims[i+1]).to(dtype=self.dtype).to(device=self.device))
         return nn.ModuleList(fc)
 
     def forward(self, x):

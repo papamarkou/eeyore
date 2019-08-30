@@ -44,7 +44,7 @@ class SMMALA(SerialSampler):
 
             proposed['theta'] = \
                 proposal_mean + np.sqrt(self.step) * self.current['chol_inv_metric_val'] @ \
-                torch.randn(self.model.num_params(), dtype=self.model.dtype)
+                torch.randn(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
             proposed['target_val'], proposed['grad_val'], proposed['metric_val'] = \
                 self.model.upto_metric_log_target(proposed['theta'].clone().detach(), data, label)
             if self.transform is not None:
@@ -67,7 +67,7 @@ class SMMALA(SerialSampler):
                 log_rate - 0.5 * (inv_metric_logdet +(loc_minus_proposal_mean.t() @ (proposed['metric_val'] @ \
                 loc_minus_proposal_mean))/self.step)
 
-            if torch.log(torch.rand(1, dtype=self.model.dtype)) < log_rate:
+            if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
                 self.current['theta'] = proposed['theta'].clone().detach()
                 self.current['target_val'] = proposed['target_val'].clone().detach()
                 self.current['grad_val'] = proposed['grad_val'].clone().detach()

@@ -10,9 +10,10 @@ from eeyore.stats import binary_cross_entropy
 
 class Model(nn.Module):
     """ Class representing sampleable neural network model """
-    def __init__(self, dtype=torch.float64):
+    def __init__(self, dtype=torch.float64, device='cpu'):
         super().__init__()
         self.dtype = dtype
+        self.device = device
 
     def num_params(self):
         """ Get the number of model parameters. """
@@ -42,11 +43,13 @@ class Model(nn.Module):
 
 class BayesianModel(Model):
     """ Class representing a Bayesian Net """
-    def __init__(self, loss=lambda x, y: binary_cross_entropy(x, y, reduction='sum'), dtype=torch.float64):
+    def __init__(self, loss=lambda x, y: binary_cross_entropy(x, y, reduction='sum'), dtype=torch.float64,
+    device='cpu'):
     # Use the built-in binarry cross entropy 'F.binary_cross_entropy' once the relevant PyTorch issue is resolved
     # https://github.com/pytorch/pytorch/issues/18945
-    # def __init__(self, loss=lambda x, y: F.binary_cross_entropy(x, y, reduction='sum'), dtype=torch.float64):
-        super().__init__(dtype=dtype)
+    # def __init__(self, loss=lambda x, y: F.binary_cross_entropy(x, y, reduction='sum'), dtype=torch.float64
+    # device='cpu'):
+        super().__init__(dtype=dtype, device=device)
         self.loss = loss
 
     def default_prior(self):

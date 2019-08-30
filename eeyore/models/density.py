@@ -3,9 +3,10 @@ import torch
 from torch.autograd import grad
 
 class Density:
-    def __init__(self, log_target, theta=None, dtype=torch.float64):
+    def __init__(self, log_target, theta=None, dtype=torch.float64, device='cpu'):
         self.theta = theta
         self.dtype = dtype
+        self.device = device
 
         self._log_target = log_target
 

@@ -32,7 +32,8 @@ class MALA(SerialSampler):
             proposal_mean = self.current['theta'] + 0.5 * self.step * self.current['grad_val']
 
             proposed['theta'] = \
-                proposal_mean + np.sqrt(self.step) * torch.randn(self.model.num_params(), dtype=self.model.dtype)
+                proposal_mean + np.sqrt(self.step) * \
+                torch.randn(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
 
             proposed['target_val'], proposed['grad_val'] = \
                 self.model.upto_grad_log_target(proposed['theta'].clone().detach(), data, label)
@@ -44,7 +45,7 @@ class MALA(SerialSampler):
 
             log_rate = log_rate - 0.5 * torch.sum((self.current['theta'] - proposal_mean) ** 2) / self.step
 
-            if torch.log(torch.rand(1, dtype=self.model.dtype)) < log_rate:
+            if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
                 self.current['theta'] = proposed['theta'].clone().detach()
                 self.current['target_val'] = proposed['target_val'].clone().detach()
                 self.current['grad_val'] = proposed['grad_val'].clone().detach()

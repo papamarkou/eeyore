@@ -19,8 +19,7 @@ class MetropolisHastings(SerialSampler):
 
     def default_kernel(self):
         return NormalTransitionKernel(
-            torch.zeros(self.model.num_params(), dtype=self.model.dtype),
-            torch.ones(self.model.num_params(), dtype=self.model.dtype)
+            torch.zeros(self.model.num_params()), torch.ones(self.model.num_params()), dtype=self.model.dtype
         )
 
     def reset(self, theta):
@@ -43,7 +42,7 @@ class MetropolisHastings(SerialSampler):
             log_rate = \
                 log_rate + proposed['target_val'] + self.kernel.log_density(self.current['theta'].clone().detach())
 
-            if torch.log(torch.rand(1, dtype=self.model.dtype)) < log_rate:
+            if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
                 self.current['theta'] = proposed['theta'].clone().detach()
                 self.current['target_val'] = proposed['target_val'].clone().detach()
                 self.current['accepted'] = 1
