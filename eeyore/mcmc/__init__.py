@@ -1,5 +1,5 @@
 from .mcchain import MCChain
 
 from .samplers import (
-    MetropolisHastings, MALA, SMMALA
+    MetropolisHastings, MALA, SMMALA, SMMALANP
 )

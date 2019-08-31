@@ -36,15 +36,13 @@ class SMMALA(SerialSampler):
         # Product of metric tensor with gradient
         self.current['first_term_val'] = self.current['inv_metric_val'] @ self.current['grad_val']
 
-    def draw(self, savestate=False):
+    def draw(self, randn_val, threshold, savestate=False):
         proposed = {key : None for key in self.keys}
 
         for data, label in self.dataloader:
             proposal_mean = self.current['theta'] + 0.5 * self.step * self.current['first_term_val']
 
-            proposed['theta'] = \
-                proposal_mean + np.sqrt(self.step) * self.current['chol_inv_metric_val'] @ \
-                torch.randn(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
+            proposed['theta'] = proposal_mean + np.sqrt(self.step) * self.current['chol_inv_metric_val'] @ randn_val
             proposed['target_val'], proposed['grad_val'], proposed['metric_val'] = \
                 self.model.upto_metric_log_target(proposed['theta'].clone().detach(), data, label)
             if self.transform is not None:
@@ -67,7 +65,7 @@ class SMMALA(SerialSampler):
                 log_rate - 0.5 * (inv_metric_logdet +(loc_minus_proposal_mean.t() @ (proposed['metric_val'] @ \
                 loc_minus_proposal_mean))/self.step)
 
-            if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
+            if torch.log(threshold) < log_rate:
                 self.current['theta'] = proposed['theta'].clone().detach()
                 self.current['target_val'] = proposed['target_val'].clone().detach()
                 self.current['grad_val'] = proposed['grad_val'].clone().detach()
@@ -92,3 +90,5 @@ class SMMALA(SerialSampler):
             self.current['inv_metric_val'].detach_()
             self.current['chol_inv_metric_val'].detach_()
             self.current['first_term_val'].detach_()
+
+            return proposed, log_rate, self.current['accepted']

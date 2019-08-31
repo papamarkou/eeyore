@@ -19,7 +19,7 @@ class SerialSampler(Sampler):
     def draw(self):
         raise NotImplementedError
 
-    def run(self, num_iterations, num_burnin, verbose=False):
+    def run(self, num_iterations, num_burnin, num_params, dtype=torch.float64, device='cpu', numpy=False):
         """ Run the sampler for num_iterations """
         verbose_msg = "Iteration {:" + str(len(str(num_iterations))) + "}, duration {}"
 
@@ -27,10 +27,16 @@ class SerialSampler(Sampler):
             if verbose:
                 start_time = timer()
 
+            randn_val = torch.randn(num_params, dtype=dtype, device=device)
+            threshold = torch.rand(1, dtype=dtype, device=device)
+            if numpy:
+                randn_val = randn_val.cpu().numpy()
+                threshold = threshold.item()
+
             if n < num_burnin:
-                self.draw(savestate=False)
+                self.draw(randn_val, threshold, savestate=False)
             else:
-                self.draw(savestate=True)
+                self.draw(randn_val, threshold, savestate=True)
 
             if verbose:
                 end_time = timer()
