@@ -8,8 +8,9 @@ from eeyore.api import BayesianModel
 from eeyore.stats import binary_cross_entropy
 
 class Hyperparameters:
-    def __init__(self, dims=[1, 2, 1], activations=2*[torch.sigmoid]):
+    def __init__(self, dims=[1, 2, 1], bias=2*[True], activations=2*[torch.sigmoid]):
         self.dims = dims
+        self.bias = bias
         self.activations = activations
 
         if len(self.dims) < 3:
@@ -41,7 +42,9 @@ class MLP(BayesianModel):
     def set_fc_layers(self):
         fc = []
         for i in range(len(self.hp.dims)-1):
-            fc.append(nn.Linear(self.hp.dims[i], self.hp.dims[i+1]).to(dtype=self.dtype).to(device=self.device))
+            fc.append(nn.Linear(
+                self.hp.dims[i], self.hp.dims[i+1], bias=self.hp.bias[i]
+            ).to(dtype=self.dtype).to(device=self.device))
         return nn.ModuleList(fc)
 
     def forward(self, x):
