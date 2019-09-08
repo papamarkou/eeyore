@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import truncnorm
 
 import torch
 
@@ -38,9 +39,10 @@ class MALA(SerialSampler):
                     proposal_mean + np.sqrt(self.step) * \
                     torch.randn(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
             else:
-                loc = proosal_mean.detach().cpu().numpy()
+                loc = proposal_mean.detach().cpu().numpy()
                 scale = np.sqrt(self.step)
-                a, b = (self.truncation - loc) / scale
+                a = (self.truncation[0] - loc) / scale
+                b = (self.truncation[1] - loc) / scale
                 proposed['theta'] = \
                     torch.from_numpy(truncnorm.rvs(a=a, b=b, loc=loc, scale=scale, size=self.model.num_params()) \
                     ).to(dtype=self.model.dtype).to(device=self.model.device)
@@ -52,18 +54,21 @@ class MALA(SerialSampler):
             if ((self.truncation[0] == -np.inf) and (self.truncation[1] == np.inf)):
                 log_rate = log_rate + 0.5 * torch.sum((proposed['theta'] - proposal_mean) ** 2) / self.step
             else:
-                log_rate = log_rate - torch.from_numpy(truncnorm.logpdf(proposed['theta'].detach().cpu().numpy(),
-                a=a, b=b, loc=loc, scale=scale)).to(dtype=self.model.dtype).to(device=self.model.device)
+                log_rate = log_rate - torch.sum(torch.from_numpy( \
+                truncnorm.logpdf(proposed['theta'].detach().cpu().numpy(), a=a, b=b, loc=loc, scale=scale) \
+                ).to(dtype=self.model.dtype).to(device=self.model.device))
 
             proposal_mean = proposed['theta'] + 0.5 * self.step * proposed['grad_val']
 
             if ((self.truncation[0] == -np.inf) and (self.truncation[1] == np.inf)):
                 log_rate = log_rate - 0.5 * torch.sum((self.current['theta'] - proposal_mean) ** 2) / self.step
             else:
-                loc = proosal_mean.detach().cpu().numpy()
-                a, b = (self.truncation - loc) / scale
-                log_rate = log_rate + torch.from_numpy(truncnorm.logpdf(self.current['theta'].detach().cpu().numpy(),
-                a=a, b=b, loc=loc, scale=scale)).to(dtype=self.model.dtype).to(device=self.model.device)
+                loc = proposal_mean.detach().cpu().numpy()
+                a = (self.truncation[0] - loc) / scale
+                b = (self.truncation[1] - loc) / scale
+                log_rate = log_rate + torch.sum(torch.from_numpy( \
+                truncnorm.logpdf(self.current['theta'].detach().cpu().numpy(), a=a, b=b, loc=loc, scale=scale) \
+                ).to(dtype=self.model.dtype).to(device=self.model.device))
 
             if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
                 self.current['theta'] = proposed['theta'].clone().detach()
