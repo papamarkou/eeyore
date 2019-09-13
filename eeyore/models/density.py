@@ -3,8 +3,9 @@ import torch
 from torch.autograd import grad
 
 class Density:
-    def __init__(self, log_target, theta=None, dtype=torch.float64, device='cpu'):
+    def __init__(self, log_target, theta=None, temperature=None, dtype=torch.float64, device='cpu'):
         self.theta = theta
+        self.temperature = temperature
         self.dtype = dtype
         self.device = device
 
@@ -29,7 +30,10 @@ class Density:
     def log_target(self, theta, x, y):
         self.set_params(theta)
         self.theta.requires_grad_(True)
-        return self._log_target(self.theta, x, y)
+        result = self._log_target(self.theta, x, y)
+        if self.temperature is not None:
+            result = self.temperature * result
+        return result
 
     def grad_log_target(self, log_target_val):
         grad_log_target_val = grad(log_target_val, self.theta, create_graph=True)

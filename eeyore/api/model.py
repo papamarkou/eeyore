@@ -43,14 +43,15 @@ class Model(nn.Module):
 
 class BayesianModel(Model):
     """ Class representing a Bayesian Net """
-    def __init__(self, loss=lambda x, y: binary_cross_entropy(x, y, reduction='sum'), dtype=torch.float64,
-    device='cpu'):
+    def __init__(self, loss=lambda x, y: binary_cross_entropy(x, y, reduction='sum'), temperature=None,
+    dtype=torch.float64, device='cpu'):
     # Use the built-in binarry cross entropy 'F.binary_cross_entropy' once the relevant PyTorch issue is resolved
     # https://github.com/pytorch/pytorch/issues/18945
-    # def __init__(self, loss=lambda x, y: F.binary_cross_entropy(x, y, reduction='sum'), dtype=torch.float64
-    # device='cpu'):
+    # def __init__(self, loss=lambda x, y: F.binary_cross_entropy(x, y, reduction='sum'), temperature=None,
+    # dtype=torch.float64, device='cpu'):
         super().__init__(dtype=dtype, device=device)
         self.loss = loss
+        self.temperature = temperature
 
     def default_prior(self):
         """ Prior distribution """
@@ -88,10 +89,16 @@ class BayesianModel(Model):
 
     def log_lik(self, x, y):
         """ Log-likelihood """
-        return -self.loss(self(x), y)
+        result = -self.loss(self(x), y)
+        if self.temperature is not None:
+            result = self.temperature * result
+        return result
 
     def log_prior(self):
-        return torch.sum(self.prior.log_prob(self.get_params()))
+        result = torch.sum(self.prior.log_prob(self.get_params()))
+        if self.temperature is not None:
+            result = self.temperature * result
+        return result
 
     def log_target(self, theta, x, y):
         self.set_params(theta)

@@ -20,13 +20,13 @@ class Hyperparameters:
             raise ValueError
 
 class MLP(BayesianModel):
-    def __init__(self, loss=lambda x, y: binary_cross_entropy(x, y, reduction='sum'), prior=None,
+    def __init__(self, loss=lambda x, y: binary_cross_entropy(x, y, reduction='sum'), temperature=None, prior=None,
     hparams=Hyperparameters(), savefile=None, dtype=torch.float64, device='cpu'):
     # Use the built-in binarry cross entropy 'F.binary_cross_entropy' once the relevant PyTorch issue is resolved
     # https://github.com/pytorch/pytorch/issues/18945
-    # def __init__(self, loss=lambda x, y: F.binary_cross_entropy(x, y, reduction='sum'), prior=None,
+    # def __init__(self, loss=lambda x, y: F.binary_cross_entropy(x, y, reduction='sum'), temperature=None, prior=None,
     # hparams=Hyperparameters(), savefile=None, dtype=torch.float64, device='cpu'):
-        super().__init__(loss=loss, dtype=dtype, device=device)
+        super().__init__(loss=loss, temperature=temperature, dtype=dtype, device=device)
         self.hp = hparams
         self.fc_layers = self.set_fc_layers()
         self.prior = prior or self.default_prior()
