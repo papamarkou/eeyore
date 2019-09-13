@@ -2,6 +2,9 @@ from itertools import chain
 
 import numpy as np
 
+from timeit import default_timer as timer
+from datetime import timedelta
+
 import torch
 from torch.distributions import Categorical
 
@@ -13,6 +16,7 @@ from .mala import MALA
 class PowerPosteriorSampler(Sampler):
     def __init__(self, model, theta0, dataloader, samplers, temperatures=None, b=0.5):
         super(PowerPosteriorSampler, self).__init__()
+        self.dataloader = dataloader
         self.b = b
 
         self.num_chains = len(samplers)
@@ -64,7 +68,7 @@ class PowerPosteriorSampler(Sampler):
         return torch.tensor([self.eval_categorical_prob(j, i) for j in chain(range(i), range(i+1, self.num_chains))])
 
     def categorical_log_prob(self, j, i):
-        self.categoricals[i].log_prob(torch.tensor(self.from_events_to_seq(j, i)))
+        return self.categoricals[i].log_prob(torch.tensor(self.from_events_to_seq(j, i)))
 
     def sample_categorical(self, i):
         return self.from_seq_to_events(self.categoricals[i].sample().item(), i)
@@ -78,6 +82,8 @@ class PowerPosteriorSampler(Sampler):
             sampler.draw(savestate=False)
 
     def between_chain_move(self, i, j):
+        data, label = next(iter(self.dataloader))
+
         log_rate = self.categorical_log_prob(i, j) - \
             self.categorical_log_prob(j, i) - \
             self.samplers[i].current['target_val'] - \
@@ -86,7 +92,7 @@ class PowerPosteriorSampler(Sampler):
             self.samplers[j].model.log_target(self.samplers[i].current['theta'].clone().detach(), data, label)
 
         if torch.log(
-            torch.rand(1, dtype=self.samplers[0].model.dtype, device=self.semplers[0].model.device)
+            torch.rand(1, dtype=self.samplers[0].model.dtype, device=self.samplers[0].model.device)
             ) < log_rate:
             theta = self.samplers[i].current['theta'].clone().detach()
             self.samplers[i].reset(self.samplers[j].current['theta'])
