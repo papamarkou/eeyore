@@ -11,6 +11,7 @@ eeyore/stats/__pycache__/
 examples/bivariate_normal/.ipynb_checkpoints/
 examples/checks/autograd/.ipynb_checkpoints/
 examples/checks/distributions/.ipynb_checkpoints/
+examples/checks/mcmc/.ipynb_checkpoints/
 examples/checks/mlp/.ipynb_checkpoints/
 examples/mlp/.ipynb_checkpoints/
 examples/mlp/iris/.ipynb_checkpoints/
