@@ -6,18 +6,22 @@ from .metropolis_hastings import MetropolisHastings
 from .mala import MALA
 
 class PowerPosteriorSampler(Sampler):
-    def __init__(self, model, theta0, dataloader, samplers, temperatures, keys=['theta', 'target_val', 'accepted']):
+    def __init__(self, model, theta0, dataloader, samplers, temperatures=None):
         super(PowerPosteriorSampler, self).__init__()
-        self.temperatures = temperatures
 
-        self.num_chains = len(self.temperatures)
+        self.num_chains = len(samplers)
 
-        if (len(samplers) != self.num_chains):
+        if (temperatures is not None) and (self.num_chains != len(temperatures)):
             raise ValueError
+
+        if (temperatures is None):
+            self.temperatures = [(i/(self.num_chains-1))**4 for i in range(self.num_chains)]
+        else:
+            self.temperatures = temperatures
 
         self.models = self.num_chains*[model]
         for i in range(self.num_chains):
-            self.models[i].temperatures = temperatures[i]
+            self.models[i].temperatures = self.temperatures[i]
 
         self.samplers = []
         for i in range(self.num_chains):
@@ -27,3 +31,11 @@ class PowerPosteriorSampler(Sampler):
                 self.samplers.append(MALA(self.models[i], theta0, dataloader, **(samplers[i][1])))
             else:
                 ValueError
+
+        self.chains = []
+        for i in range(self.num_chains):
+            self.chains.append(MCChain(self.samplers[i].keys))
+
+    def reset(self, theta):
+        for sampler in self.samplers:
+            sampler.reset(theta)
