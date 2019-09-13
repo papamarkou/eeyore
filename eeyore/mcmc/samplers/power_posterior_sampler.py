@@ -77,6 +77,9 @@ class PowerPosteriorSampler(Sampler):
         for sampler in self.samplers:
             sampler.reset(theta)
 
+    def get_chain(self):
+        return self.chains[self.num_powers-1]
+
     def within_chain_moves(self):
         for sampler in self.samplers:
             sampler.draw(savestate=False)
