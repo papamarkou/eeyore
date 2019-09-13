@@ -19,22 +19,22 @@ class PowerPosteriorSampler(Sampler):
         self.dataloader = dataloader
         self.b = b
 
-        self.num_chains = len(samplers)
+        self.num_powers = len(samplers)
 
-        if (temperatures is not None) and (self.num_chains != len(temperatures)):
+        if (temperatures is not None) and (self.num_powers != len(temperatures)):
             raise ValueError
 
         if (temperatures is None):
-            self.temperatures = [(i/(self.num_chains-1))**4 for i in range(self.num_chains)]
+            self.temperatures = [(i/(self.num_powers-1))**4 for i in range(self.num_powers)]
         else:
             self.temperatures = temperatures
 
-        self.models = self.num_chains*[model]
-        for i in range(self.num_chains):
+        self.models = self.num_powers*[model]
+        for i in range(self.num_powers):
             self.models[i].temperatures = self.temperatures[i]
 
         self.samplers = []
-        for i in range(self.num_chains):
+        for i in range(self.num_powers):
             if samplers[i][0] == 'MetropolisHastings':
                 self.samplers.append(MetropolisHastings(self.models[i], theta0, dataloader, **(samplers[i][1])))
             elif samplers[i][0] == 'MALA':
@@ -43,11 +43,11 @@ class PowerPosteriorSampler(Sampler):
                 ValueError
 
         self.categoricals = []
-        for i in range(self.num_chains):
+        for i in range(self.num_powers):
             self.categoricals.append(Categorical(self.eval_categorical_probs(i)))
 
         self.chains = []
-        for i in range(self.num_chains):
+        for i in range(self.num_powers):
             self.chains.append(MCChain(self.samplers[i].keys))
 
     def from_seq_to_events(self, k, i):
@@ -61,11 +61,11 @@ class PowerPosteriorSampler(Sampler):
     def eval_categorical_prob(self, j, i):
         eb = np.exp(-self.b)
         numerator = eb**np.absolute(j-i)
-        denominator = eb*(2-eb**i-eb**(self.num_chains-1-i))/(1-eb)
+        denominator = eb*(2-eb**i-eb**(self.num_powers-1-i))/(1-eb)
         return numerator/denominator
 
     def eval_categorical_probs(self, i):
-        return torch.tensor([self.eval_categorical_prob(j, i) for j in chain(range(i), range(i+1, self.num_chains))])
+        return torch.tensor([self.eval_categorical_prob(j, i) for j in chain(range(i), range(i+1, self.num_powers))])
 
     def categorical_log_prob(self, j, i):
         return self.categoricals[i].log_prob(torch.tensor(self.from_events_to_seq(j, i)))
@@ -102,7 +102,7 @@ class PowerPosteriorSampler(Sampler):
             self.samplers[j].model.set_params(self.samplers[j].current['theta'].clone().detach())
 
     def between_chain_moves(self):
-        for i in range(self.num_chains):
+        for i in range(self.num_powers):
             j = self.sample_categorical(i)
 
             self.between_chain_move(i, j)
@@ -114,7 +114,7 @@ class PowerPosteriorSampler(Sampler):
             self.between_chain_moves()
 
         if savestate:
-            for i in range(self.num_chains):
+            for i in range(self.num_powers):
                 self.chains[i].update(
                     {k: v.clone().detach() if isinstance(v, torch.Tensor) else v
                     for k, v in self.samplers[i].current.items()}
