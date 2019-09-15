@@ -12,6 +12,7 @@ from eeyore.api import Sampler
 from eeyore.mcmc import MCChain
 from .metropolis_hastings import MetropolisHastings
 from .mala import MALA
+from .smmala import SMMALA
 
 class PowerPosteriorSampler(Sampler):
     def __init__(self, model, theta0, dataloader, samplers, temperatures=None, b=0.5):
@@ -39,6 +40,8 @@ class PowerPosteriorSampler(Sampler):
                 self.samplers.append(MetropolisHastings(self.models[i], theta0, dataloader, **(samplers[i][1])))
             elif samplers[i][0] == 'MALA':
                 self.samplers.append(MALA(self.models[i], theta0, dataloader, **(samplers[i][1])))
+            elif samplers[i][0] == 'SMMALA':
+                self.samplers.append(SMMALA(self.models[i], theta0, dataloader, **(samplers[i][1])))
             else:
                 ValueError
 

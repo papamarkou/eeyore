@@ -10,7 +10,7 @@ class Iris(Dataset):
         self.load_data()
 
     def __repr__(self):
-        return f'XOR dataset'
+        return f'Iris dataset'
 
     def __len__(self):
         return len(self.data)
