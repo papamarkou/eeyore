@@ -19,12 +19,12 @@ class SerialSampler(Sampler):
     def draw(self):
         raise NotImplementedError
 
-    def run(self, num_iterations, num_burnin, verbose=False):
+    def run(self, num_iterations, num_burnin, verbose=False, verbose_step=100):
         """ Run the sampler for num_iterations """
         verbose_msg = "Iteration {:" + str(len(str(num_iterations))) + "}, duration {}"
 
         for n in range(num_iterations):
-            if verbose:
+            if verbose and (((n+1) % verbose_step) == 0):
                 start_time = timer()
 
             if n < num_burnin:
@@ -32,6 +32,6 @@ class SerialSampler(Sampler):
             else:
                 self.draw(savestate=True)
 
-            if verbose:
+            if verbose and (((n+1) % verbose_step) == 0):
                 end_time = timer()
                 print(verbose_msg.format(n+1, timedelta(seconds=end_time-start_time)))

@@ -126,11 +126,11 @@ class PowerPosteriorSampler(Sampler):
                     for k, v in self.samplers[i].current.items()}
                 )
 
-    def run(self, num_iterations, num_burnin, between_step=10, verbose=False):
+    def run(self, num_iterations, num_burnin, between_step=10, verbose=False, verbose_step=100):
         verbose_msg = "Iteration {:" + str(len(str(num_iterations))) + "}, duration {}"
 
         for n in range(num_iterations):
-            if verbose:
+            if verbose and (((n+1) % verbose_step) == 0):
                 start_time = timer()
 
             between = True if ((n % between_step) == 0) else False
@@ -138,6 +138,6 @@ class PowerPosteriorSampler(Sampler):
 
             self.draw(between=between, savestate=savestate)
 
-            if verbose:
+            if verbose and (((n+1) % verbose_step) == 0):
                 end_time = timer()
                 print(verbose_msg.format(n+1, timedelta(seconds=end_time-start_time)))
