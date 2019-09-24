@@ -13,6 +13,8 @@ examples/checks/autograd/.ipynb_checkpoints/
 examples/checks/distributions/.ipynb_checkpoints/
 examples/checks/mcmc/.ipynb_checkpoints/
 examples/checks/mlp/.ipynb_checkpoints/
+examples/checks/mlp/binary_classification/.ipynb_checkpoints/
+examples/checks/mlp/multiclass_classification/.ipynb_checkpoints/
 examples/mlp/.ipynb_checkpoints/
 examples/mlp/iris/.ipynb_checkpoints/
 examples/mlp/xor/.ipynb_checkpoints/
