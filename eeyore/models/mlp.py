@@ -49,7 +49,9 @@ class MLP(BayesianModel):
 
     def forward(self, x):
         for fc, activation in zip(self.fc_layers, self.hp.activations):
-            x = activation(fc(x))
+            x = fc(x)
+            if activation is not None:
+                x = activation(x)
         return x
 
     def num_hidden_layers(self):
