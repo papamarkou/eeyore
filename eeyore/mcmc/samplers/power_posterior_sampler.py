@@ -26,7 +26,7 @@ class PowerPosteriorSampler(Sampler):
             raise ValueError
 
         if (temperatures is None):
-            self.temperatures = [(i/(self.num_powers-1))**4 for i in range(self.num_powers)]
+            self.temperatures = [(i/self.num_powers)**4 for i in range(1, self.num_powers+1)]
         else:
             self.temperatures = temperatures
 
