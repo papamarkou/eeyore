@@ -2,18 +2,19 @@ import torch
 
 from eeyore.api import SerialSampler
 from eeyore.kernels import NormalTransitionKernel
-from eeyore.mcmc import MCChain
+from eeyore.mcmc import ChainFile, ChainList
 
 class MetropolisHastings(SerialSampler):
-    def __init__(self, model, theta0, dataloader, kernel=None, keys=['theta', 'target_val', 'accepted']):
+    def __init__(self, model, theta0, dataloader, kernel=None,
+    chain=ChainList(keys=['theta', 'target_val', 'accepted'])):
         super(MetropolisHastings, self).__init__()
         self.model = model
         self.dataloader = dataloader
 
         self.kernel = kernel or self.default_kernel()
-        self.keys = ['theta', 'target_val']
+        self.keys = ['theta', 'target_val', 'accepted']
         self.current = {key : None for key in self.keys}
-        self.chain = MCChain(keys)
+        self.chain = chain
 
         self.reset(theta0)
 

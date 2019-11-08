@@ -1,8 +1,9 @@
 import torch
 
+from eeyore.api import Chain
 
-class MCChain:
-    """ Monte Carlo chain to store samples """
+class ChainList(Chain):
+    """ Monte Carlo chain to store samples in lists """
 
     def __init__(self, keys=['theta', 'target_val', 'accepted']):
         self.keys = keys

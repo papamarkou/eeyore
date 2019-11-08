@@ -4,18 +4,18 @@ from scipy.stats import truncnorm
 import torch
 
 from eeyore.api import SerialSampler
-from eeyore.mcmc import MCChain
+from eeyore.mcmc import ChainFile, ChainList
 
 class MALA(SerialSampler):
-    def __init__(self, model, theta0, dataloader, step=0.1, keys=['theta', 'target_val', 'accepted']):
+    def __init__(self, model, theta0, dataloader, step=0.1, chain=ChainList(keys=['theta', 'target_val', 'accepted'])):
         super(MALA, self).__init__()
         self.model = model
         self.dataloader = dataloader
         self.step = step
 
-        self.keys = ['theta', 'target_val', 'grad_val']
+        self.keys = ['theta', 'target_val', 'grad_val', 'accepted']
         self.current = {key : None for key in self.keys}
-        self.chain = MCChain(keys)
+        self.chain = chain
 
         self.reset(theta0)
 

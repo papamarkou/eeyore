@@ -3,19 +3,20 @@ import numpy as np
 import torch
 
 from eeyore.api import SerialSampler
-from eeyore.mcmc import MCChain
+from eeyore.mcmc import ChainFile, ChainList
 
 class SMMALA(SerialSampler):
-    def __init__(self, model, theta0, dataloader, step=0.1, transform=None, keys=['theta', 'target_val', 'accepted']):
+    def __init__(self, model, theta0, dataloader, step=0.1, transform=None,
+    chain=ChainList(keys=['theta', 'target_val', 'accepted'])):
         super(SMMALA, self).__init__()
         self.model = model
         self.dataloader = dataloader
         self.step = step
         self.transform = transform
 
-        self.keys = ['theta', 'target_val', 'grad_val', 'metric_val', 'inv_metric_val', 'first_term_val']
+        self.keys = ['theta', 'target_val', 'grad_val', 'metric_val', 'inv_metric_val', 'first_term_val', 'accepted']
         self.current = {key : None for key in self.keys}
-        self.chain = MCChain(keys)
+        self.chain = chain
 
         self.reset(theta0)
 

@@ -9,7 +9,7 @@ import torch
 from torch.distributions import Categorical
 
 from eeyore.api import Sampler
-from eeyore.mcmc import MCChain
+from eeyore.mcmc import ChainFile, ChainList
 from .metropolis_hastings import MetropolisHastings
 from .mala import MALA
 from .smmala import SMMALA
@@ -51,7 +51,7 @@ class PowerPosteriorSampler(Sampler):
 
         self.chains = []
         for i in range(self.num_powers):
-            self.chains.append(MCChain(self.samplers[i].keys))
+            self.chains.append(ChainList(self.samplers[i].keys))
 
     def from_seq_to_events(self, k, i):
         j = k if (k < i) else (k+1)

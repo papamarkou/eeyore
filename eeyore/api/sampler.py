@@ -1,5 +1,3 @@
-import torch
-
 from timeit import default_timer as timer
 from datetime import timedelta
 

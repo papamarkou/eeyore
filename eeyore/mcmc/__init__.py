@@ -1,4 +1,6 @@
-from .mcchain import MCChain
+from .chains import (
+    ChainFile, ChainList
+)
 
 from .samplers import (
     MetropolisHastings, MALA, SMMALA, PowerPosteriorSampler
