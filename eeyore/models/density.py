@@ -3,8 +3,11 @@ import torch
 from torch.autograd import grad
 
 class Density:
-    def __init__(self, log_target, theta=None, temperature=None, dtype=torch.float64, device='cpu'):
+    def __init__(self, log_target, theta=None, constraint=None, bounds=[None, None], temperature=None,
+    dtype=torch.float64, device='cpu'):
         self.theta = theta
+        self.constraint = constraint
+        self.bounds = bounds
         self.temperature = temperature
         self.dtype = dtype
         self.device = device

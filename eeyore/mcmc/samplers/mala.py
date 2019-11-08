@@ -7,13 +7,11 @@ from eeyore.api import SerialSampler
 from eeyore.mcmc import MCChain
 
 class MALA(SerialSampler):
-    def __init__(self, model, theta0, dataloader, step=0.1, truncation=[-np.inf, np.inf],
-    keys=['theta', 'target_val', 'accepted']):
+    def __init__(self, model, theta0, dataloader, step=0.1, keys=['theta', 'target_val', 'accepted']):
         super(MALA, self).__init__()
         self.model = model
         self.dataloader = dataloader
         self.step = step
-        self.truncation = truncation
 
         self.keys = ['theta', 'target_val', 'grad_val']
         self.current = {key : None for key in self.keys}
@@ -34,15 +32,18 @@ class MALA(SerialSampler):
         for data, label in self.dataloader:
             proposal_mean = self.current['theta'] + 0.5 * self.step * self.current['grad_val']
 
-            if ((self.truncation[0] == -np.inf) and (self.truncation[1] == np.inf)):
+            if (self.model.constraint is None) or (self.model.constraint == 'transformation'):
                 proposed['theta'] = \
                     proposal_mean + np.sqrt(self.step) * \
                     torch.randn(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
-            else:
+            elif self.model.constraint == 'truncation':
+                l = -np.inf if (self.model.bounds[0] is None) else self.model.bounds[0]
+                u = np.inf if (self.model.bounds[1] is None) else self.model.bounds[1]
+
                 loc = proposal_mean.detach().cpu().numpy()
                 scale = np.sqrt(self.step)
-                a = (self.truncation[0] - loc) / scale
-                b = (self.truncation[1] - loc) / scale
+                a = (l - loc) / scale
+                b = (u - loc) / scale
                 proposed['theta'] = \
                     torch.from_numpy(truncnorm.rvs(a=a, b=b, loc=loc, scale=scale, size=self.model.num_params()) \
                     ).to(dtype=self.model.dtype).to(device=self.model.device)
@@ -51,21 +52,21 @@ class MALA(SerialSampler):
                 self.model.upto_grad_log_target(proposed['theta'].clone().detach(), data, label)
 
             log_rate = proposed['target_val'] - self.current['target_val']
-            if ((self.truncation[0] == -np.inf) and (self.truncation[1] == np.inf)):
+            if (self.model.constraint is None) or (self.model.constraint == 'transformation'):
                 log_rate = log_rate + 0.5 * torch.sum((proposed['theta'] - proposal_mean) ** 2) / self.step
-            else:
+            elif self.model.constraint == 'truncation':
                 log_rate = log_rate - torch.sum(torch.from_numpy( \
                 truncnorm.logpdf(proposed['theta'].detach().cpu().numpy(), a=a, b=b, loc=loc, scale=scale) \
                 ).to(dtype=self.model.dtype).to(device=self.model.device))
 
             proposal_mean = proposed['theta'] + 0.5 * self.step * proposed['grad_val']
 
-            if ((self.truncation[0] == -np.inf) and (self.truncation[1] == np.inf)):
+            if (self.model.constraint is None) or (self.model.constraint == 'transformation'):
                 log_rate = log_rate - 0.5 * torch.sum((self.current['theta'] - proposal_mean) ** 2) / self.step
-            else:
+            elif self.model.constraint == 'truncation':
                 loc = proposal_mean.detach().cpu().numpy()
-                a = (self.truncation[0] - loc) / scale
-                b = (self.truncation[1] - loc) / scale
+                a = (l - loc) / scale
+                b = (u - loc) / scale
                 log_rate = log_rate + torch.sum(torch.from_numpy( \
                 truncnorm.logpdf(self.current['theta'].detach().cpu().numpy(), a=a, b=b, loc=loc, scale=scale) \
                 ).to(dtype=self.model.dtype).to(device=self.model.device))

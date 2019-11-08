@@ -43,14 +43,16 @@ class Model(nn.Module):
 
 class BayesianModel(Model):
     """ Class representing a Bayesian Net """
-    def __init__(self, loss=lambda x, y: binary_cross_entropy(x, y, reduction='sum'), temperature=None,
-    dtype=torch.float64, device='cpu'):
+    def __init__(self, loss=lambda x, y: binary_cross_entropy(x, y, reduction='sum'), constraint=None,
+    bounds=[None, None], temperature=None, dtype=torch.float64, device='cpu'):
     # Use the built-in binarry cross entropy 'F.binary_cross_entropy' once the relevant PyTorch issue is resolved
     # https://github.com/pytorch/pytorch/issues/18945
     # def __init__(self, loss=lambda x, y: F.binary_cross_entropy(x, y, reduction='sum'), temperature=None,
     # dtype=torch.float64, device='cpu'):
         super().__init__(dtype=dtype, device=device)
         self.loss = loss
+        self.constraint = constraint
+        self.bounds = bounds
         self.temperature = temperature
 
     def default_prior(self):
@@ -89,20 +91,42 @@ class BayesianModel(Model):
 
     def log_lik(self, x, y):
         """ Log-likelihood """
-        result = -self.loss(self(x), y)
+        log_lik_val = -self.loss(self(x), y)
         if self.temperature is not None:
-            result = self.temperature * result
-        return result
+            log_lik_val = self.temperature * log_lik_val
+        return log_lik_val
 
     def log_prior(self):
-        result = torch.sum(self.prior.log_prob(self.get_params()))
+        log_prior_val = torch.sum(self.prior.log_prob(self.get_params()))
         if self.temperature is not None:
-            result = self.temperature * result
-        return result
+            log_prior_val = self.temperature * log_prior_val
+        return log_prior_val
 
     def log_target(self, theta, x, y):
         self.set_params(theta)
-        return self.log_lik(x, y) + self.log_prior()
+
+        log_prior_val = self.log_prior()
+
+        if self.constraint is not None:
+            if self.constraint == 'transformation':
+                pass
+            elif self.constraint == 'truncation':
+                if (self.bounds[0] != -float('inf')) and (self.bounds[1] == float('inf')):
+                    theta_transformed = torch.log(theta.clone().detach() - self.bounds[0])
+                elif (self.bounds[0] == -float('inf')) and (self.bounds[1] != float('inf')):
+                    theta_transformed = torch.log(self.bounds[1] - theta.clone().detach())
+                elif (self.bounds[0] != -float('inf')) and (self.bounds[1] != float('inf')):
+                    theta_transformed = - torch.log(
+                        (self.bounds[1] - theta.clone().detach()) / (theta.clone().detach() - self.bounds[0]))
+
+            self.set_params(theta_transformed)
+
+        log_lik_val = self.log_lik(x, y)
+
+        if self.constraint is not None:
+            self.set_params(theta)
+
+        return log_lik_val + log_prior_val
 
     def grad_log_target(self, log_target_val):
         grad_log_target_val = grad(log_target_val, self.parameters(), create_graph=True)
