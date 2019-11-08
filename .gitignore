@@ -5,6 +5,7 @@ eeyore/api/__pycache__/
 eeyore/data/__pycache__/
 eeyore/kernels/__pycache__/
 eeyore/mcmc/__pycache__/
+eeyore/mcmc/chains/__pycache__/
 eeyore/mcmc/samplers/__pycache__/
 eeyore/models/__pycache__/
 eeyore/stats/__pycache__/
