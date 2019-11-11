@@ -1,8 +1,7 @@
 import torch
 
-
-class TransitionKernel:
-    """ Transition kernel for Metropolis Hastings. """
+class Kernel:
+    """ Transition kernel """
 
     def __init__(self, dtype=torch.float64, device='cpu'):
         self.dtype = dtype

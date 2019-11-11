@@ -1,1 +1,1 @@
-from .normal import NormalTransitionKernel
+from .normal import NormalKernel

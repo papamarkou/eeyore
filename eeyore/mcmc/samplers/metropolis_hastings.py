@@ -1,7 +1,7 @@
 import torch
 
 from eeyore.api import SerialSampler
-from eeyore.kernels import NormalTransitionKernel
+from eeyore.kernels import NormalKernel
 from eeyore.mcmc import ChainFile, ChainList
 
 class MetropolisHastings(SerialSampler):
@@ -19,7 +19,7 @@ class MetropolisHastings(SerialSampler):
         self.reset(theta0)
 
     def default_kernel(self):
-        return NormalTransitionKernel(
+        return NormalKernel(
             torch.zeros(self.model.num_params()), torch.ones(self.model.num_params()), dtype=self.model.dtype
         )
 

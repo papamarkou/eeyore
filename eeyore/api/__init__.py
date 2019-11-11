@@ -4,4 +4,4 @@ from .model import (
 
 from .chain import Chain
 from .sampler import Sampler, SerialSampler
-from .transition_kernel import TransitionKernel
+from .kernel import Kernel
