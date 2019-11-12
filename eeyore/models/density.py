@@ -31,7 +31,7 @@ class Density:
         print("-" * 80)
 
     def log_target(self, theta, x, y):
-        self.set_params(theta)
+        self.set_params(theta.clone().detach())
         self.theta.requires_grad_(True)
         result = self._log_target(self.theta, x, y)
         if self.temperature is not None:
