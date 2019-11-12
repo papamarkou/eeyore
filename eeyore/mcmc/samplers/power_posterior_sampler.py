@@ -1,3 +1,5 @@
+import copy
+
 from itertools import chain
 
 import numpy as np
@@ -30,9 +32,10 @@ class PowerPosteriorSampler(Sampler):
         else:
             self.temperatures = temperatures
 
-        self.models = self.num_powers*[model]
+        self.models = []
         for i in range(self.num_powers):
-            self.models[i].temperatures = self.temperatures[i]
+            self.models.append(copy.deepcopy(model))
+            self.models[i].temperature = self.temperatures[i]
 
         self.samplers = []
         for i in range(self.num_powers):
