@@ -3,5 +3,5 @@ from .chains import (
 )
 
 from .samplers import (
-    MetropolisHastings, MALA, SMMALA, PowerPosteriorSampler
+    MetropolisHastings, MALA, SMMALA, DEMC, PowerPosteriorSampler
 )
