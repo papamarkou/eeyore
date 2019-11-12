@@ -2,32 +2,64 @@ import os
 
 import torch
 
+from eeyore.stats import choose_from_subset
 from eeyore.api import Sampler
 from eeyore.kernels import DEMCKernel
 from eeyore.mcmc import ChainFile, ChainList
 from .metropolis_hastings import MetropolisHastings
 
 class DEMC(Sampler):
-    def __init__(self, model, theta0, dataloader, num_chains=10, c=0.1, schedule=lambda n, num_iterations: 1.,
+    def __init__(self, model, theta0, dataloader, num_chains=10, sigma=1., c=0.1, schedule=lambda n, num_iterations: 1.,
     storage='list', keys=['theta', 'target_val', 'accepted'], path=os.getcwd(), mode='a'):
         super(DEMC, self).__init__()
         self.num_chains = num_chains
+        self.sigma = sigma
         self.c = c
         self.schedule = schedule
+        self.temperature = None
 
         self.models = []
+        self.samplers = []
         for i in range(self.num_chains):
             self.models.append(copy.deepcopy(model))
 
+        # Define chains
+        self.chains = []
+        for i in range(self.num_chains):
+            if storage == 'list':
+                self.chains.append(ChainList(keys=keys))
+            elif storage == 'file':
+                chain_path = os.path.join(path, 'chain'+f"{i:0{len(str(num_iterations))}}")
+                if not os.path.exists(chain_path):
+                    os.makedirs(chain_path)
+                self.chains.append(ChainFile(keys=keys, path=chain_path, mode=mode))
+
         self.samplers = []
         for i in range(self.num_chains):
-            self.samplers.append(MetropolisHastings(self.models[i], theta0, dataloader))
+            self.samplers.append(MetropolisHastings(
+                self.models[i], theta0, dataloader, symmetric=True,
+                kernel=DEMCKernel(self.sigma, c=0.1, dtype=self.model.dtype, device=self.model.device),
+                chain=self.chains[i]
+            ))
+
+    def set_temperature(self, n, num_iterations):
+        self.temperature = self.schedule(n, num_iterations)
+        for i in range(self.num_chains):
+            self.models[i].temperature = self.temperature
+
+    def set_kernel(self, i):
+        j = choose_from_subset(self.num_chains, [i])
+        k = choose_from_subset(self.num_chains, [i, j])
+        self.samplers[i].kernel.set_a_and_b(
+            self.samplers[j].current['theta'].clone().detach(), self.samplers[k].current['theta'].clone().detach()
+        )
+        self.samplers[i].kernel.set_density(self.samplers[i].current['theta'].clone().detach())
 
     def draw(self, savestate=False):
-        self.within_chain_moves()
-
-        if savestate:
-            for i in range(self.num_chains):
+        for i in range(self.num_chains):
+            self.set_kernel(i)
+            self.samplers[i].draw(savestate=savestate)
+            if savestate:
                 self.chains[i].update(
                     {k: v.clone().detach() if isinstance(v, torch.Tensor) else v
                     for k, v in self.sampler.current.items()}
@@ -41,6 +73,8 @@ class DEMC(Sampler):
                 start_time = timer()
 
             savestate = False if (n < num_burnin) else True
+
+            self.set_temperature(n, num_iterations)
 
             self.draw(savestate=savestate)
 

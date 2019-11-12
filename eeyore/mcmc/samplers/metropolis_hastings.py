@@ -5,11 +5,12 @@ from eeyore.kernels import NormalKernel
 from eeyore.mcmc import ChainFile, ChainList
 
 class MetropolisHastings(SerialSampler):
-    def __init__(self, model, theta0, dataloader, kernel=None,
+    def __init__(self, model, theta0, dataloader, symmetric=True, kernel=None,
     chain=ChainList(keys=['theta', 'target_val', 'accepted'])):
         super(MetropolisHastings, self).__init__()
         self.model = model
         self.dataloader = dataloader
+        self.symmetric = symmetric
 
         self.kernel = kernel or self.default_kernel()
         self.keys = ['theta', 'target_val', 'accepted']
@@ -36,12 +37,12 @@ class MetropolisHastings(SerialSampler):
             proposed['theta'] = self.kernel.sample()
             proposed['target_val'] = self.model.log_target(proposed['theta'], data, label)
 
-            log_rate = - self.current['target_val'] - self.kernel.log_density(proposed['theta'].clone().detach())
-
-            self.kernel.set_density(proposed['theta'].clone().detach())
-
-            log_rate = \
-                log_rate + proposed['target_val'] + self.kernel.log_density(self.current['theta'].clone().detach())
+            log_rate = proposed['target_val'] - self.current['target_val']
+            if not self.symmetric:
+                log_rate = - self.kernel.log_density(proposed['theta'].clone().detach())
+                self.kernel.set_density(proposed['theta'].clone().detach())
+                log_rate = \
+                    log_rate + proposed['target_val'] + self.kernel.log_density(self.current['theta'].clone().detach())
 
             if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
                 self.current['theta'] = proposed['theta'].clone().detach()
