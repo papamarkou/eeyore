@@ -1,4 +1,5 @@
 import os
+import copy
 
 import torch
 
@@ -38,7 +39,7 @@ class DEMC(Sampler):
         for i in range(self.num_chains):
             self.samplers.append(MetropolisHastings(
                 self.models[i], theta0, dataloader, symmetric=True,
-                kernel=DEMCKernel(self.sigma, c=0.1, dtype=self.model.dtype, device=self.model.device),
+                kernel=DEMCKernel(self.sigma, c=0.1, dtype=self.models[i].dtype, device=self.models[i].device),
                 chain=self.chains[i]
             ))
 
@@ -62,7 +63,7 @@ class DEMC(Sampler):
             if savestate:
                 self.chains[i].update(
                     {k: v.clone().detach() if isinstance(v, torch.Tensor) else v
-                    for k, v in self.sampler.current.items()}
+                    for k, v in self.samplers[i].current.items()}
                 )
 
     def run(self, num_iterations, num_burnin, verbose=False, verbose_step=100):
