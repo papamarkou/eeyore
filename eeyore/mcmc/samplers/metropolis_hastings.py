@@ -39,18 +39,20 @@ class MetropolisHastings(SerialSampler):
 
             log_rate = proposed['target_val'] - self.current['target_val']
             if not self.symmetric:
-                log_rate = - self.kernel.log_density(proposed['theta'].clone().detach())
+                log_rate = log_rate - self.kernel.log_density(proposed['theta'].clone().detach())
                 self.kernel.set_density(proposed['theta'].clone().detach())
-                log_rate = \
-                    log_rate + proposed['target_val'] + self.kernel.log_density(self.current['theta'].clone().detach())
+                log_rate = log_rate + self.kernel.log_density(self.current['theta'].clone().detach())
 
             if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
                 self.current['theta'] = proposed['theta'].clone().detach()
                 self.current['target_val'] = proposed['target_val'].clone().detach()
+                if self.symmetric:
+                    self.kernel.set_density(proposed['theta'].clone().detach())
                 self.current['accepted'] = 1
             else:
                 self.model.set_params(self.current['theta'].clone().detach())
-                self.kernel.set_density(self.current['theta'].clone().detach())
+                if not self.symmetric:
+                    self.kernel.set_density(self.current['theta'].clone().detach())
                 self.current['accepted'] = 0
 
             if savestate:
