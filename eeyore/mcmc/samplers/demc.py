@@ -10,7 +10,7 @@ from eeyore.mcmc import ChainFile, ChainList
 from .metropolis_hastings import MetropolisHastings
 
 class DEMC(Sampler):
-    def __init__(self, model, theta0, dataloader, num_chains=10, sigma=1., c=0.1, schedule=lambda n, num_iterations: 1.,
+    def __init__(self, model, theta0, dataloader, sigma, num_chains=10, c=0.1, schedule=lambda n, num_iterations: 1.,
     storage='list', keys=['theta', 'target_val', 'accepted'], path=os.getcwd(), mode='a'):
         super(DEMC, self).__init__()
         self.num_chains = num_chains
@@ -20,7 +20,6 @@ class DEMC(Sampler):
         self.temperature = None
 
         self.models = []
-        self.samplers = []
         for i in range(self.num_chains):
             self.models.append(copy.deepcopy(model))
 
@@ -30,7 +29,7 @@ class DEMC(Sampler):
             if storage == 'list':
                 self.chains.append(ChainList(keys=keys))
             elif storage == 'file':
-                chain_path = os.path.join(path, 'chain'+f"{i:0{len(str(num_iterations))}}")
+                chain_path = os.path.join(path, 'chain'+f"{i:0{len(str(num_iterations))}}"+'.csv')
                 if not os.path.exists(chain_path):
                     os.makedirs(chain_path)
                 self.chains.append(ChainFile(keys=keys, path=chain_path, mode=mode))

@@ -10,7 +10,7 @@ class DEMCKernel(Kernel):
         super(DEMCKernel, self).__init__(dtype=dtype, device=device)
         self.a = None
         self.b = None
-        self.sigma = sigma
+        self.sigma = sigma.to(self.dtype).to(self.device)
         self.c = c
         self.density = None
 
