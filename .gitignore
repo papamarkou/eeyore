@@ -10,6 +10,7 @@ eeyore/mcmc/samplers/__pycache__/
 eeyore/models/__pycache__/
 eeyore/stats/__pycache__/
 examples/bivariate_normal/.ipynb_checkpoints/
+ examples/bivariate_normal_mixture/.ipynb_checkpoints/
 examples/checks/autograd/.ipynb_checkpoints/
 examples/checks/distributions/.ipynb_checkpoints/
 examples/checks/mcmc/.ipynb_checkpoints/
