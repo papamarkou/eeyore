@@ -23,13 +23,12 @@ class DEMC(Sampler):
         for i in range(self.num_chains):
             self.models.append(copy.deepcopy(model))
 
-        # Define chains
         self.chains = []
         for i in range(self.num_chains):
             if storage == 'list':
                 self.chains.append(ChainList(keys=keys))
             elif storage == 'file':
-                chain_path = os.path.join(path, 'chain'+f"{i:0{len(str(num_iterations))}}"+'.csv')
+                chain_path = os.path.join(path, 'chain'+f"{(i+1):0{len(str(self.num_chains))}}")
                 if not os.path.exists(chain_path):
                     os.makedirs(chain_path)
                 self.chains.append(ChainFile(keys=keys, path=chain_path, mode=mode))
@@ -59,11 +58,6 @@ class DEMC(Sampler):
         for i in range(self.num_chains):
             self.set_kernel(i)
             self.samplers[i].draw(savestate=savestate)
-            if savestate:
-                self.chains[i].update(
-                    {k: v.clone().detach() if isinstance(v, torch.Tensor) else v
-                    for k, v in self.samplers[i].current.items()}
-                )
 
     def run(self, num_iterations, num_burnin, verbose=False, verbose_step=100):
         verbose_msg = "Iteration {:" + str(len(str(num_iterations))) + "}, duration {}"
