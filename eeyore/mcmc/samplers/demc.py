@@ -1,6 +1,9 @@
 import os
 import copy
 
+from timeit import default_timer as timer
+from datetime import timedelta
+
 import torch
 
 from eeyore.stats import choose_from_subset
