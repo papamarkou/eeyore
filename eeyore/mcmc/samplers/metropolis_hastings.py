@@ -25,40 +25,37 @@ class MetropolisHastings(SerialSampler):
         )
 
     def reset(self, theta):
-        data, label = next(iter(self.dataloader))
-
         self.current['theta'] = theta.clone().detach()
-        self.current['target_val'] = self.model.log_target(self.current['theta'].clone().detach(), data, label)
+        self.current['target_val'] = self.model.log_target(self.current['theta'].clone().detach(), self.dataloader)
 
     def draw(self, savestate=False):
         proposed = {key : None for key in self.keys}
 
-        for data, label in self.dataloader:
-            proposed['theta'] = self.kernel.sample()
-            proposed['target_val'] = self.model.log_target(proposed['theta'], data, label)
+        proposed['theta'] = self.kernel.sample()
+        proposed['target_val'] = self.model.log_target(proposed['theta'], self.dataloader)
 
-            log_rate = proposed['target_val'] - self.current['target_val']
-            if not self.symmetric:
-                log_rate = log_rate - self.kernel.log_density(proposed['theta'].clone().detach())
+        log_rate = proposed['target_val'] - self.current['target_val']
+        if not self.symmetric:
+            log_rate = log_rate - self.kernel.log_density(proposed['theta'].clone().detach())
+            self.kernel.set_density(proposed['theta'].clone().detach())
+            log_rate = log_rate + self.kernel.log_density(self.current['theta'].clone().detach())
+
+        if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
+            self.current['theta'] = proposed['theta'].clone().detach()
+            self.current['target_val'] = proposed['target_val'].clone().detach()
+            if self.symmetric:
                 self.kernel.set_density(proposed['theta'].clone().detach())
-                log_rate = log_rate + self.kernel.log_density(self.current['theta'].clone().detach())
+            self.current['accepted'] = 1
+        else:
+            self.model.set_params(self.current['theta'].clone().detach())
+            if not self.symmetric:
+                self.kernel.set_density(self.current['theta'].clone().detach())
+            self.current['accepted'] = 0
 
-            if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
-                self.current['theta'] = proposed['theta'].clone().detach()
-                self.current['target_val'] = proposed['target_val'].clone().detach()
-                if self.symmetric:
-                    self.kernel.set_density(proposed['theta'].clone().detach())
-                self.current['accepted'] = 1
-            else:
-                self.model.set_params(self.current['theta'].clone().detach())
-                if not self.symmetric:
-                    self.kernel.set_density(self.current['theta'].clone().detach())
-                self.current['accepted'] = 0
+        if savestate:
+            self.chain.update(
+                {k: v.clone().detach() if isinstance(v, torch.Tensor) else v for k, v in self.current.items()}
+            )
 
-            if savestate:
-                self.chain.update(
-                    {k: v.clone().detach() if isinstance(v, torch.Tensor) else v for k, v in self.current.items()}
-                )
-
-            self.current['theta'].detach_()
-            self.current['target_val'].detach_()
+        self.current['theta'].detach_()
+        self.current['target_val'].detach_()

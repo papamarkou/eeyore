@@ -30,10 +30,10 @@ class Density:
         print(f"Number of density parameters: {n_params}")
         print("-" * 80)
 
-    def log_target(self, theta, x, y):
+    def log_target(self, theta, dataloader):
         self.set_params(theta.clone().detach())
         self.theta.requires_grad_(True)
-        result = self._log_target(self.theta, x, y)
+        result = self._log_target(self.theta, dataloader)
         if self.temperature is not None:
             result = self.temperature * result
         return result
@@ -43,8 +43,8 @@ class Density:
         grad_log_target_val = torch.cat([g.view(-1) for g in grad_log_target_val])
         return grad_log_target_val
 
-    def upto_grad_log_target(self, theta, x, y):
-        log_target_val = self.log_target(theta, x, y)
+    def upto_grad_log_target(self, theta, dataloader):
+        log_target_val = self.log_target(theta, dataloader)
         grad_log_target_val = self.grad_log_target(log_target_val)
         return log_target_val, grad_log_target_val
 
@@ -61,11 +61,11 @@ class Density:
     def metric_log_target(self, grad_log_target_val):
         return -self.hess_log_target(grad_log_target_val)
 
-    def upto_hess_log_target(self, theta, x, y):
-        log_target_val, grad_log_target_val = self.upto_grad_log_target(theta, x, y)
+    def upto_hess_log_target(self, theta, dataloader):
+        log_target_val, grad_log_target_val = self.upto_grad_log_target(theta, dataloader)
         hess_log_target_val = self.hess_log_target(grad_log_target_val)
         return log_target_val, grad_log_target_val, hess_log_target_val
 
-    def upto_metric_log_target(self, theta, x, y):
-        log_target_val, grad_log_target_val, hess_log_target_val = self.upto_hess_log_target(theta, x, y)
+    def upto_metric_log_target(self, theta, dataloader):
+        log_target_val, grad_log_target_val, hess_log_target_val = self.upto_hess_log_target(theta, dataloader)
         return log_target_val, grad_log_target_val, -hess_log_target_val

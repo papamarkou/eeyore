@@ -102,7 +102,7 @@ class BayesianModel(Model):
             log_prior_val = self.temperature * log_prior_val
         return log_prior_val
 
-    def log_target(self, theta, x, y):
+    def log_target(self, theta, dataloader):
         self.set_params(theta)
 
         log_prior_val = self.log_prior()
@@ -121,6 +121,8 @@ class BayesianModel(Model):
 
             self.set_params(theta_transformed)
 
+        x, y = next(iter(dataloader))
+
         log_lik_val = self.log_lik(x, y)
 
         if self.constraint is not None:
@@ -133,8 +135,8 @@ class BayesianModel(Model):
         grad_log_target_val = torch.cat([g.view(-1) for g in grad_log_target_val])
         return grad_log_target_val
 
-    def upto_grad_log_target(self, theta, x, y):
-        log_target_val = self.log_target(theta, x, y)
+    def upto_grad_log_target(self, theta, dataloader):
+        log_target_val = self.log_target(theta, dataloader)
         grad_log_target_val = self.grad_log_target(log_target_val)
         return log_target_val, grad_log_target_val
 
@@ -152,12 +154,12 @@ class BayesianModel(Model):
     def metric_log_target(self, grad_log_target_val):
         return -self.hess_log_target(grad_log_target_val)
 
-    def upto_hess_log_target(self, theta, x, y):
-        log_target_val, grad_log_target_val = self.upto_grad_log_target(theta, x, y)
+    def upto_hess_log_target(self, theta, dataloader):
+        log_target_val, grad_log_target_val = self.upto_grad_log_target(theta, dataloader)
         hess_log_target_val = self.hess_log_target(grad_log_target_val)
 
         return log_target_val, grad_log_target_val, hess_log_target_val
 
-    def upto_metric_log_target(self, theta, x, y):
-        log_target_val, grad_log_target_val, hess_log_target_val = self.upto_hess_log_target(theta, x, y)
+    def upto_metric_log_target(self, theta, dataloader):
+        log_target_val, grad_log_target_val, hess_log_target_val = self.upto_hess_log_target(theta, dataloader)
         return log_target_val, grad_log_target_val, -hess_log_target_val

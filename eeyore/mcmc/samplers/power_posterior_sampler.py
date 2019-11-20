@@ -17,9 +17,10 @@ from .mala import MALA
 from .smmala import SMMALA
 
 class PowerPosteriorSampler(Sampler):
-    def __init__(self, model, theta0, dataloader, samplers, temperatures=None, b=0.5):
+    def __init__(self, models, theta0s, dataloaders, samplers, temperatures=None, b=0.5):
         super(PowerPosteriorSampler, self).__init__()
-        self.dataloader = dataloader
+        self.models = models
+        self.dataloaders = dataloaders
         self.b = b
 
         self.num_powers = len(samplers)
@@ -32,19 +33,19 @@ class PowerPosteriorSampler(Sampler):
         else:
             self.temperatures = temperatures
 
-        self.models = []
         for i in range(self.num_powers):
-            self.models.append(copy.deepcopy(model))
             self.models[i].temperature = self.temperatures[i]
 
         self.samplers = []
         for i in range(self.num_powers):
             if samplers[i][0] == 'MetropolisHastings':
-                self.samplers.append(MetropolisHastings(self.models[i], theta0, dataloader, **(samplers[i][1])))
+                self.samplers.append(
+                    MetropolisHastings(self.models[i], theta0s[i], self.dataloaders[i], **(samplers[i][1]))
+                )
             elif samplers[i][0] == 'MALA':
-                self.samplers.append(MALA(self.models[i], theta0, dataloader, **(samplers[i][1])))
+                self.samplers.append(MALA(self.models[i], theta0s[i], self.dataloaders[i], **(samplers[i][1])))
             elif samplers[i][0] == 'SMMALA':
-                self.samplers.append(SMMALA(self.models[i], theta0, dataloader, **(samplers[i][1])))
+                self.samplers.append(SMMALA(self.models[i], theta0s[i], self.dataloaders[i], **(samplers[i][1])))
             else:
                 ValueError
 
@@ -91,21 +92,22 @@ class PowerPosteriorSampler(Sampler):
             sampler.draw(savestate=False)
 
     def between_chain_move(self, i, j):
-        data, label = next(iter(self.dataloader))
-
         log_rate = self.categorical_log_prob(i, j) - \
             self.categorical_log_prob(j, i) - \
             self.samplers[i].current['target_val'] - \
             self.samplers[j].current['target_val'] + \
-            self.samplers[i].model.log_target(self.samplers[j].current['theta'].clone().detach(), data, label) + \
-            self.samplers[j].model.log_target(self.samplers[i].current['theta'].clone().detach(), data, label)
+            self.samplers[i].model.log_target(
+                self.samplers[j].current['theta'].clone().detach(), self.samplers[i].dataloader
+            ) + \
+            self.samplers[j].model.log_target(
+                self.samplers[i].current['theta'].clone().detach(), self.samplers[j].dataloader
+            )
 
         if torch.log(
             torch.rand(1, dtype=self.samplers[0].model.dtype, device=self.samplers[0].model.device)
             ) < log_rate:
-            theta = self.samplers[i].current['theta'].clone().detach()
-            self.samplers[i].reset(self.samplers[j].current['theta'])
-            self.samplers[j].reset(theta)
+            self.samplers[i].reset(self.samplers[j].current['theta'].clone().detach())
+            self.samplers[j].reset(self.samplers[i].current['theta'].clone().detach())
         else:
             self.samplers[i].model.set_params(self.samplers[i].current['theta'].clone().detach())
             self.samplers[j].model.set_params(self.samplers[j].current['theta'].clone().detach())
