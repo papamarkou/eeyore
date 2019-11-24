@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 # import torch.nn.functional as F
 
+from torch.utils.data import DataLoader
+
 from torch.autograd import grad
 
 from eeyore.stats import binary_cross_entropy
@@ -89,6 +91,30 @@ class BayesianModel(Model):
                 p.grad = grad_val[i:i+j].view(p.size())
             i += j
 
+    def transform_params_forwards(self, theta):
+        if (self.bounds[0] != -float('inf')) and (self.bounds[1] == float('inf')):
+            theta_transformed = torch.log(theta - self.bounds[0])
+        elif (self.bounds[0] == -float('inf')) and (self.bounds[1] != float('inf')):
+            theta_transformed = torch.log(self.bounds[1] - theta)
+        elif (self.bounds[0] != -float('inf')) and (self.bounds[1] != float('inf')):
+            theta_transformed = - torch.log((self.bounds[1] - theta) / (theta - self.bounds[0]))
+
+    def transform_params_backwards(self, theta):
+        if (self.bounds[0] != -float('inf')) and (self.bounds[1] == float('inf')):
+            theta_transformed = torch.exp(theta) + self.bounds[0]
+        elif (self.bounds[0] == -float('inf')) and (self.bounds[1] != float('inf')):
+            theta_transformed = self.bounds[1] - torch.exp(theta)
+        elif (self.bounds[0] != -float('inf')) and (self.bounds[1] != float('inf')):
+            theta_transformed = (self.bounds[1] - self.bounds[0]) / (1 + torch.exp(-theta)) + self.bounds[0]
+
+    def transform_params(self, theta):
+        if self.constraint == 'transformation':
+            theta_transformed = self.transform_params_backwards(theta)
+        elif self.constraint == 'truncation':
+            theta_transformed = self.transform_params_forwards(theta)
+
+        self.set_params(theta_transformed.clone().detach())
+
     def log_lik(self, x, y):
         """ Log-likelihood """
         log_lik_val = -self.loss(self(x), y)
@@ -108,20 +134,9 @@ class BayesianModel(Model):
         log_prior_val = self.log_prior()
 
         if self.constraint is not None:
-            if self.constraint == 'transformation':
-                pass
-            elif self.constraint == 'truncation':
-                if (self.bounds[0] != -float('inf')) and (self.bounds[1] == float('inf')):
-                    theta_transformed = torch.log(theta.clone().detach() - self.bounds[0])
-                elif (self.bounds[0] == -float('inf')) and (self.bounds[1] != float('inf')):
-                    theta_transformed = torch.log(self.bounds[1] - theta.clone().detach())
-                elif (self.bounds[0] != -float('inf')) and (self.bounds[1] != float('inf')):
-                    theta_transformed = - torch.log(
-                        (self.bounds[1] - theta.clone().detach()) / (theta.clone().detach() - self.bounds[0]))
+            self.trunc_transform_params(theta)
 
-            self.set_params(theta_transformed)
-
-        x, y = next(iter(dataloader))
+        x, y, _ = next(iter(dataloader))
 
         log_lik_val = self.log_lik(x, y)
 
@@ -163,3 +178,31 @@ class BayesianModel(Model):
     def upto_metric_log_target(self, theta, dataloader):
         log_target_val, grad_log_target_val, hess_log_target_val = self.upto_hess_log_target(theta, dataloader)
         return log_target_val, grad_log_target_val, -hess_log_target_val
+
+    def predictive_posterior(self, x, y, chain): # (x, y) must be a single data point
+        n_thetas = len(chain)
+        predictive_posterior_val = 0
+
+        for i in range(n_thetas):
+            if self.constraint is not None:
+                self.transform_params(chain.vals['theta'][i].clone().detach())
+            else:
+                self.set_params(chain.vals['theta'][i].clone().detach())
+
+            predictive_posterior_val = predictive_posterior_val + torch.exp(self.log_lik(x, y))
+
+        predictive_posterior_val = predictive_posterior_val / n_thetas
+
+        return predictive_posterior_val
+
+    def predictive_posterior_sample(self, num_samples, dataset, chain, shuffle=True):
+        dataloader = DataLoader(dataset, batch_size=1, shuffle=shuffle)
+        dataloader_iterator = iter(dataloader)
+        samples = torch.empty(num_samples, dtype=self.dtype, device=self.device)
+        indices = torch.empty(num_samples, dtype=self.dtype, device=self.device)
+
+        for i in range(num_samples):
+            x, y, idx = next(dataloader_iterator)
+            samples[i] = self.predictive_posterior(x, y, chain)
+
+        return samples, indices
