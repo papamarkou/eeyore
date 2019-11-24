@@ -21,6 +21,9 @@ class ChainList(Chain):
     def get_theta(self, i):
         return [theta[i].item() for theta in self.vals['theta']]
 
+    def get_target_vals(self):
+        return [target_val.item() for target_val in self.vals['target_val']]
+
     def state(self):
         current = {}
         for key, val in self.vals.items():

@@ -104,10 +104,11 @@ class PowerPosteriorSampler(Sampler):
             )
 
         if torch.log(
-            torch.rand(1, dtype=self.samplers[0].model.dtype, device=self.samplers[0].model.device)
+            torch.rand(1, dtype=self.samplers[i].model.dtype, device=self.samplers[i].model.device)
             ) < log_rate:
+            state_copy = copy.deepcopy(self.samplers[i].current['theta'].clone().detach())
             self.samplers[i].reset(self.samplers[j].current['theta'].clone().detach())
-            self.samplers[j].reset(self.samplers[i].current['theta'].clone().detach())
+            self.samplers[j].reset(state_copy.clone().detach())
         else:
             self.samplers[i].model.set_params(self.samplers[i].current['theta'].clone().detach())
             self.samplers[j].model.set_params(self.samplers[j].current['theta'].clone().detach())
