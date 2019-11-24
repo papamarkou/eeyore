@@ -199,10 +199,11 @@ class BayesianModel(Model):
         dataloader = DataLoader(dataset, batch_size=1, shuffle=shuffle)
         dataloader_iterator = iter(dataloader)
         samples = torch.empty(num_samples, dtype=self.dtype, device=self.device)
-        indices = torch.empty(num_samples, dtype=self.dtype, device=self.device)
+        indices = torch.empty(num_samples, dtype=torch.int64, device=self.device)
 
         for i in range(num_samples):
             x, y, idx = next(dataloader_iterator)
             samples[i] = self.predictive_posterior(x, y, chain)
+            indices[i] = idx.clone().detach()
 
         return samples, indices
