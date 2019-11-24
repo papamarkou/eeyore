@@ -5,9 +5,9 @@ from eeyore.api import Chain
 class ChainList(Chain):
     """ Monte Carlo chain to store samples in lists """
 
-    def __init__(self, keys=['theta', 'target_val', 'accepted']):
+    def __init__(self, keys=['theta', 'target_val', 'accepted'], vals=None):
         self.keys = keys
-        self.reset()
+        self.reset(vals=vals)
 
     def __repr__(self):
         return f"Markov chain containing {len(self.vals['theta'])} samples."
@@ -15,8 +15,11 @@ class ChainList(Chain):
     def __len__(self):
         return len(self.vals['theta'])
 
-    def reset(self):
-        self.vals = {key : [] for key in self.keys}
+    def reset(self, vals=None):
+        if vals is None:
+            self.vals = {key : [] for key in self.keys}
+        else:
+            self.vals = dict(zip(self.keys, vals))
 
     def get_theta(self, i):
         return [theta[i].item() for theta in self.vals['theta']]

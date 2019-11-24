@@ -5,6 +5,7 @@ import numpy as np
 import torch
 
 from eeyore.api import Chain
+from .chain_list import ChainList
 
 class ChainFile(Chain):
     """ Monte Carlo chain to store samples in file """
@@ -13,6 +14,10 @@ class ChainFile(Chain):
         self.keys = keys
         self.path = path
         self.mode = mode
+
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
+
         self.reset()
 
     def reset(self):
@@ -35,3 +40,34 @@ class ChainFile(Chain):
                 self.vals[key].write(str(state[key])+'\n')
 
         self.close()
+
+    def to_chainlist(self, dtype=torch.float32, device='cpu'):
+        chainlist_keys = []
+        not_converted = []
+        chainlist_vals = []
+
+        for key in self.keys:
+            if (key == 'theta') or (key == 'grad_val'):
+                chainlist_keys.append(key)
+                with open(os.path.join(self.path, key+'.csv'), mode='r') as file:
+                    chainlist_vals.append([
+                        torch.tensor(list(map(float, line.split(',')))).to(dtype).to(device)
+                        for line in file.readlines()
+                    ])
+            elif key == 'target_val':
+                chainlist_keys.append(key)
+                with open(os.path.join(self.path, key+'.csv'), mode='r') as file:
+                    chainlist_vals.append([
+                        torch.tensor(float(line.strip())).to(dtype).to(device)
+                        for line in file.readlines()
+                    ])
+            elif key == 'accepted':
+                chainlist_keys.append(key)
+                with open(os.path.join(self.path, key+'.csv'), mode='r') as file:
+                    chainlist_vals.append([int(line.strip()) for line in file.readlines()])
+            else:
+                not_converted.append(key)
+
+        chainlist = ChainList(keys=chainlist_keys, vals=chainlist_vals)
+
+        return chainlist, not_converted
