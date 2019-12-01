@@ -35,7 +35,7 @@ class SMMALA(SerialSampler):
         # Product of metric tensor with gradient
         self.current['first_term_val'] = self.current['inv_metric_val'] @ self.current['grad_val']
 
-    def draw(self, savestate=False):
+    def draw(self, n, savestate=False):
         proposed = {key : None for key in self.keys}
 
         proposal_mean = self.current['theta'] + 0.5 * self.step * self.current['first_term_val']

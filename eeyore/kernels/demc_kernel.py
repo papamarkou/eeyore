@@ -4,15 +4,20 @@ from torch.distributions import Normal
 from eeyore.api import Kernel
 
 class DEMCKernel(Kernel):
-    """ Gaussian distributed transition kernel """
+    """ Normal transition kernel for DEMC"""
 
-    def __init__(self, sigma, c=0.1, dtype=torch.float64, device='cpu'):
-        super(DEMCKernel, self).__init__(dtype=dtype, device=device)
-        self.a = None
-        self.b = None
-        self.sigma = sigma.to(self.dtype).to(self.device)
+    def __init__(self, a=None, b=None, c=0.1, density=None):
+        self.a = a
+        self.b = b
         self.c = c
-        self.density = None
+        self.density = density
+
+    def init_a_and_b(self, n, dtype, device):
+        self.a = torch.empty(n, dtype=dtype, device=device)
+        self.b = torch.empty(n, dtype=dtype, device=device)
+
+    def init_density(self, n, dtype, device):
+        self.density = Normal(torch.empty(n, dtype=dtype, device=device), torch.empty(n, dtype=dtype, device=device))
 
     def set_a_and_b(self, a, b):
         self.a = a
@@ -21,6 +26,12 @@ class DEMCKernel(Kernel):
     def mean(self, theta):
         return theta + self.c * (self.a - self.b)
 
-    def set_density(self, theta):
-        """ Set the probability density function """
-        self.density = Normal(self.mean(theta).to(self.dtype).to(self.device), self.sigma)
+    def set_density(self, theta, sigma):
+        """ Set normal probability density function """
+        self.density = Normal(self.mean(theta), sigma)
+
+    def set_density_params(self, theta, sigma=None):
+        """ Set the parameters of of normal probability density function """
+        self.density.loc = self.mean(theta)
+        if sigma is not None:
+            self.density.scale = sigma

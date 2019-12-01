@@ -3,10 +3,6 @@ import torch
 class Kernel:
     """ Transition kernel """
 
-    def __init__(self, dtype=torch.float64, device='cpu'):
-        self.dtype = dtype
-        self.device = device
-
     def default_density(self):
         raise NotImplementedError
 
@@ -14,7 +10,7 @@ class Kernel:
         raise NotImplementedError
 
     def log_density(self, state):
-        return torch.sum(self.density.log_prob(state), dtype=self.dtype)
+        return torch.sum(self.density.log_prob(state))
 
     def sample(self):
         """ Sample the probability density function """

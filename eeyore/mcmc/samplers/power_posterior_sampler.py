@@ -87,9 +87,9 @@ class PowerPosteriorSampler(Sampler):
     def get_chain(self):
         return self.chains[self.num_powers-1]
 
-    def within_chain_moves(self):
+    def within_chain_moves(self, n):
         for sampler in self.samplers:
-            sampler.draw(savestate=False)
+            sampler.draw(n, savestate=False)
 
     def between_chain_move(self, i, j):
         log_rate = self.categorical_log_prob(i, j) - \
@@ -119,8 +119,8 @@ class PowerPosteriorSampler(Sampler):
 
             self.between_chain_move(i, j)
 
-    def draw(self, between=True, savestate=False):
-        self.within_chain_moves()
+    def draw(self, n, between=True, savestate=False):
+        self.within_chain_moves(n)
 
         if between:
             self.between_chain_moves()
@@ -142,7 +142,7 @@ class PowerPosteriorSampler(Sampler):
             between = True if ((n % between_step) == 0) else False
             savestate = False if (n < num_burnin) else True
 
-            self.draw(between=between, savestate=savestate)
+            self.draw(n, between=between, savestate=savestate)
 
             if verbose and (((n+1) % verbose_step) == 0):
                 end_time = timer()

@@ -14,7 +14,7 @@ class Sampler:
 class SerialSampler(Sampler):
     """ Sequential MCMC Sampler """
 
-    def draw(self):
+    def draw(self, n):
         raise NotImplementedError
 
     def run(self, num_iterations, num_burnin, verbose=False, verbose_step=100):
@@ -26,9 +26,9 @@ class SerialSampler(Sampler):
                 start_time = timer()
 
             if n < num_burnin:
-                self.draw(savestate=False)
+                self.draw(n, savestate=False)
             else:
-                self.draw(savestate=True)
+                self.draw(n, savestate=True)
 
             if verbose and (((n+1) % verbose_step) == 0):
                 end_time = timer()

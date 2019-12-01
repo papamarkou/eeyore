@@ -24,7 +24,7 @@ class MALA(SerialSampler):
         self.current['target_val'], self.current['grad_val'] = \
             self.model.upto_grad_log_target(self.current['theta'].clone().detach(), self.dataloader)
 
-    def draw(self, savestate=False):
+    def draw(self, n, savestate=False):
         proposed = {key : None for key in self.keys}
 
         proposal_mean = self.current['theta'] + 0.5 * self.step * self.current['grad_val']
