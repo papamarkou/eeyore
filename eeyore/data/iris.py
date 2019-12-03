@@ -170,9 +170,9 @@ class Iris(Dataset):
         ], dtype=self.dtype, device=self.device)
 
         self.labels = torch.cat([
-            torch.tensor(50*[[1, 0, 0]], dtype=self.dtype, device=self.device),
-            torch.tensor(50*[[0, 1, 0]], dtype=self.dtype, device=self.device),
-            torch.tensor(50*[[0, 0, 1]], dtype=self.dtype, device=self.device)
+            torch.tensor([[1, 0, 0] for _ in range(50)], dtype=self.dtype, device=self.device),
+            torch.tensor([[0, 1, 0] for _ in range(50)], dtype=self.dtype, device=self.device),
+            torch.tensor([[0, 0, 1] for _ in range(50)], dtype=self.dtype, device=self.device)
         ])
 
     def __getitem__(self, idx):

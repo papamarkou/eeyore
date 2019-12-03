@@ -218,7 +218,9 @@ class Banknotes(Dataset):
             [214.3, 129.9, 129.9, 10.2]
         ], dtype=self.dtype, device=self.device)
 
-        self.labels = torch.tensor(100*[[0]] + 100*[[1]], dtype=self.dtype, device=self.device)
+        self.labels = torch.tensor(
+            [[0] for _ in range(100)] + [[1] for _ in range(100)], dtype=self.dtype, device=self.device
+        )
 
     def __getitem__(self,  idx):
         return self.data[idx], self.labels[idx]

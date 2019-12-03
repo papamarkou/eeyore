@@ -37,7 +37,7 @@ class RAM(SerialSampler):
 
         randn_sample = torch.randn(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
         proposed['theta'] = self.current['theta'].clone().detach() + self.s @ randn_sample
-        proposed['target_val'] = self.model.log_target(proposed['theta'], self.dataloader)
+        proposed['target_val'] = self.model.log_target(proposed['theta'].clone().detach(), self.dataloader)
 
         log_rate = proposed['target_val'] - self.current['target_val']
 

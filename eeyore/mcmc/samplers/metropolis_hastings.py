@@ -31,7 +31,7 @@ class MetropolisHastings(SerialSampler):
         proposed = {key : None for key in self.keys}
 
         proposed['theta'] = self.kernel.sample()
-        proposed['target_val'] = self.model.log_target(proposed['theta'], self.dataloader)
+        proposed['target_val'] = self.model.log_target(proposed['theta'].clone().detach(), self.dataloader)
 
         log_rate = proposed['target_val'] - self.current['target_val']
         if not self.symmetric:
