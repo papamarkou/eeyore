@@ -1,5 +1,3 @@
-import numpy as np
-
 import torch
 
 from eeyore.api import SerialSampler
@@ -51,7 +49,8 @@ class RAM(SerialSampler):
 
         h = min(1, self.model.num_params() * (n + 1) ** (-self.g))
         self.s = torch.cholesky(self.s @ (
-            torch.eye(self.model.num_params()) + h * (min(1, torch.exp(log_rate).item()) - self.a
+            torch.eye(self.model.num_params(), dtype=self.model.dtype, device=self.model.device) + \
+            h * (min(1, torch.exp(log_rate).item()) - self.a
             ) * torch.ger(randn_sample, randn_sample) / torch.dot(randn_sample, randn_sample).item()) @ self.s.t())
 
         if savestate:
