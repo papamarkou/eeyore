@@ -11,7 +11,7 @@ class MultivariateNormalKernel(Kernel):
 
     def set_density(self, mu, scale_tril):
         """ Set multivariate normal probability density function """
-        self.density = MultivariateNormal(mu, scale_tril)
+        self.density = MultivariateNormal(mu, scale_tril=scale_tril)
 
     def set_density_params(self, mu, scale_tril=None):
         """ Set the parameters of multivariate normal probability density function """
