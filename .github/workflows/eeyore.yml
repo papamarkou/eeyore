@@ -1,4 +1,4 @@
-name: eeyore package
+name: eeyore
 
 on: [push]
 
