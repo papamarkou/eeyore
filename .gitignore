@@ -1,4 +1,3 @@
-dist/
 eeyore.egg-info/
 eeyore/__pycache__/
 eeyore/api/__pycache__/
@@ -11,18 +10,18 @@ eeyore/kernels/__pycache__/
 eeyore/models/__pycache__/
 eeyore/samplers/__pycache__/
 eeyore/stats/__pycache__/
-examples/distributions/bivariate_normal/.ipynb_checkpoints/
-examples/distributions/bivariate_normal_mixture/.ipynb_checkpoints/
 examples/checks/autograd/.ipynb_checkpoints/
 examples/checks/distributions/.ipynb_checkpoints/
 examples/checks/mcmc/.ipynb_checkpoints/
 examples/checks/mlp/.ipynb_checkpoints/
 examples/checks/mlp/binary_classification/.ipynb_checkpoints/
 examples/checks/mlp/multiclass_classification/.ipynb_checkpoints/
+examples/distributions/bivariate_normal/.ipynb_checkpoints/
+examples/distributions/bivariate_normal_mixture/.ipynb_checkpoints/
 examples/distributions/gamma/.ipynb_checkpoints/
 examples/mlp/.ipynb_checkpoints/
 examples/mlp/iris/.ipynb_checkpoints/
 examples/mlp/xor/.ipynb_checkpoints/
 examples/odes/fitzhugh_nagumo/.ipynb_checkpoints/
-src/eeyore.egg-info/
+tests/__pycache__/
 tmp/
