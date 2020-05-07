@@ -1,6 +1,7 @@
 from .am import AM
 from .demc import DEMC
 from .gamc import GAMC
+from .hmc import HMC
 from .mala import MALA
 from .metropolis_hastings import MetropolisHastings
 from .power_posterior_sampler import PowerPosteriorSampler
