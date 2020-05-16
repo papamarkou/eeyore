@@ -1,6 +1,6 @@
-# %% Evaluation of grad and of Hessian of MLP log-target
+# %% Evaluation of grad and of Hessian of MLP log-target for binary classification
 # 
-# Confirm PyTorch and manually coded grad and metric tensor of MLP log-target coincide
+# Confirm PyTorch and manually coded grad and Hessian of MLP log-target coincide
 
 # %% Import packages
 
@@ -15,10 +15,9 @@ from eeyore.datasets import XYDataset
 from eeyore.models.mlp import Hyperparameters, MLP
 from eeyore.stats import binary_cross_entropy
 
+# %% Compute MLP log-target using eeyore API version
 
-# %% # Compute MLP log-target using eeyore API version
-
-# %% Load XOR data
+# Load XOR data
 
 xor = XYDataset.from_eeyore('xor', dtype=torch.float64)
 
@@ -27,7 +26,7 @@ labels = xor.y
 
 dataloader = DataLoader(xor, batch_size=4, shuffle=False)
 
-# %% Setup MLP model
+# Setup MLP model
 
 hparams = Hyperparameters([2, 2, 1])
 model = MLP(
@@ -37,25 +36,23 @@ model = MLP(
 )
 model.prior = Normal(torch.zeros(9, dtype=torch.float64), 100*torch.ones(9, dtype=torch.float64))
 
-# %% Fix model parameters
+# Fix model parameters
 
 theta0 = torch.tensor([1.1, -2.9, -0.4, 0.8, 4.3, 9.2, 4.44, -3.4, 7.2], dtype=torch.float64)
 theta = theta0.clone().detach()
 model.set_params(theta.clone().detach())
 
-# %% Compute MLP log-target using eeyore API version
+# Compute MLP log-target using eeyore API version
 
 lt_result01 = model.log_target(theta, data, labels)
-lt_result01
 
-# %% Confirm that log-target is the sum of log-lik and log-prior
+# Compute sum of log-lik and log-prior using eeyore API version
 
-model.log_lik(data, labels), model.log_prior(), model.log_lik(data, labels)+model.log_prior()
+log_lik_plus_log_prior = model.log_lik(data, labels)+model.log_prior()
 
+# %% Compute MLP log-target fully manually
 
-# %% # Compute MLP log-target fully manually
-
-# %%
+# Define function for computing log-likelihood manually
 
 def log_lik(theta, x, y):
     w1 = theta[0:4].view(2, 2)
@@ -69,43 +66,30 @@ def log_lik(theta, x, y):
     
     return -binary_cross_entropy(h2, y, reduction='sum')
 
-# %%
+# Define function for computing log-prior manually
 
 def log_prior(theta):
     d = Normal(torch.zeros(9, dtype=torch.float64), 100*torch.ones(9, dtype=torch.float64))
     return torch.sum(d.log_prob(theta))
 
-# %%
+# Define function for computing log-target manually
 
 def log_target(theta, x, y):
     return log_lik(theta, x, y)+log_prior(theta)
 
-# %%
+# Compute log-target manually
 
 lt_result02 = log_target(theta, data, labels)
-lt_result02
 
-# %% # Print out values of both log-target implementations
-
-# %%
-
-[p.data.item() for p in [lt_result01, lt_result02]]
-
-
-# %% # Compute grad of MLP log-target using eeyore API version
-
-# %%
+# %% Compute grad of MLP log-target using eeyore API version
 
 theta = theta0.clone().detach()
 
 lt_val01 = model.log_target(theta, data, labels)
 
 glt_result01 = model.grad_log_target(lt_val01)
-glt_result01
 
-# %% # Compute grad of MLP log-target using backward pass
-
-# %%
+# %% Compute grad of MLP log-target using backward pass
 
 theta = theta0.clone().detach()
 
@@ -125,11 +109,8 @@ for p in model.parameters():
 lt_val03.backward()
 
 glt_result02 = torch.cat([p.grad.view(-1) for p in model.parameters()])
-glt_result02
 
-# %% # Compute grad of MLP log-target calling grad() on manually coded log_target()
-
-# %%
+# %% Compute grad of MLP log-target calling grad() on manually coded log_target()
 
 theta = theta0.clone().detach()
 theta.requires_grad_(True)
@@ -137,11 +118,8 @@ theta.requires_grad_(True)
 lt_val04 = log_target(theta, data, labels)
 
 glt_result03, = grad(lt_val04, theta)
-glt_result03
 
-# %% # Compute grad of MLP log-target calling grad() on manually coded log-lik and log-prior
-
-# %% Confirm that log-target is the sum of log-lik and log-prior
+# %% Compute grad of MLP log-target calling grad() on manually coded log-lik and log-prior
 
 theta = theta0.clone().detach()
 theta.requires_grad_(True)
@@ -155,28 +133,14 @@ lp_val = log_prior(theta)
 glp_val, = grad(lp_val, theta)
 
 glt_result04 = gll_val+glp_val
-gll_val, glp_val, glt_result04
 
-
-# %% # Print out values of all grad log-target implementations
-
-# %%
-
-[p for p in [glt_result01, glt_result02, glt_result03, glt_result04]]
-
-
-# %% # Compute metric of MLP log-target using eeyore API version
-
-# %%
+# %% Compute Hessian of MLP log-target using eeyore API version
 
 theta = theta0.clone().detach()
 
 lt_val05, glt_result05, mlt_result01 = model.upto_metric_log_target(theta, data, labels)
-lt_val05, glt_result05, mlt_result01
 
-# %% # Compute metric of MLP log-target calling grad() on manually coded log_target()
-
-# %%
+# %% Compute Hessian of MLP log-target calling grad() on manually coded log_target()
 
 theta = theta0.clone().detach()
 theta.requires_grad_(True)
@@ -191,10 +155,36 @@ for i in range(9):
     hlt_val.append(torch.cat([h.view(-1) for h in deriv_i_wrt_grad]))
 
 mlt_result02 = -torch.cat(hlt_val, 0).reshape(9, 9)
-mlt_result02
 
-# %% # Print out values of both metric log-target implementations
+# %% Run target tests
 
-# %%
+class TestTargets:
+    def test_lt_result01_vs_log_lik_plus_log_prior(self):
+        assert torch.equal(lt_result01, log_lik_plus_log_prior)
+        
+    def test_lt_result01_vs_lt_result02(self):
+        assert torch.equal(lt_result01, lt_result02)
 
-[p for p in [mlt_result01, mlt_result02]]
+# %% Run gradient tests
+
+class TestGradients:        
+    def test_glt_result01_vs_glt_result02(self):
+        assert torch.equal(glt_result01, glt_result02)
+
+    def test_glt_result01_vs_glt_result03(self):
+        assert torch.equal(glt_result01, glt_result03)
+
+    def test_glt_result01_vs_glt_result04(self):
+        assert torch.equal(glt_result01, glt_result04)
+
+    def test_glt_result01_vs_glt_result05(self):
+        assert torch.equal(glt_result01, glt_result05)
+
+    def test_glt_result01_vs_glt_result06(self):
+        assert torch.equal(glt_result01, glt_result06)
+
+# %% Run Hessian tests
+
+class TestHessians:
+    def test_mlt_result01_vs_mlt_result02(self):
+        assert torch.equal(mlt_result01, mlt_result02)

@@ -34,4 +34,4 @@ def test_grad():
     f_val = f(theta)
     f_val.backward()
 
-    assert torch.all(torch.eq(analytical_gradf(theta), theta.grad)).item()
+    assert torch.equal(analytical_gradf(theta), theta.grad)

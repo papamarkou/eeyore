@@ -60,19 +60,9 @@ def logit(p):
 
 result02a = -F.binary_cross_entropy_with_logits(logit(out), labels, reduction='sum')
 
-# Compare result01 with result02a
-
-def test_result01_vs_result02a():
-    assert result01 == result02a
-
 # Compute MLP log-likelihood using Pytorch binary_cross_entropy
 
 result02b = -F.binary_cross_entropy(out, labels, reduction='sum')
-
-# Compare result01 with result02b
-
-def test_result01_vs_result02b():
-    assert result01 == result02b
 
 # %% Compute MLP log-likelihood manually using Pytorch forward output
 
@@ -90,11 +80,6 @@ def log_lik(g, y):
 # Compute MLP log-lik
 
 result03 = log_lik(logit(out), labels)
-
-# Compare result01 with result03
-
-def test_result01_vs_result03():
-    assert result01 == result03
 
 # %% Compute MLP log-likelihood similarly to model.log_lik
 
@@ -114,11 +99,6 @@ out_of_forward01 = forward01(data)
 
 result04 = log_lik(logit(out_of_forward01), labels)
 
-# Compare result01 with result04
-
-def test_result01_vs_result04():
-    assert result01 == result04
-
 # %% Compute MLP log-likelihood manually by invoking linear layer and activation functions
 
 # Define MLP forward02
@@ -137,11 +117,6 @@ out_of_forward02 = forward02(data, 2)
 
 result05 = log_lik(logit(out_of_forward02), labels)
 
-# Compare result01 with result05
-
-def test_result01_vs_result05():
-    assert result01 == result05
-
 # %% Compute MLP log-likelihood computing manually linear layers given activations
 
 # Define MLP forward03
@@ -159,11 +134,6 @@ out_of_forward03 = forward03(data, 2)
 # Compute MLP log-lik given forward03 output
 
 result06 = log_lik(logit(out_of_forward03), labels)
-
-# Compare result01 with result06
-
-def test_result01_vs_result06():
-    assert result01 == result06
 
 # %% Compute MLP log-likelihood fully manually
 
@@ -189,7 +159,26 @@ out_of_forward04 = forward04(data)
 
 result07 = log_lik(logit(out_of_forward04), labels)
 
-# Compare result01 with result07
+# %% Run tests
 
-def test_result01_vs_result07():
-    assert result01 == result07
+class TestLogLiks:
+    def test_result01_vs_result02a(self):
+        assert torch.equal(result01, result02a)
+        
+    def test_result01_vs_result02b(self):
+        assert torch.equal(result01, result02b)    
+
+    def test_result01_vs_result03(self):
+        assert torch.equal(result01, result03)
+
+    def test_result01_vs_result04(self):
+        assert torch.equal(result01, result04)
+
+    def test_result01_vs_result05(self):
+        assert torch.equal(result01, result05)
+
+    def test_result01_vs_result06(self):
+        assert torch.equal(result01, result06)
+
+    def test_result01_vs_result07(self):
+        assert torch.equal(result01, result07)

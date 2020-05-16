@@ -65,9 +65,9 @@ theta = torch.tensor([2., 3.], dtype=torch.float, requires_grad=True)
 
 gradf_val, hessf_val = autograd_gradhessf(theta, f)
 
-class TestHessian:
+class TestDerivatives:
     def test_grad(self):
-        assert torch.all(torch.eq(analytical_gradf(theta), gradf_val)).item()
+        assert torch.equal(analytical_gradf(theta), gradf_val)
         
     def test_hess(self):
-        assert torch.all(torch.eq(analytical_hessf(theta), hessf_val)).item()
+        assert torch.equal(analytical_hessf(theta), hessf_val)
