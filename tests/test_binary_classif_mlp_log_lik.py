@@ -41,6 +41,8 @@ result01 = model.log_lik(data, labels)
 
 # %% Compute MLP log-likelihood using Pytorch forward method, loss and cross entropy
 
+# Evaluate MLP model (Pytorch forward method)
+
 out = model(data)
 # out = model.forward(data)
 
