@@ -27,11 +27,27 @@ class HMC(SerialSampler):
         self.current['target_val'], self.current['grad_val'] = \
             self.model.upto_grad_log_target(self.current['sample'].clone().detach(), x, y)
 
+    def potential_energy(self, position, x, y):
+        return -self.model.log_target(position, x, y)
+
+    def upto_grad_potential_energy(self, position, x, y):
+        target_val, grad_val = self.model.upto_grad_log_target(position, x, y)
+        return -target_val, -grad_val # potential = -target_val, grad_potential = -grad_val
+
+    def log_proposal(self, momentum):
+        return - 0.5 * torch.sum(momentum**2)
+
+    def kinetic_energy(self, momentum):
+        return -self.log_proposal(momentum)
+
+    def hamiltonian(self, potential, momentum):
+        return potential + self.kinetic_energy(momentum)
+
     def leapfrog(self, position0, momentum0, x, y):
         position = position0.clone().detach()
 
         # Make a half step for momentum at the beginning
-        potential, grad_potential = self.model.upto_grad_log_target(position, x, y)
+        potential, grad_potential = self.upto_grad_potential_energy(position, x, y)
         momentum = momentum0 - 0.5 * self.step * grad_potential
 
         # Alternate full steps for position and momentum
@@ -40,21 +56,18 @@ class HMC(SerialSampler):
             position = position + self.step * momentum
 
             # Make a full step for the momentum
-            potential, grad_potential = self.model.upto_grad_log_target(position.clone().detach(), x, y)
+            potential, grad_potential = self.upto_grad_potential_energy(position.clone().detach(), x, y)
             momentum = momentum - self.step * grad_potential
 
         # Make a half step for momentum at the end
         position = position + self.step * momentum
-        potential, grad_potential = self.model.upto_grad_log_target(position.clone().detach(), x, y)
+        potential, grad_potential = self.upto_grad_potential_energy(position.clone().detach(), x, y)
         momentum = momentum - 0.5 * self.step * grad_potential
 
         # Negate momentum at end of trajectory to make the proposal symmetric
         momentum = -momentum
 
-        return position, momentum, potential
-
-    def hamiltonian(self, potential, momentum):
-        return potential + torch.sum(momentum**2)
+        return position, momentum, -potential, -grad_potential # target_val = -potential, grad_val = -grad_potential
 
     def draw(self, x, y, savestate=False):
         proposed = {key : None for key in self.keys}
@@ -64,12 +77,12 @@ class HMC(SerialSampler):
         proposed['momentum'] = torch.randn(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
         self.current['momentum'] = proposed['momentum'].clone().detach()
 
-        proposed['sample'], proposed['momentum'], proposed['target_val'] = \
-            self.leapfrog(self, proposed['sample'], proposed['momentum'], x, y)
+        proposed['sample'], proposed['momentum'], proposed['target_val'], proposed['grad_val'] = \
+            self.leapfrog(proposed['sample'], proposed['momentum'], x, y)
 
         log_rate = \
-            self.hamiltonian(self, self.current['target_val'], self.current['momentum']) \
-            - self.hamiltonian(self, proposed['target_val'], proposed['momentum'])
+            self.hamiltonian(-self.current['target_val'], self.current['momentum']) \
+            - self.hamiltonian(-proposed['target_val'], proposed['momentum'])
 
         if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
             self.current['sample'] = proposed['sample'].clone().detach()
