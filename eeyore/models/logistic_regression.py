@@ -6,9 +6,9 @@ from torch.distributions import Normal
 from .bayesian_model import BayesianModel
 
 class Hyperparameters:
-    def __init__(self, input_size=1, num_classes=1, bias=True, activation=torch.sigmoid):
+    def __init__(self, input_size=1, output_size=1, bias=True, activation=torch.sigmoid):
         self.input_size = input_size
-        self.num_classes = num_classes
+        self.output_size = output_size
         self.bias = bias
         self.activation = activation
 
@@ -18,7 +18,7 @@ class LogisticRegression(BayesianModel):
         super().__init__(
             loss=loss, constraint=constraint, bounds=bounds, temperature=temperature, dtype=dtype, device=device)
         self.hp = hparams
-        self.linear = nn.Linear(self.hp.input_size, self.hp.num_classes, bias=self.hp.bias).to(
+        self.linear = nn.Linear(self.hp.input_size, self.hp.output_size, bias=self.hp.bias).to(
             dtype=self.dtype, device=self.device
         )
         self.prior = prior or self.default_prior()
