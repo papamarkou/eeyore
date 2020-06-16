@@ -1,6 +1,6 @@
 """eeyore
 
-https://github.com/scidom/eeyore
+https://github.com/papamarkou/eeyore
 """
 
 from setuptools import setup
