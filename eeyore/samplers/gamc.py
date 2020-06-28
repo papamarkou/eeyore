@@ -95,29 +95,34 @@ class GAMC(SingleChainSerialSampler):
         if self.current_kernel == 1:
             self.offset = n - 1
 
-    def set_current_state(self, x, y):
-        self.set_kernel_indicators(self.counter.idx+1, self.counter.num_iters)
-
-        if (self.counter.idx > 0) and (self.current_kernel != self.last_kernel):
-            self.reset(
-                self.samplers[self.last_kernel].current['sample'].clone().detach(), x, y, sampler_id=self.current_kernel
-            )
-
-    def reset(self, theta, x, y, sampler_id=None, reset_chain=False):
-        if reset_chain:
-            super().reset()
+    def set_current(self, theta, data=None, sampler_id=None):
+        x, y = super().set_current(theta, data=data)
 
         i = sampler_id if sampler_id is not None else self.current_kernel
 
         if self.sampler_names[i] == 'AM':
-            self.samplers[i].reset(theta, x, y, cov=self.samplers[i].cov0.clone().detach(), reset_chain=reset_chain)
+            self.samplers[i].set_current(theta, data=(x, y), cov=self.samplers[i].cov0.clone().detach())
         elif self.sampler_names[i] == 'RAM':
-            self.samplers[i].reset(theta, x, y, cov=self.samplers[i].cov0, reset_chain=reset_chain)
+            self.samplers[i].set_current(theta, data=(x, y), cov=self.samplers[i].cov0)
         else:
-            self.samplers[i].reset(theta, x, y, reset_chain=reset_chain)
+            self.samplers[i].set_current(theta, data=(x, y))
+
+    def set_current_from_data(self, x, y):
+        self.set_kernel_indicators(self.counter.idx+1, self.counter.num_iters)
+
+        if (self.counter.idx > 0) and (self.current_kernel != self.last_kernel):
+            self.set_current(
+                self.samplers[self.last_kernel].current['sample'].clone().detach(),
+                data=(x, y),
+                sampler_id=self.current_kernel
+            )
+
+    def reset(self, theta, data=None, sampler_id=None):
+        self.set_current(theta, data=data, sampler_id=sampler_id)
+        super().reset()
 
     def draw(self, x, y, savestate=False):
-        self.set_current_state(x, y)
+        self.set_current_from_data(x, y)
 
         if ((self.sampler_names[self.current_kernel] == 'AM') or
             (self.sampler_names[self.current_kernel] == 'RAM')
