@@ -15,18 +15,12 @@ class SMMALA(SingleChainSerialSampler):
         self.transform = transform
 
         self.keys = ['sample', 'target_val', 'grad_val', 'metric_val', 'inv_metric_val', 'first_term_val', 'accepted']
-        self.current = {key : None for key in self.keys}
         self.chain = chain
 
-        x, y = data0 or next(iter(self.dataloader))
-        self.reset(theta0.clone().detach(), x, y)
+        self.set_current(theta0.clone().detach(), data=data0)
 
-    def reset(self, theta, x, y, reset_chain=False):
-        if reset_chain:
-            super().reset()
-
-        self.current = {key : None for key in self.keys}
-        self.current['sample'] = theta
+    def set_current(self, theta, data=None):
+        x, y = super().set_current(theta, data=data)
         self.current['sample'].requires_grad_(True)
         self.current['target_val'], self.current['grad_val'], self.current['metric_val'] = \
             self.model.upto_metric_log_target(self.current['sample'].clone().detach(), x, y)
@@ -39,6 +33,10 @@ class SMMALA(SingleChainSerialSampler):
         # First summand appearing in equation (10) of page 130
         # Product of metric tensor with gradient
         self.current['first_term_val'] = self.current['inv_metric_val'] @ self.current['grad_val']
+
+    def reset(self, theta, data=None):
+        self.set_current(theta, data=data)
+        super().reset()
 
     def draw(self, x, y, savestate=False):
         proposed = {key : None for key in self.keys}

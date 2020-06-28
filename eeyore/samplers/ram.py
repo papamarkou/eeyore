@@ -19,7 +19,6 @@ class RAM(SingleChainSerialSampler):
         else:
             self.cov0 = torch.eye(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
         self.keys = ['sample', 'target_val', 'accepted']
-        self.current = {key : None for key in self.keys}
         self.chain = chain
 
         self.set_current(theta0.clone().detach(), data=data0, cov=self.cov0)

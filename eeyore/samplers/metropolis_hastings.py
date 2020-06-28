@@ -16,7 +16,6 @@ class MetropolisHastings(SingleChainSerialSampler):
 
         self.kernel = kernel or self.default_kernel(theta0.clone().detach())
         self.keys = ['sample', 'target_val', 'accepted']
-        self.current = {key : None for key in self.keys}
         self.chain = chain
 
         self.set_current(theta0.clone().detach(), data=data0)

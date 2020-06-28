@@ -96,7 +96,7 @@ class GAMC(SingleChainSerialSampler):
             self.offset = n - 1
 
     def set_current(self, theta, data=None, sampler_id=None):
-        x, y = super().set_current(theta, data=data)
+        x, y = data or next(iter(self.dataloader))
 
         i = sampler_id if sampler_id is not None else self.current_kernel
 

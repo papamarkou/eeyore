@@ -17,7 +17,6 @@ class MALA(SingleChainSerialSampler):
         self.step = step
 
         self.keys = ['sample', 'target_val', 'grad_val', 'accepted']
-        self.current = {key : None for key in self.keys}
         self.chain = chain
 
         self.set_current(theta0.clone().detach(), data=data0)

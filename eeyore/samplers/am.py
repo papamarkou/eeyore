@@ -27,7 +27,6 @@ class AM(SingleChainSerialSampler):
             self.cov0 = self.transform(self.cov0)
         self.num_accepted = 0
         self.keys = ['sample', 'target_val', 'accepted']
-        self.current = {key : None for key in self.keys}
         self.chain = chain
 
         self.set_current(theta0.clone().detach(), data=data0, cov=self.cov0.clone().detach())

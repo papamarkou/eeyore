@@ -15,7 +15,6 @@ class HMC(SingleChainSerialSampler):
         self.transform = transform
 
         self.keys = ['sample', 'target_val', 'grad_val', 'momentum', 'accepted']
-        self.current = {key : None for key in self.keys}
         self.chain = chain
 
         self.set_current(theta0.clone().detach(), data=data0)

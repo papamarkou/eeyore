@@ -8,9 +8,11 @@ class SingleChainSerialSampler(SerialSampler):
         super().__init__(counter=counter)
 
     def set_current(self, theta, data=None):
-        x, y = data or next(iter(self.dataloader))
+        self.current = {key : None for key in self.keys}
         self.current['sample'] = theta
         
+        x, y = data or next(iter(self.dataloader))
+
         return x, y
 
     def reset(self):
