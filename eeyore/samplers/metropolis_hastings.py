@@ -19,17 +19,13 @@ class MetropolisHastings(SingleChainSerialSampler):
         self.current = {key : None for key in self.keys}
         self.chain = chain
 
-        x, y = data0 or next(iter(self.dataloader))
-        self.reset(theta0.clone().detach(), x, y)
+        self.set_current(theta0.clone().detach(), data=data0)
 
     def default_kernel(self, theta):
         return NormalKernel(theta, torch.ones(self.model.num_params()))
 
-    def reset(self, theta, x, y, sigma=None, scale_tril=None, reset_chain=False):
-        if reset_chain:
-            super().reset()
-
-        self.current['sample'] = theta
+    def set_current(self, theta, data=None, sigma=None, scale_tril=None):
+        x, y = super().set_current(theta, data=data)
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
         if sigma is not None:
             self.kernel.set_density_params(self.current['sample'].clone().detach(), sigma=sigma)
@@ -39,6 +35,10 @@ class MetropolisHastings(SingleChainSerialSampler):
             )
         else:
             self.kernel.set_density_params(self.current['sample'].clone().detach())
+
+    def reset(self, theta, data=None, sigma=None, scale_tril=None):
+        self.set_current(theta, data=data, sigma=sigma, scale_tril=scale_tril)
+        super().reset()
 
     def draw(self, x, y, savestate=False):
         proposed = {key : None for key in self.keys}
