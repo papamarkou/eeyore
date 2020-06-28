@@ -1,11 +1,11 @@
 import torch
 
-from .serial_sampler import SerialSampler
+from .single_chain_serial_sampler import SingleChainSerialSampler
 from eeyore.chains import ChainList
 from eeyore.datasets import DataCounter
 from eeyore.stats import recursive_mean
 
-class AM(SerialSampler):
+class AM(SingleChainSerialSampler):
     def __init__(self, model, theta0,
         dataloader=None, data0=None, counter=None,
         cov0=None, l=0.05, b=1., c=1., t0=2, transform=None,
@@ -33,7 +33,19 @@ class AM(SerialSampler):
         x, y = data0 or next(iter(self.dataloader))
         self.reset(theta0.clone().detach(), x, y, cov=self.cov0.clone().detach())
 
-    def reset(self, theta, x, y, cov=None):
+    def set_current(self, theta, data=None):
+        x, y = super().set_current(theta, data=data)
+        self.current['target_val'], self.current['grad_val'] = \
+            self.model.upto_grad_log_target(self.current['sample'].clone().detach(), x, y)
+
+    def reset(self, theta, data=None):
+        self.set_current(theta, data=data)
+        super().reset()
+
+    def reset(self, theta, x, y, cov=None, reset_chain=False):
+        if reset_chain:
+            super().reset()
+
         self.current['sample'] = theta
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
         self.running_mean = torch.zeros(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)

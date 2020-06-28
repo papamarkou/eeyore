@@ -4,8 +4,10 @@ from .gamc import GAMC
 from .hmc import HMC
 from .mala import MALA
 from .metropolis_hastings import MetropolisHastings
+from .multi_chain_serial_sampler import MultiChainSerialSampler
 from .power_posterior_sampler import PowerPosteriorSampler
 from .ram import RAM
 from .sampler import Sampler
 from .serial_sampler import SerialSampler
+from .single_chain_serial_sampler import SingleChainSerialSampler
 from .smmala import SMMALA

@@ -1,10 +1,10 @@
 import torch
 
-from .serial_sampler import SerialSampler
+from .single_chain_serial_sampler import SingleChainSerialSampler
 from eeyore.chains import ChainList
 from eeyore.datasets import DataCounter
 
-class RAM(SerialSampler):
+class RAM(SingleChainSerialSampler):
     def __init__(self, model, theta0,
         dataloader=None, data0=None, counter=None,
         cov0=None, a=0.234, g=0.7, chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
@@ -25,7 +25,10 @@ class RAM(SerialSampler):
         x, y = data0 or next(iter(self.dataloader))
         self.reset(theta0.clone().detach(), x, y, cov=self.cov0)
 
-    def reset(self, theta, x, y, cov=None):
+    def reset(self, theta, x, y, cov=None, reset_chain=False):
+        if reset_chain:
+            super().reset()
+
         self.current['sample'] = theta
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
         if cov is not None:

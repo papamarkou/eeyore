@@ -42,11 +42,11 @@ sampler.run(num_epochs=11000, num_burnin_epochs=1000)
 
 # %% Compute acceptance rate
 
-sampler.chain.acceptance_rate()
+print('Acceptance rate: {}'.format(sampler.chain.acceptance_rate()))
 
 # %% Compute Monte Carlo mean
 
-sampler.chain.mean()
+print('Monte Carlo mean: {}'.format(sampler.chain.mean()))
 
 # %% Plot traces of simulated Markov chain
 

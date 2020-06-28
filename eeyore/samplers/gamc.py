@@ -7,13 +7,13 @@ from .am import AM
 from .mala import MALA
 from .metropolis_hastings import MetropolisHastings
 from .ram import RAM
-from .serial_sampler import SerialSampler
+from .single_chain_serial_sampler import SingleChainSerialSampler
 from .smmala import SMMALA
 from eeyore.chains import ChainList
 from eeyore.datasets import DataCounter
 from eeyore.kernels import MultivariateNormalKernel
 
-class GAMC(SerialSampler):
+class GAMC(SingleChainSerialSampler):
     def __init__(self, model, theta0, dataloader, samplers, data0=None, counter=None, choose_kernel=None, a=10.,
         chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
         super(GAMC, self).__init__(counter or DataCounter.from_dataloader(dataloader))
@@ -103,15 +103,18 @@ class GAMC(SerialSampler):
                 self.samplers[self.last_kernel].current['sample'].clone().detach(), x, y, sampler_id=self.current_kernel
             )
 
-    def reset(self, theta, x, y, sampler_id=None):
+    def reset(self, theta, x, y, sampler_id=None, reset_chain=False):
+        if reset_chain:
+            super().reset()
+
         i = sampler_id if sampler_id is not None else self.current_kernel
 
         if self.sampler_names[i] == 'AM':
-            self.samplers[i].reset(theta, x, y, cov=self.samplers[i].cov0.clone().detach())
+            self.samplers[i].reset(theta, x, y, cov=self.samplers[i].cov0.clone().detach(), reset_chain=reset_chain)
         elif self.sampler_names[i] == 'RAM':
-            self.samplers[i].reset(theta, x, y, cov=self.samplers[i].cov0)
+            self.samplers[i].reset(theta, x, y, cov=self.samplers[i].cov0, reset_chain=reset_chain)
         else:
-            self.samplers[i].reset(theta, x, y)
+            self.samplers[i].reset(theta, x, y, reset_chain=reset_chain)
 
     def draw(self, x, y, savestate=False):
         self.set_current_state(x, y)

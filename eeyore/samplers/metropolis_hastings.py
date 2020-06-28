@@ -1,11 +1,11 @@
 import torch
 
-from .serial_sampler import SerialSampler
+from .single_chain_serial_sampler import SingleChainSerialSampler
 from eeyore.chains import ChainList
 from eeyore.datasets import DataCounter
 from eeyore.kernels import NormalKernel
 
-class MetropolisHastings(SerialSampler):
+class MetropolisHastings(SingleChainSerialSampler):
     def __init__(self, model, theta0,
         dataloader=None, data0=None, counter=None,
         symmetric=True, kernel=None, chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
@@ -25,7 +25,10 @@ class MetropolisHastings(SerialSampler):
     def default_kernel(self, theta):
         return NormalKernel(theta, torch.ones(self.model.num_params()))
 
-    def reset(self, theta, x, y, sigma=None, scale_tril=None):
+    def reset(self, theta, x, y, sigma=None, scale_tril=None, reset_chain=False):
+        if reset_chain:
+            super().reset()
+
         self.current['sample'] = theta
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
         if sigma is not None:

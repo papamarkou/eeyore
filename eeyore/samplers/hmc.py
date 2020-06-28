@@ -1,11 +1,10 @@
-import numpy as np
 import torch
 
-from .serial_sampler import SerialSampler
+from .single_chain_serial_sampler import SingleChainSerialSampler
 from eeyore.chains import ChainList
 from eeyore.datasets import DataCounter
 
-class HMC(SerialSampler):
+class HMC(SingleChainSerialSampler):
     def __init__(self, model, theta0, dataloader=None, data0=None, counter=None, step=0.1, num_steps=10, transform=None,
     chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
         super(HMC, self).__init__(counter or DataCounter.from_dataloader(dataloader))
@@ -22,7 +21,10 @@ class HMC(SerialSampler):
         x, y = data0 or next(iter(self.dataloader))
         self.reset(theta0.clone().detach(), x, y)
 
-    def reset(self, theta, x, y):
+    def reset(self, theta, x, y, reset_chain=False):
+        if reset_chain:
+            super().reset()
+
         self.current['sample'] = theta
         self.current['target_val'], self.current['grad_val'] = \
             self.model.upto_grad_log_target(self.current['sample'].clone().detach(), x, y)
