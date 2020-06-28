@@ -1,5 +1,7 @@
 import torch
 
+from pathlib import Path
+
 from .chain import Chain
 
 class ChainList(Chain):
@@ -27,11 +29,11 @@ class ChainList(Chain):
     def get_target_vals(self):
         return [target_val.item() for target_val in self.vals['target_val']]
 
-    def state(self):
+    def state(self, i=-1):
         current = {}
         for key, val in self.vals.items():
             try:
-                current[key] = val[-1]
+                current[key] = val[i]
             except IndexError:
                 print(f'WARNING: chain does not have values for {key}.')
                 pass
@@ -58,3 +60,13 @@ class ChainList(Chain):
     def load(self, path):
         """ Load a previously saved chain """
         self.vals = torch.load(path)
+
+    def to_chainfile(self, path=Path.cwd(), mode='a'):
+        from .chain_file import ChainFile
+
+        chainfile = ChainFile(keys=self.keys, path=path, mode=mode)
+
+        for i in range(len(self)):
+            chainfile.update(self.state(i), reset=False, close=False)
+
+        chainfile.close()
