@@ -30,23 +30,10 @@ class AM(SingleChainSerialSampler):
         self.current = {key : None for key in self.keys}
         self.chain = chain
 
-        x, y = data0 or next(iter(self.dataloader))
-        self.reset(theta0.clone().detach(), x, y, cov=self.cov0.clone().detach())
+        self.set_current(theta0.clone().detach(), data=data0, cov=self.cov0.clone().detach())
 
-    def set_current(self, theta, data=None):
+    def set_current(self, theta, data=None, cov=None):
         x, y = super().set_current(theta, data=data)
-        self.current['target_val'], self.current['grad_val'] = \
-            self.model.upto_grad_log_target(self.current['sample'].clone().detach(), x, y)
-
-    def reset(self, theta, data=None):
-        self.set_current(theta, data=data)
-        super().reset()
-
-    def reset(self, theta, x, y, cov=None, reset_chain=False):
-        if reset_chain:
-            super().reset()
-
-        self.current['sample'] = theta
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
         self.running_mean = torch.zeros(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
         self.cov_sum = torch.zeros(
@@ -54,6 +41,10 @@ class AM(SingleChainSerialSampler):
         )
         if cov is not None:
             self.cov = cov
+
+    def reset(self, theta, data=None, cov=None):
+        self.set_current(theta, data=data, cov=cov)
+        super().reset()
 
     def set_cov(self, n, offset=0):
         k = n - offset
