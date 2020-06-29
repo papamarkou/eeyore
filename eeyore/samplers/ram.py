@@ -29,8 +29,8 @@ class RAM(SingleChainSerialSampler):
         if cov is not None:
             self.chol_cov = torch.cholesky(cov)
 
-    def reset(self, theta, data=None, cov=None):
-        self.set_current(theta, data=data, cov=cov)
+    def reset(self, theta, data=None):
+        self.set_current(theta, data=data, cov=self.cov0) # To change cov, change self.cov0
         super().reset()
 
     def draw(self, x, y, savestate=False, offset=0):
