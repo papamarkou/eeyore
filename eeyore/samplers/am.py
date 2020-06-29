@@ -41,8 +41,9 @@ class AM(SingleChainSerialSampler):
         if cov is not None:
             self.cov = cov
 
-    def reset(self, theta, data=None, cov=None):
-        self.set_current(theta, data=data, cov=cov)
+    def reset(self, theta, data=None):
+        self.set_current(theta, data=data, cov=self.cov0.clone().detach()) # To change cov, change self.cov0
+        self.num_accepted = 0
         super().reset()
 
     def set_cov(self, n, offset=0):
