@@ -23,9 +23,11 @@ class MetropolisHastings(SingleChainSerialSampler):
     def default_kernel(self, theta):
         return NormalKernel(theta, torch.ones(self.model.num_params()))
 
-    def set_current(self, theta, data=None, sigma=None, scale_tril=None):
+    def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
+
+    def set_kernel_params(self, sigma=None, scale_tril=None):
         if sigma is not None:
             self.kernel.set_density_params(self.current['sample'].clone().detach(), sigma=sigma)
         elif scale_tril is not None:
