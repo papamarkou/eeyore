@@ -30,7 +30,7 @@ class AM(SingleChainSerialSampler):
         self.chain = chain
 
         self.set_current(theta0.clone().detach(), data=data0)
-        self.set_cov(cov=self.cov0.clone().detach())
+        self.set_cov()
 
     def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)
@@ -48,7 +48,7 @@ class AM(SingleChainSerialSampler):
 
     def reset(self, theta, data=None):
         self.set_current(theta, data=data)
-        self.set_cov(cov=self.cov0.clone().detach()) # To change cov, change self.cov0
+        self.set_cov()
         self.num_accepted = 0
         super().reset()
 
