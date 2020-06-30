@@ -25,8 +25,8 @@ class HMC(SingleChainSerialSampler):
             self.model.upto_grad_log_target(self.current['sample'].clone().detach(), x, y)
 
     def reset(self, theta, data=None):
-        self.set_current(theta, data=data)
         super().reset()
+        self.set_current(theta, data=data)
 
     def potential_energy(self, position, x, y):
         return -self.model.log_target(position, x, y)
