@@ -29,24 +29,30 @@ class AM(SingleChainSerialSampler):
         self.keys = ['sample', 'target_val', 'accepted']
         self.chain = chain
 
-        self.set_current(theta0.clone().detach(), data=data0, cov=self.cov0.clone().detach())
+        self.set_current(theta0.clone().detach(), data=data0)
+        self.set_cov(cov=self.cov0.clone().detach())
 
-    def set_current(self, theta, data=None, cov=None):
+    def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
+
+    def set_cov(self, cov=None):
+        if cov is not None:
+            self.cov = cov
+        else:
+            self.cov = self.cov0.clone().detach()
         self.running_mean = torch.zeros(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
         self.cov_sum = torch.zeros(
             self.model.num_params(), self.model.num_params(), dtype=self.model.dtype, device=self.model.device
         )
-        if cov is not None:
-            self.cov = cov
 
     def reset(self, theta, data=None):
-        self.set_current(theta, data=data, cov=self.cov0.clone().detach()) # To change cov, change self.cov0
+        self.set_current(theta, data=data)
+        self.set_cov(cov=self.cov0.clone().detach()) # To change cov, change self.cov0
         self.num_accepted = 0
         super().reset()
 
-    def set_cov(self, n, offset=0):
+    def set_recursive_cov(self, n, offset=0):
         k = n - offset
         self.cov = (self.cov_sum - (k + 1) * torch.ger(self.running_mean, self.running_mean)) / k
 
@@ -84,7 +90,7 @@ class AM(SingleChainSerialSampler):
             if (self.num_accepted == 0):
                 self.cov = self.cov0.clone().detach()
             else:
-                self.set_cov(self.counter.idx, offset=offset)
+                self.set_recursive_cov(self.counter.idx, offset=offset)
                 if self.transform is not None:
                     self.cov = self.transform(self.cov)
 
