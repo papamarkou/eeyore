@@ -29,8 +29,7 @@ class AM(SingleChainSerialSampler):
         self.keys = ['sample', 'target_val', 'accepted']
         self.chain = chain
 
-        self.set_current(theta0.clone().detach(), data=data0)
-        self.set_cov()
+        self.set_all(theta0.clone().detach(), data=data0)
 
     def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)
@@ -46,11 +45,14 @@ class AM(SingleChainSerialSampler):
             self.model.num_params(), self.model.num_params(), dtype=self.model.dtype, device=self.model.device
         )
 
-    def reset(self, theta, data=None):
+    def set_all(self, theta, data=None, cov=None):
         self.set_current(theta, data=data)
-        self.set_cov()
-        self.num_accepted = 0
+        self.set_cov(cov=cov)
+
+    def reset(self, theta, data=None):
         super().reset()
+        self.set_all(theta, data=data)
+        self.num_accepted = 0
 
     def set_recursive_cov(self, n, offset=0):
         k = n - offset
