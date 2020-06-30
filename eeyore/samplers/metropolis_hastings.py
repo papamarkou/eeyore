@@ -38,8 +38,8 @@ class MetropolisHastings(SingleChainSerialSampler):
             self.kernel.set_density_params(self.current['sample'].clone().detach())
 
     def reset(self, theta, data=None):
-        self.set_current(theta, data=data)
         super().reset()
+        self.set_current(theta, data=data)
 
     def draw(self, x, y, savestate=False):
         proposed = {key : None for key in self.keys}
