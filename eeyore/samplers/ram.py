@@ -21,8 +21,7 @@ class RAM(SingleChainSerialSampler):
         self.keys = ['sample', 'target_val', 'accepted']
         self.chain = chain
 
-        self.set_current(theta0.clone().detach(), data=data0)
-        self.set_cov()
+        self.set_all(theta0.clone().detach(), data=data0)
 
     def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)
@@ -31,10 +30,13 @@ class RAM(SingleChainSerialSampler):
     def set_cov(self, cov=None):
         self.chol_cov = torch.cholesky(cov or self.cov0)
 
-    def reset(self, theta, data=None):
+    def set_all(self, theta, data=None, cov=None):
         self.set_current(theta, data=data)
-        self.set_cov()
+        self.set_cov(cov=cov)
+
+    def reset(self, theta, data=None):
         super().reset()
+        self.set_all(theta, data=data)
 
     def draw(self, x, y, savestate=False, offset=0):
         proposed = {key : None for key in self.keys}
