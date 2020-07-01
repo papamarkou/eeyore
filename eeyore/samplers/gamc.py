@@ -38,7 +38,7 @@ class GAMC(SingleChainSerialSampler):
     def init_samplers(self, samplers, theta0, data0, model):
         self.samplers = []
         for i in range(2):
-            if self.sampler_names[i] == 'MetropolisHastings':
+            if samplers[i][0] == 'MetropolisHastings':
                 self.samplers.append(MetropolisHastings(
                     copy.deepcopy(model),
                     theta0,
@@ -52,25 +52,25 @@ class GAMC(SingleChainSerialSampler):
                     ),
                     chain=self.chain
                 ))
-            if self.sampler_names[i] == 'AM':
+            if samplers[i][0] == 'AM':
                 self.samplers.append(AM(
                     copy.deepcopy(model), theta0,
                     dataloader=None, data0=data0, counter=self.counter,
                     chain=self.chain, **(samplers[i][1])
                 ))
-            if self.sampler_names[i] == 'RAM':
+            if samplers[i][0] == 'RAM':
                 self.samplers.append(RAM(
                     copy.deepcopy(model), theta0,
                     dataloader=None, data0=data0, counter=self.counter,
                     chain=self.chain, **(samplers[i][1])
                 ))
-            elif self.sampler_names[i] == 'MALA':
+            elif samplers[i][0] == 'MALA':
                 self.samplers.append(MALA(
                     copy.deepcopy(model), theta0,
                     dataloader=None, data0=data0, counter=self.counter,
                     chain=self.chain, **(samplers[i][1])
                 ))
-            elif self.sampler_names[i] == 'SMMALA':
+            elif samplers[i][0] == 'SMMALA':
                 self.samplers.append(SMMALA(
                     copy.deepcopy(model), theta0,
                     dataloader=None, data0=data0, counter=self.counter,
@@ -95,31 +95,25 @@ class GAMC(SingleChainSerialSampler):
         if self.current_kernel == 1:
             self.offset = n - 1
 
-    def set_current(self, theta, data=None, sampler_id=None):
-        x, y = data or next(iter(self.dataloader))
-
-        i = sampler_id if sampler_id is not None else self.current_kernel
-
-        if self.sampler_names[i] == 'AM':
-            self.samplers[i].set_current(theta, data=(x, y), cov=self.samplers[i].cov0.clone().detach())
-        elif self.sampler_names[i] == 'RAM':
-            self.samplers[i].set_current(theta, data=(x, y), cov=self.samplers[i].cov0)
-        else:
-            self.samplers[i].set_current(theta, data=(x, y))
+    def set_all(self, theta, data=None, sampler_id=None):        
+        self.samplers[sampler_id or self.current_kernel].set_all(theta, data=data or next(iter(self.dataloader)))
 
     def set_current_from_data(self, x, y):
         self.set_kernel_indicators(self.counter.idx+1, self.counter.num_iters)
 
         if (self.counter.idx > 0) and (self.current_kernel != self.last_kernel):
-            self.set_current(
-                self.samplers[self.last_kernel].current['sample'].clone().detach(),
-                data=(x, y),
-                sampler_id=self.current_kernel
-            )
+            self.set_all(self.samplers[self.last_kernel].current['sample'].clone().detach(), data=(x, y))
 
-    def reset(self, theta, data=None, sampler_id=None):
-        self.set_current(theta, data=data, sampler_id=sampler_id)
+    def reset(self, theta, data=None):
         super().reset()
+
+        x, y = data or next(iter(self.dataloader))
+        for sampler in self.samplers:
+            sampler.set_all(theta, data=(x, y))
+
+        self.last_kernel = None
+        self.current_kernel = None
+        self.offset = 0
 
     def draw(self, x, y, savestate=False):
         self.set_current_from_data(x, y)

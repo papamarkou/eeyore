@@ -15,6 +15,9 @@ class SingleChainSerialSampler(SerialSampler):
 
         return x, y
 
+    def set_all(self, theta, data=None):
+        self.set_current(theta, data=data)
+
     def reset(self):
         self.counter.reset()
         self.chain.reset()
