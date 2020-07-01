@@ -46,12 +46,11 @@ class AM(SingleChainSerialSampler):
         )
 
     def set_all(self, theta, data=None, cov=None):
-        self.set_current(theta, data=data)
+        super().set_all(theta, data=data)
         self.set_cov(cov=cov)
 
-    def reset(self, theta, data=None):
-        super().reset()
-        self.set_all(theta, data=data)
+    def reset(self, theta, data=None, reset_counter=True, reset_chain=True):
+        super().reset(theta, data=data, reset_counter=reset_counter, reset_chain=reset_chain)
         self.num_accepted = 0
 
     def set_recursive_cov(self, n, offset=0):

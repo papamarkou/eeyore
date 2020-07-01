@@ -95,28 +95,35 @@ class GAMC(SingleChainSerialSampler):
         if self.current_kernel == 1:
             self.offset = n - 1
 
-    def set_all(self, theta, data=None, sampler_id=None):        
-        self.samplers[sampler_id or self.current_kernel].set_all(theta, data=data or next(iter(self.dataloader)))
+    def set_all(self, theta, data=None):
+        x, y = data or next(iter(self.dataloader))
+        for sampler in self.samplers:
+            sampler.set_all(theta, data=(x, y))      
 
-    def set_current_from_data(self, x, y):
+    def reset_in_sampler(self, theta, data=None, sampler_id=None, reset_counter=True, reset_chain=True):        
+        self.samplers[sampler_id or self.current_kernel].reset(
+            theta, data=data or next(iter(self.dataloader)), reset_counter=reset_counter, reset_chain=reset_chain
+        )
+
+    def reset_in_sampler_from_data(self, x, y, reset_counter=True, reset_chain=True):
         self.set_kernel_indicators(self.counter.idx+1, self.counter.num_iters)
 
         if (self.counter.idx > 0) and (self.current_kernel != self.last_kernel):
-            self.set_all(self.samplers[self.last_kernel].current['sample'].clone().detach(), data=(x, y))
+            self.reset_in_sampler(
+                self.samplers[self.last_kernel].current['sample'].clone().detach(),
+                data=(x, y),
+                reset_counter=reset_counter,
+                reset_chain=reset_chain
+            )
 
-    def reset(self, theta, data=None):
-        super().reset()
-
-        x, y = data or next(iter(self.dataloader))
-        for sampler in self.samplers:
-            sampler.set_all(theta, data=(x, y))
-
+    def reset(self, theta, data=None, reset_counter=True, reset_chain=True):
+        super().reset(theta, data=data, reset_counter=reset_counter, reset_chain=reset_chain)
         self.last_kernel = None
         self.current_kernel = None
         self.offset = 0
 
     def draw(self, x, y, savestate=False):
-        self.set_current_from_data(x, y)
+        self.set_all_in_sampler_from_data(x, y, reset_counter=False, reset_chain=False)
 
         if ((self.sampler_names[self.current_kernel] == 'AM') or
             (self.sampler_names[self.current_kernel] == 'RAM')

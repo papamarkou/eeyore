@@ -26,10 +26,6 @@ class MALA(SingleChainSerialSampler):
         self.current['target_val'], self.current['grad_val'] = \
             self.model.upto_grad_log_target(self.current['sample'].clone().detach(), x, y)
 
-    def reset(self, theta, data=None):
-        super().reset()
-        self.set_current(theta, data=data)
-
     def draw(self, x, y, savestate=False):
         proposed = {key : None for key in self.keys}
 

@@ -84,25 +84,25 @@ class PowerPosteriorSampler(MultiChainSerialSampler):
     def init_samplers(self, samplers, theta0, data0, model, storage, keys, path, mode):
         self.samplers = []
         for i in range(self.num_chains):
-            if self.sampler_names[i] == 'MetropolisHastings':
+            if samplers[i][0] == 'MetropolisHastings':
                 self.samplers.append(MetropolisHastings(
                     copy.deepcopy(model), theta0,
                     dataloader=None, data0=data0, counter=self.counter,
                     chain=self.init_chain(i, storage, keys, path, mode), **(samplers[i][1])
                 ))
-            elif self.sampler_names[i] == 'MALA':
+            elif samplers[i][0] == 'MALA':
                 self.samplers.append(MALA(
                     copy.deepcopy(model), theta0,
                     dataloader=None, data0=data0, counter=self.counter,
                     chain=self.init_chain(i, storage, keys, path, mode), **(samplers[i][1])
                 ))
-            elif self.sampler_names[i] == 'SMMALA':
+            elif samplers[i][0] == 'SMMALA':
                 self.samplers.append(SMMALA(
                     copy.deepcopy(model), theta0,
                     dataloader=None, data0=data0, counter=self.counter,
                     chain=self.init_chain(i, storage, keys, path, mode), **(samplers[i][1])
                 ))
-            elif self.sampler_names[i] == 'GAMC':
+            elif samplers[i][0] == 'GAMC':
                 self.samplers.append(GAMC(
                     copy.deepcopy(model), theta0,
                     dataloader=None, data0=data0, counter=self.counter,
@@ -153,9 +153,9 @@ class PowerPosteriorSampler(MultiChainSerialSampler):
     def sample_categorical(self, i):
         return self.from_seq_to_events(self.categoricals[i].sample().item(), i)
 
-    def reset(self, theta, x, y, reset_chain=False):
-        for sampler in self.samplers:
-            sampler.reset(theta, x, y, reset_chain=reset_chain)
+    def reset(self, theta, data=None):
+        super().reset(theta, data=data, reset_counter=False, reset_chain=True)
+        self.counter.reset()
 
     def within_chain_move(self, i, x, y):
         if self.sampler_names[i] == 'GAMC':
@@ -179,19 +179,33 @@ class PowerPosteriorSampler(MultiChainSerialSampler):
             state_copy = copy.deepcopy(
                 self.samplers[i].samplers[self.samplers[i].current_kernel].current['sample'].clone().detach()
             )
-            self.samplers[i].reset(
-                self.samplers[j].samplers[self.samplers[j].current_kernel].current['sample'].clone().detach(), x, y,
-                sampler_id=self.samplers[j].current_kernel
+            self.samplers[i].reset_in_sampler(
+                self.samplers[j].samplers[self.samplers[j].current_kernel].current['sample'].clone().detach(),
+                data=(x, y),
+                sampler_id=self.samplers[j].current_kernel,
+                reset_counter=False,
+                reset_chain=False
             )
-            self.samplers[j].reset(state_copy.clone().detach(), x, y, sampler_id=self.samplers[i].current_kernel)
+            self.samplers[j].reset_in_sampler(
+                state_copy.clone().detach(),
+                data=(x, y),
+                sampler_id=self.samplers[i].current_kernel,
+                reset_counter=False,
+                reset_chain=False
+            )
 
             indicator_copy = self.samplers[i].current_kernel
             self.samplers[i].current_kernel = self.samplers[j].current_kernel
             self.samplers[j].current_kernel = indicator_copy
         else:
             state_copy = copy.deepcopy(self.samplers[i].current['sample'].clone().detach())
-            self.samplers[i].reset(self.samplers[j].current['sample'].clone().detach(), x, y)
-            self.samplers[j].reset(state_copy.clone().detach(), x, y)
+            self.samplers[i].reset(
+                self.samplers[j].current['sample'].clone().detach(),
+                data=(x, y),
+                reset_counter=False,
+                reset_chain=False
+            )
+            self.samplers[j].reset(state_copy.clone().detach(), data=(x, y), reset_counter=False, reset_chain=False)
 
     def revert_states(self, sampler_i, sampler_j):
         sampler_i.model.set_params(sampler_i.current['sample'].clone().detach())

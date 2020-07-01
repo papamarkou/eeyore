@@ -18,9 +18,12 @@ class SingleChainSerialSampler(SerialSampler):
     def set_all(self, theta, data=None):
         self.set_current(theta, data=data)
 
-    def reset(self):
-        self.counter.reset()
-        self.chain.reset()
+    def reset(self, theta, data=None, reset_counter=True, reset_chain=True):
+        if reset_counter:
+            self.counter.reset()
+        if reset_chain:
+            self.chain.reset()
+        self.set_all(theta, data=data)
 
     def to_chainfile(self, path=Path.cwd(), mode='a'):
         self.chain.to_chainfile(path=path, mode=mode)

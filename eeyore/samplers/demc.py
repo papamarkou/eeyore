@@ -69,9 +69,9 @@ class DEMC(MultiChainSerialSampler):
         )
         self.samplers[i].kernel.set_density_params(self.samplers[i].current['sample'].clone().detach())
 
-    def reset(self, theta, x, y, reset_chain=False):
-        for sampler in self.samplers:
-            sampler.reset(theta, x, y, reset_chain=reset_chain)
+    def reset(self, theta, data=None):
+        super().reset(theta, data=data, reset_counter=False, reset_chain=True)
+        self.counter.reset()
 
     def draw(self, x, y, savestate=False):
         self.set_temperature(self.counter.idx, self.counter.num_iters)
