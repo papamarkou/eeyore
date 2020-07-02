@@ -53,9 +53,6 @@ class DEMC(MultiChainSerialSampler):
                 symmetric=True, kernel=self.init_kernel(i, model), chain=self.init_chain(i, storage, keys, path, mode)
             ))
 
-    def get_chain(self, i):
-        return self.samplers[i].chain
-
     def set_temperature(self, n, num_iterations):
         temperature = self.schedule(n, num_iterations)
         for i in range(self.num_chains):

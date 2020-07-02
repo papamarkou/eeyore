@@ -58,7 +58,7 @@ class SerialSampler(Sampler):
         num_burnin_epochs,
         path,
         check_conditions=None,
-        verbose=True,
+        verbose=False,
         verbose_step=100
         # chain_basename='chain',
         # accepted_basename='accepted',
@@ -80,33 +80,24 @@ class SerialSampler(Sampler):
                 print(verbose_msg.format(i+1, j, k))
 
             try:
-                theta0 = model.prior.sample()
-                sampler.reset()
-                # sampler = generate_sampler(model, theta0, dataloader)
+                theta0 = self.get_sampler().model.prior.sample()
+                self.reset(theta0.clone().detach(), data=None, reset_counter=True, reset_chain=True)
 
                 start_time = timer()
-                sampler.run(
+                self.run(
                     num_epochs=num_epochs, num_burnin_epochs=num_burnin_epochs, verbose=verbose, verbose_step=verbose_step
                 )
                 end_time = timer()
                 runtime = end_time - start_time
 
-                if ((check_conditions is None) or check_conditions(get_chain(sampler), runtime)):
-                    chain = torch.empty(num_post_burnin_epochs, model.num_params())
-                    for l in range(model.num_params()):
-                        chain[:, l] = torch.tensor(get_chain(sampler).get_sample(k))
+                if ((check_conditions is None) or check_conditions(self.get_chain(), runtime)):
+                    run_path = Path(path).joinpath('run'+str(i+1).zfill(num_chains))
 
-                    with open(Path(outpath).joinpath('{}{:02d}.csv'.format(chain_basename, i+1)), 'w') as file:
-                        np.savetxt(file, chain.cpu().detach().numpy(), delimiter=',', newline='\n', header='')
+                    self.get_chain().to_chainfile(path=run_path, mode='w')
 
-                    with open(Path(outpath).joinpath('{}{:02d}.txt'.format(accepted_basename, i+1)), 'w') as file:
-                        writer = csv.writer(file)
-                        for a in get_chain(sampler).vals['accepted']:
-                            writer.writerow([a])
-
-                    with open(Path(outpath).joinpath('{}{:02d}.txt'.format(runtime_basename, i+1)), 'w') as file:
-                        file.write(str('{}'.format(runtime)))
-                        file.write('\n')
+                    with open(run_path.joinpath('runtime.txt'), 'w') as file:
+                        file.write(str('{}\n'.format(runtime)))
+                        # file.write('\n')
 
                     i = i + 1
 

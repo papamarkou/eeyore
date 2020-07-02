@@ -7,6 +7,12 @@ class SingleChainSerialSampler(SerialSampler):
     def __init__(self, counter):
         super().__init__(counter=counter)
 
+    def get_sampler(self):
+        return self.sampler
+
+    def get_chain(self):
+        return self.chain
+
     def set_current(self, theta, data=None):
         self.current = {key : None for key in self.keys}
         self.current['sample'] = theta

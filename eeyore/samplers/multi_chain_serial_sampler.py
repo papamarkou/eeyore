@@ -7,6 +7,12 @@ class MultiChainSerialSampler(SerialSampler):
     def __init__(self, counter):
         super().__init__(counter=counter)
 
+    def get_sampler(self, i=0):
+        return self.samplers[i]
+    
+    def get_chain(self, i=0):
+        return self.get_sampler(i=i).chain
+
     def set_current(self, theta, data=None):        
         x, y = data or next(iter(self.dataloader))
         for sampler in self.samplers:
