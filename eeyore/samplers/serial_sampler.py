@@ -59,13 +59,9 @@ class SerialSampler(Sampler):
         path,
         check_conditions=None,
         verbose=False,
-        verbose_step=100
-        # chain_basename='chain',
-        # accepted_basename='accepted',
-        # runtime_basename='runtime',
-        # print_acceptance=True,
-        # print_runtime=True,
-        # error_basename='error'
+        verbose_step=100,
+        print_acceptance=False,
+        print_runtime=True
     ):
         if not Path(path).exists():
             Path(path).mkdir(parents=True, exist_ok=True)
@@ -79,6 +75,8 @@ class SerialSampler(Sampler):
             if verbose:
                 print(verbose_msg.format(i+1, j, k))
 
+            run_path = Path(path).joinpath('run'+str(i+1).zfill(num_chains))
+
             try:
                 theta0 = self.get_sampler().model.prior.sample()
                 self.reset(theta0.clone().detach(), data=None, reset_counter=True, reset_chain=True)
@@ -91,13 +89,12 @@ class SerialSampler(Sampler):
                 runtime = end_time - start_time
 
                 if ((check_conditions is None) or check_conditions(self.get_chain(), runtime)):
-                    run_path = Path(path).joinpath('run'+str(i+1).zfill(num_chains))
-
                     self.get_chain().to_chainfile(path=run_path, mode='w')
 
                     with open(run_path.joinpath('runtime.txt'), 'w') as file:
-                        file.write(str('{}\n'.format(runtime)))
+                        # file.write(str('{}'.format(runtime)))
                         # file.write('\n')
+                        file.write("{}\n".format(runtime))
 
                     i = i + 1
 
@@ -111,16 +108,22 @@ class SerialSampler(Sampler):
 
                 if verbose:
                     if print_acceptance:
-                        print('; acceptance rate = {}'.format(get_chain(sampler).acceptance_rate()), end='')
+                        print('; acceptance rate = {}'.format(self.get_chain().acceptance_rate()), end='')
                     if print_runtime:
                         print('; runtime = {}'.format(timedelta(seconds=runtime)), end='')
                     print('\n')
             except RuntimeError as error:
-                with open(Path(outpath).joinpath('{}{:02d}.txt'.format(error_basename, k+1)), 'w') as file:
-                    file.write(error)
-                    file.write('\n')
+                with open(run_path.joinpath('errors', 'error'+str(k+1).zfill(num_chains)), 'w') as file:
+                    # file.write(error)
+                    # file.write('\n')
+                    file.write("{}\n".format(error))
 
                 k = k + 1
 
                 if verbose:
                     print('Failed due to runtime error\n')
+
+        with open(Path(path).joinpath('run_counts.txt')) as file:
+            file.write("{},succesful\n".format(i))
+            file.write("{},unmet_conditions\n".format(j))
+            file.write("{},runtime_errors\n".format(k))
