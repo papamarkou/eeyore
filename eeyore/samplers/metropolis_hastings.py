@@ -6,8 +6,8 @@ from eeyore.datasets import DataCounter
 from eeyore.kernels import NormalKernel
 
 class MetropolisHastings(SingleChainSerialSampler):
-    def __init__(self, model, theta0,
-        dataloader=None, data0=None, counter=None,
+    def __init__(self, model,
+        theta0=None, dataloader=None, data0=None, counter=None,
         symmetric=True, kernel=None, chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
         super(MetropolisHastings, self).__init__(counter or DataCounter.from_dataloader(dataloader))
         self.model = model
@@ -18,7 +18,8 @@ class MetropolisHastings(SingleChainSerialSampler):
         self.keys = ['sample', 'target_val', 'accepted']
         self.chain = chain
 
-        self.set_current(theta0.clone().detach(), data=data0)
+        if theta0 is not None:
+            self.set_current(theta0.clone().detach(), data=data0)
 
     def default_kernel(self, theta):
         return NormalKernel(theta, torch.ones(self.model.num_params()))

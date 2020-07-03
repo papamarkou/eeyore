@@ -15,8 +15,8 @@ from eeyore.chains import ChainFile, ChainList
 from eeyore.datasets import DataCounter
 
 class PowerPosteriorSampler(MultiChainSerialSampler):
-    def __init__(self, model, theta0,
-        dataloader, samplers, data0=None, counter=None,
+    def __init__(self, model, dataloader, samplers,
+        theta0=None, data0=None, counter=None,
         temperature=None, between_step=10, b=0.5, storage='list', keys=['sample', 'target_val', 'accepted'],
         path=Path.cwd(), mode='a', check_input=False):
         super(PowerPosteriorSampler, self).__init__(counter or DataCounter.from_dataloader(dataloader))
@@ -33,7 +33,7 @@ class PowerPosteriorSampler(MultiChainSerialSampler):
         if any(name == 'GAMC' for name in self.sampler_names) and (not self.use_gamc):
             raise ValueError
 
-        self.init_samplers(samplers, theta0, data0 or next(iter(self.dataloader)), model, storage, keys, path, mode)
+        self.init_samplers(model, samplers, theta0, data0 or next(iter(self.dataloader)), storage, keys, path, mode)
 
         self.set_temperature(temperature)
 
@@ -81,31 +81,31 @@ class PowerPosteriorSampler(MultiChainSerialSampler):
 
         return chain
 
-    def init_samplers(self, samplers, theta0, data0, model, storage, keys, path, mode):
+    def init_samplers(self, model, samplers, theta0, data0, storage, keys, path, mode):
         self.samplers = []
         for i in range(self.num_chains):
             if samplers[i][0] == 'MetropolisHastings':
                 self.samplers.append(MetropolisHastings(
-                    copy.deepcopy(model), theta0,
-                    dataloader=None, data0=data0, counter=self.counter,
+                    copy.deepcopy(model),
+                    theta0=theta0, dataloader=None, data0=data0, counter=self.counter,
                     chain=self.init_chain(i, storage, keys, path, mode), **(samplers[i][1])
                 ))
             elif samplers[i][0] == 'MALA':
                 self.samplers.append(MALA(
-                    copy.deepcopy(model), theta0,
-                    dataloader=None, data0=data0, counter=self.counter,
+                    copy.deepcopy(model),
+                    theta0=theta0, dataloader=None, data0=data0, counter=self.counter,
                     chain=self.init_chain(i, storage, keys, path, mode), **(samplers[i][1])
                 ))
             elif samplers[i][0] == 'SMMALA':
                 self.samplers.append(SMMALA(
-                    copy.deepcopy(model), theta0,
-                    dataloader=None, data0=data0, counter=self.counter,
+                    copy.deepcopy(model),
+                    theta0=theta0, dataloader=None, data0=data0, counter=self.counter,
                     chain=self.init_chain(i, storage, keys, path, mode), **(samplers[i][1])
                 ))
             elif samplers[i][0] == 'GAMC':
                 self.samplers.append(GAMC(
-                    copy.deepcopy(model), theta0,
-                    dataloader=None, data0=data0, counter=self.counter,
+                    copy.deepcopy(model),
+                    theta0=theta0, dataloader=None, data0=data0, counter=self.counter,
                     chain=self.init_chain(i, storage, keys, path, mode), **(samplers[i][1])
                 ))
 

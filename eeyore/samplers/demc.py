@@ -11,8 +11,8 @@ from eeyore.kernels import DEMCKernel
 from eeyore.stats import choose_from_subset
 
 class DEMC(MultiChainSerialSampler):
-    def __init__(self, model, theta0, sigmas,
-        dataloader, data0=None, counter=None,
+    def __init__(self, model, sigmas, dataloader,
+        theta0=None, data0=None, counter=None,
         num_chains=10, c=None, schedule=lambda n, num_iterations: 1., storage='list',
         keys=['sample', 'target_val', 'accepted'], path=Path.cwd(), mode='a'):
         super(DEMC, self).__init__(counter or DataCounter.from_dataloader(dataloader))
@@ -23,7 +23,7 @@ class DEMC(MultiChainSerialSampler):
 
         self.c = c or [2.38/np.sqrt(model.num_params()) for i in range(self.num_chains)]
 
-        self.init_samplers(theta0, data0 or next(iter(self.dataloader)), model, storage, keys, path, mode)
+        self.init_samplers(model, theta0, data0 or next(iter(self.dataloader)), storage, keys, path, mode)
 
     def init_kernel(self, i, model):
         kernel = DEMCKernel(c=self.c[i])
@@ -44,12 +44,12 @@ class DEMC(MultiChainSerialSampler):
 
         return chain
 
-    def init_samplers(self, theta0, data0, model, storage, keys, path, mode):
+    def init_samplers(self, model, theta0, data0, storage, keys, path, mode):
         self.samplers = []
         for i in range(self.num_chains):
             self.samplers.append(MetropolisHastings(
-                copy.deepcopy(model), theta0,
-                dataloader=None, data0=data0, counter=self.counter,
+                copy.deepcopy(model),
+                theta0=theta0, dataloader=None, data0=data0, counter=self.counter,
                 symmetric=True, kernel=self.init_kernel(i, model), chain=self.init_chain(i, storage, keys, path, mode)
             ))
 

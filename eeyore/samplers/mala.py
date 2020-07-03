@@ -8,8 +8,8 @@ from eeyore.chains import ChainList
 from eeyore.datasets import DataCounter
 
 class MALA(SingleChainSerialSampler):
-    def __init__(self, model, theta0,
-        dataloader=None, data0=None, counter=None,
+    def __init__(self, model,
+        theta0=None, dataloader=None, data0=None, counter=None,
         step=0.1, chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
         super().__init__(counter or DataCounter.from_dataloader(dataloader))
         self.model = model
@@ -19,7 +19,8 @@ class MALA(SingleChainSerialSampler):
         self.keys = ['sample', 'target_val', 'grad_val', 'accepted']
         self.chain = chain
 
-        self.set_current(theta0.clone().detach(), data=data0)
+        if theta0 is not None:
+            self.set_current(theta0.clone().detach(), data=data0)
 
     def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)

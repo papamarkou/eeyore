@@ -6,8 +6,8 @@ from eeyore.datasets import DataCounter
 from eeyore.stats import recursive_mean
 
 class AM(SingleChainSerialSampler):
-    def __init__(self, model, theta0,
-        dataloader=None, data0=None, counter=None,
+    def __init__(self, model,
+        theta0=None, dataloader=None, data0=None, counter=None,
         cov0=None, l=0.05, b=1., c=1., t0=2, transform=None,
         chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
         super(AM, self).__init__(counter or DataCounter.from_dataloader(dataloader))
@@ -29,7 +29,8 @@ class AM(SingleChainSerialSampler):
         self.keys = ['sample', 'target_val', 'accepted']
         self.chain = chain
 
-        self.set_all(theta0.clone().detach(), data=data0)
+        if theta0 is not None:
+            self.set_all(theta0.clone().detach(), data=data0)
 
     def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)
