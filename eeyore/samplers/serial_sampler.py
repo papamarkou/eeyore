@@ -63,8 +63,8 @@ class SerialSampler(Sampler):
         print_acceptance=False,
         print_runtime=True
     ):
-        if not Path(path).exists():
-            Path(path).mkdir(parents=True, exist_ok=True)
+        #if not Path(path).exists():
+        #    Path(path).mkdir(parents=True, exist_ok=True)
 
         if verbose:
             verbose_msg = self.set_verbose_benchmark_msg(num_chains)
@@ -78,7 +78,7 @@ class SerialSampler(Sampler):
             run_path = Path(path).joinpath('run'+str(i+1).zfill(num_chains))
 
             try:
-                theta0 = self.get_sampler().model.prior.sample()
+                theta0 = self.get_model().prior.sample()
                 self.reset(theta0.clone().detach(), data=None, reset_counter=True, reset_chain=True)
 
                 start_time = timer()

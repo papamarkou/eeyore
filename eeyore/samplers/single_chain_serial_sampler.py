@@ -7,8 +7,8 @@ class SingleChainSerialSampler(SerialSampler):
     def __init__(self, counter):
         super().__init__(counter=counter)
 
-    def get_sampler(self):
-        return self.sampler
+    def get_model(self):
+        return self.model
 
     def get_chain(self):
         return self.chain

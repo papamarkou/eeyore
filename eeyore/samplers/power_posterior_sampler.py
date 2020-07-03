@@ -109,11 +109,8 @@ class PowerPosteriorSampler(MultiChainSerialSampler):
                     chain=self.init_chain(i, storage, keys, path, mode), **(samplers[i][1])
                 ))
 
-    def get_sampler(self, i=None):
-        return super().get_sampler(i=i or self.num_chains-1)
-
-    def get_chain(self, i=None):
-        return self.get_sampler(i=i).chain
+    def default_indicator(self):
+        return  self.num_chains - 1
 
     def set_temperature(self, temperature):
         if (temperature is not None) and (self.num_chains != len(temperature)):

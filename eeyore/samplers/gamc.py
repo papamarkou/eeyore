@@ -77,14 +77,14 @@ class GAMC(SingleChainSerialSampler):
                     chain=self.chain, **(samplers[i][1])
                 ))
 
-    def get_sampler(self, i=None):
-        return self.samplers[i or self.current_kernel]
+    def default_indicator(self):
+        return self.current_kernel
 
-    def get_chain(self):
-        return self.chain
+    def get_model(self, i=None):
+        return self.samplers[i or self.default_indicator()].model
 
     def current_sampler(self):
-        return self.get_sampler(i=None)
+        return self.samplers[self.current_kernel]
 
     def exp_decay_indicator_prob(self, n, num_iters, a=10.):
         return torch.exp(torch.tensor([- a * n / num_iters]))
