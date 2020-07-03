@@ -63,9 +63,6 @@ class SerialSampler(Sampler):
         print_acceptance=False,
         print_runtime=True
     ):
-        #if not Path(path).exists():
-        #    Path(path).mkdir(parents=True, exist_ok=True)
-
         if verbose:
             verbose_msg = self.set_verbose_benchmark_msg(num_chains)
 
@@ -92,8 +89,6 @@ class SerialSampler(Sampler):
                     self.get_chain().to_chainfile(path=run_path, mode='w')
 
                     with open(run_path.joinpath('runtime.txt'), 'w') as file:
-                        # file.write(str('{}'.format(runtime)))
-                        # file.write('\n')
                         file.write("{}\n".format(runtime))
 
                     i = i + 1
@@ -114,8 +109,6 @@ class SerialSampler(Sampler):
                     print('\n')
             except RuntimeError as error:
                 with open(run_path.joinpath('errors', 'error'+str(k+1).zfill(num_chains)), 'w') as file:
-                    # file.write(error)
-                    # file.write('\n')
                     file.write("{}\n".format(error))
 
                 k = k + 1
@@ -123,7 +116,7 @@ class SerialSampler(Sampler):
                 if verbose:
                     print('Failed due to runtime error\n')
 
-        with open(Path(path).joinpath('run_counts.txt')) as file:
+        with open(Path(path).joinpath('run_counts.txt'), 'w') as file:
             file.write("{},succesful\n".format(i))
             file.write("{},unmet_conditions\n".format(j))
             file.write("{},runtime_errors\n".format(k))
