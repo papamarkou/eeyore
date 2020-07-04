@@ -13,6 +13,9 @@ class SingleChainSerialSampler(SerialSampler):
     def get_chain(self):
         return self.chain
 
+    def get_sample(self, i):
+        return self.get_chain().get_sample(i)
+
     def set_current(self, theta, data=None):
         self.current = {key : None for key in self.keys}
         self.current['sample'] = theta
