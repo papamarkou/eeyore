@@ -14,8 +14,8 @@ from eeyore.datasets import DataCounter
 from eeyore.kernels import MultivariateNormalKernel
 
 class GAMC(SingleChainSerialSampler):
-    def __init__(self, model, samplers, theta0=None, dataloader=None, data0=None, counter=None, choose_kernel=None, a=10.,
-        chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
+    def __init__(self, model, samplers, theta0=None, dataloader=None, data0=None, counter=None, choose_kernel=None,
+        a=10., chain=ChainList()):
         super(GAMC, self).__init__(counter or DataCounter.from_dataloader(dataloader))
 
         self.dataloader = dataloader
@@ -104,9 +104,9 @@ class GAMC(SingleChainSerialSampler):
     def set_all(self, theta, data=None):
         x, y = data or next(iter(self.dataloader))
         for sampler in self.samplers:
-            sampler.set_all(theta, data=(x, y))      
+            sampler.set_all(theta, data=(x, y))
 
-    def reset_in_sampler(self, theta, data=None, sampler_id=None, reset_counter=True, reset_chain=True):        
+    def reset_in_sampler(self, theta, data=None, sampler_id=None, reset_counter=True, reset_chain=True):
         self.samplers[sampler_id or self.current_kernel].reset(
             theta, data=data or next(iter(self.dataloader)), reset_counter=reset_counter, reset_chain=reset_chain
         )

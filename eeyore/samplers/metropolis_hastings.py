@@ -8,7 +8,7 @@ from eeyore.kernels import NormalKernel
 class MetropolisHastings(SingleChainSerialSampler):
     def __init__(self, model,
         theta0=None, dataloader=None, data0=None, counter=None,
-        symmetric=True, kernel=None, chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
+        symmetric=True, kernel=None, chain=ChainList()):
         super(MetropolisHastings, self).__init__(counter or DataCounter.from_dataloader(dataloader))
         self.model = model
         self.dataloader = dataloader

@@ -9,7 +9,7 @@ class AM(SingleChainSerialSampler):
     def __init__(self, model,
         theta0=None, dataloader=None, data0=None, counter=None,
         cov0=None, l=0.05, b=1., c=1., t0=2, transform=None,
-        chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
+        chain=ChainList()):
         super(AM, self).__init__(counter or DataCounter.from_dataloader(dataloader))
         self.model = model
         self.dataloader = dataloader

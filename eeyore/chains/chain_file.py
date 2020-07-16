@@ -9,29 +9,31 @@ from eeyore.constants import torch_to_np_types
 class ChainFile(Chain):
     """ Monte Carlo chain to store samples in file """
 
-    def __init__(self, keys=['sample', 'target_val', 'accepted'], path=Path.cwd(), mode='a'):
-        self.keys = keys
+    def __init__(self, keys=None, path=Path.cwd(), mode='a'):
         self.path = path
         self.mode = mode
 
         if not self.path.exists():
             self.path.mkdir(parents=True, exist_ok=True)
 
-        self.reset()
+        self.reset(keys=keys)
 
-    def reset(self):
-        self.vals = {key : open(self.path.joinpath(key+'.csv'), self.mode) for key in self.keys}
+    def reset(self, keys=None):
+        self.vals = {
+            key : open(self.path.joinpath(key+'.csv'), self.mode)
+            for key in keys or ['sample', 'target_val', 'accepted']
+        }
 
     def close(self):
-        for key in self.keys:
+        for key in self.vals.keys():
             self.vals[key].close()
 
     def update(self, state, reset=True, close=True):
         """ Update the chain """
         if reset:
-            self.reset()
+            self.reset(keys=self.vals.keys())
 
-        for key in self.keys:
+        for key in self.vals.keys():
             if isinstance(state[key], torch.Tensor):
                 np.savetxt(self.vals[key], state[key].detach().cpu().numpy().ravel()[np.newaxis], delimiter=',')
             elif isinstance(state[key], np.ndarray):
@@ -66,7 +68,7 @@ class ChainFile(Chain):
         not_converted = []
         chainlist_vals = []
 
-        for key in self.keys:
+        for key in self.vals.keys():
             if key in ('accepted', 'target_val', 'sample', 'grad_val'):
                 chainlist_keys.append(key)
                 with open(self.path.joinpath(key+'.csv'), mode='r') as file:
@@ -76,6 +78,6 @@ class ChainFile(Chain):
             else:
                 not_converted.append(key)
 
-        chainlist = ChainList(keys=chainlist_keys, vals=chainlist_vals)
+        chainlist = ChainList(vals=dict(zip(chainlist_keys, chainlist_vals)))
 
         return chainlist, not_converted

@@ -7,9 +7,8 @@ from .chain import Chain
 class ChainList(Chain):
     """ Monte Carlo chain to store samples in lists """
 
-    def __init__(self, keys=['sample', 'target_val', 'accepted'], vals=None):
-        self.keys = keys
-        self.reset(vals=vals)
+    def __init__(self, keys=None, vals=None):
+        self.reset(keys=keys, vals=vals)
 
     def __repr__(self):
         return f"Markov chain containing {len(self.vals['sample'])} samples."
@@ -17,11 +16,11 @@ class ChainList(Chain):
     def __len__(self):
         return len(self.vals['sample'])
 
-    def reset(self, vals=None):
+    def reset(self, keys=None, vals=None):
         if vals is None:
-            self.vals = {key : [] for key in self.keys}
+            self.vals = {key : [] for key in keys or ['sample', 'target_val', 'accepted']}
         else:
-            self.vals = dict(zip(self.keys, vals))
+            self.vals = vals
 
     def get_sample(self, i):
         return [sample[i].item() for sample in self.vals['sample']]
@@ -41,7 +40,7 @@ class ChainList(Chain):
 
     def update(self, state):
         """ Update the chain """
-        for key in self.keys:
+        for key in self.vals.keys():
             self.vals[key].append(state[key])
 
     def mean(self):
@@ -64,7 +63,7 @@ class ChainList(Chain):
     def to_chainfile(self, path=Path.cwd(), mode='a'):
         from .chain_file import ChainFile
 
-        chainfile = ChainFile(keys=self.keys, path=path, mode=mode)
+        chainfile = ChainFile(keys=self.vals.keys(), path=path, mode=mode)
 
         for i in range(len(self)):
             chainfile.update(self.state(i), reset=False, close=False)

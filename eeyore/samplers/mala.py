@@ -10,7 +10,7 @@ from eeyore.datasets import DataCounter
 class MALA(SingleChainSerialSampler):
     def __init__(self, model,
         theta0=None, dataloader=None, data0=None, counter=None,
-        step=0.1, chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
+        step=0.1, chain=ChainList()):
         super().__init__(counter or DataCounter.from_dataloader(dataloader))
         self.model = model
         self.dataloader = dataloader
