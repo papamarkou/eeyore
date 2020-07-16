@@ -28,6 +28,9 @@ class ChainList(Chain):
     def get_sample(self, i):
         return [sample[i].item() for sample in self.vals['sample']]
 
+    def get_samples(self):
+        return torch.stack(self.vals['sample'])
+
     def get_target_vals(self):
         return [target_val.item() for target_val in self.vals['target_val']]
 
