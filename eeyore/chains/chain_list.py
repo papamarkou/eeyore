@@ -16,6 +16,9 @@ class ChainList(Chain):
     def __len__(self):
         return len(self.vals['sample'])
 
+    def num_params(self):
+        return len(self.vals['sample'][0])
+
     def reset(self, keys=None, vals=None):
         if vals is None:
             self.vals = {key : [] for key in keys or ['sample', 'target_val', 'accepted']}
