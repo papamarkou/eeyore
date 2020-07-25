@@ -129,7 +129,7 @@ class GAMC(SingleChainSerialSampler):
         self.offset = 0
 
     def draw(self, x, y, savestate=False):
-        self.set_all_in_sampler_from_data(x, y, reset_counter=False, reset_chain=False)
+        self.reset_in_sampler_from_data(x, y, reset_counter=False, reset_chain=False)
 
         if ((self.sampler_names[self.current_kernel] == 'AM') or
             (self.sampler_names[self.current_kernel] == 'RAM')

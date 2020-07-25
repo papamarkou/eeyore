@@ -159,7 +159,7 @@ class PowerPosteriorSampler(MultiChainSerialSampler):
 
     def within_chain_move(self, i, x, y):
         if self.sampler_names[i] == 'GAMC':
-            self.samplers[i].set_current_state(x, y)
+            self.samplers[i].reset_in_sampler_from_data(x, y, reset_counter=False, reset_chain=False)
         self.samplers[i].draw(x, y, savestate=False)
 
     def within_chain_moves(self, x, y):

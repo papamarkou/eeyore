@@ -16,14 +16,6 @@ from eeyore.datasets import EmptyXYDataset
 from eeyore.models import Density
 from eeyore.samplers import DEMC
 
-# %% Set up empty data loader
-
-dataloader = DataLoader(EmptyXYDataset())
-
-# for data, label in dataloader:
-#     print("Data :", data)
-#     print("Label :", label)
-
 # %% Set up unnormalized target density
 
 # Using manually defined log_pdf function
@@ -47,20 +39,20 @@ def log_pdf(theta, x, y):
 
 density = Density(log_pdf, 2, dtype=torch.float32)
 
-# %% Set initial values of chains
-
-theta0 = torch.tensor([-1, 1], dtype=torch.float32)
-
-# %% Set proposal scale
+# %% Set number of chains
 
 num_chains = 5
 
-sigmas = [torch.ones(2) for _ in range(num_chains)]
-
 # %% Setup DE-MC sampler
 
-c = [1. for _ in range(num_chains)]
-sampler = DEMC(density, theta0, sigmas, dataloader, num_chains=num_chains, c=c)
+sampler = DEMC(
+    density,
+    [torch.ones(2) for _ in range(num_chains)],
+    DataLoader(EmptyXYDataset()),
+    theta0=torch.tensor([-1, 1], dtype=torch.float32),
+    num_chains=num_chains,
+    c=[1. for _ in range(num_chains)]
+)
 
 # %% Run DE-MC sampler
 
@@ -72,34 +64,32 @@ chain_id = 0
 
 # %% Compute acceptance rate
 
-sampler.samplers[chain_id].chain.acceptance_rate()
+print('Acceptance rate: {}'.format(sampler.get_chain(idx=chain_id).acceptance_rate()))
 
 # %% Compute Monte Carlo mean
 
-sampler.samplers[chain_id].chain.mean()
+print('Monte Carlo mean: {}'.format(sampler.get_chain(idx=chain_id).mean()))
 
 # %% Plot traces of simulated Markov chain
 
-for i in range(sampler.samplers[chain_id].model.num_params()):
-    chain = sampler.samplers[chain_id].chain.get_sample(i)
+for j in range(sampler.get_model(idx=chain_id).num_params()):
+    chain = sampler.get_sample(j, chain_idx=chain_id)
     plt.figure()
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Traceplot of parameter $\theta_{}$'.format(i+1))
+    plt.title(r'Traceplot of parameter $\theta_{}$'.format(j+1))
 
 # %% Plot histograms of marginals of simulated Markov chain
 
 x_hist_range = np.linspace(-4, 4, 100)
 
-for i in range(sampler.samplers[chain_id].model.num_params()):
+for j in range(sampler.get_model(idx=chain_id).num_params()):
     plt.figure()
-    plot = sns.distplot(
-        sampler.samplers[chain_id].chain.get_sample(i), hist=False, color='blue', label='Simulated'
-    )
+    plot = sns.distplot(sampler.get_sample(j, chain_idx=chain_id), hist=False, color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')
     plot.set_ylabel('Relative frequency')
-    plot.set_title(r'Traceplot of parameter $\theta_{}$'.format(i+1))
+    plot.set_title(r'Traceplot of parameter $\theta_{}$'.format(j+1))
     sns.lineplot(x_hist_range, stats.norm.pdf(x_hist_range, 0, 1), color='red', label='Target')
     plot.legend()
 
@@ -113,35 +103,6 @@ contour_grid[:, :, 1] = y_contour_range
 
 target = stats.multivariate_normal([0., 0.], [[1., 0.], [0., 1.]])
 
-plt.scatter(
-    x=sampler.samplers[chain_id].chain.get_sample(0),
-    y=sampler.samplers[chain_id].chain.get_sample(1),
-    marker='+'
-)
+plt.scatter(x=sampler.get_sample(0, chain_idx=chain_id), y=sampler.get_sample(1, chain_idx=chain_id), marker='+')
 plt.contour(x_contour_range, y_contour_range, target.pdf(contour_grid), cmap='copper')
 plt.title('Countours of target and scatterplot of simulated chain');
-
-# %% Plot KDE of target of simulated Markov chain
-
-plot = sns.kdeplot(
-    sampler.samplers[chain_id].chain.get_sample(0),
-    sampler.samplers[chain_id].chain.get_sample(1),
-    shade=True
-)
-plot.set_title('KDE of simulated chain');
-
-# %% Plot KDEs of target and of marginals of simulated Markov chain
-
-plot = sns.jointplot(
-    sampler.samplers[chain_id].chain.get_sample(0),
-    sampler.samplers[chain_id].chain.get_sample(1),
-    kind="kde"
-)
-
-# %% Plot scatter of target and histograms of marginals of simulated Markov chain
-
-sns.jointplot(
-    sampler.samplers[chain_id].chain.get_sample(0),
-    sampler.samplers[chain_id].chain.get_sample(1),
-    kind="scatter"
-);

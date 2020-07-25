@@ -19,14 +19,6 @@ from eeyore.models import Density
 from eeyore.samplers import GAMC
 from eeyore.stats import softabs
 
-# %% Set up empty data loaders
-
-dataloader = DataLoader(EmptyXYDataset())
-
-# for data, label in dataloaders:
-#     print("Data :", data)
-#     print("Label :", label)
-
 # %% Set up unnormalized target density
 
 # Use torch.float64 to avoid numerical issues associated with eigenvalue computation in softabs
@@ -53,10 +45,6 @@ def log_pdf(theta, x, y):
 
 density = Density(log_pdf, 2, dtype=torch.float32)
 
-# %% Set initial values of chains
-
-theta0 = torch.randn(2, dtype=torch.float32)
-
 # %% Setup GAMC sampler
 
 # softabs is used for avoiding issues with Cholesky decomposition
@@ -77,7 +65,13 @@ per_chain_samplers = [
     }]
 ]
 
-sampler = GAMC(density, theta0, dataloader, per_chain_samplers, a=10.)
+sampler = GAMC(
+    density,
+    per_chain_samplers,
+    theta0=torch.randn(2, dtype=torch.float32),
+    dataloader=DataLoader(EmptyXYDataset()),
+    a=10.
+)
 
 # %% Run GAMC sampler
 
@@ -88,14 +82,18 @@ sampler.run(num_epochs=11000, num_burnin_epochs=1000, verbose=True, verbose_step
 end_time = timer()
 print("Time taken: {}".format(timedelta(seconds=end_time-start_time)))
 
+# %% Compute acceptance rate
+
+print('Acceptance rate: {}'.format(sampler.get_chain().acceptance_rate()))
+
 # %% Compute Monte Carlo mean
 
-sampler.chain.mean()
+print('Monte Carlo mean: {}'.format(sampler.get_chain().mean()))
 
 # %% Plot traces of simulated Markov chain
 
-for i in range(sampler.samplers[0].model.num_params()):
-    chain = sampler.chain.get_sample(i)
+for i in range(density.num_params()):
+    chain = sampler.get_sample(i)
     plt.figure()
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
@@ -106,9 +104,9 @@ for i in range(sampler.samplers[0].model.num_params()):
 
 x_hist_range = np.linspace(-4, 4, 100)
 
-for i in range(sampler.samplers[0].model.num_params()):
+for i in range(density.num_params()):
     plt.figure()
-    plot = sns.distplot(sampler.chain.get_sample(i), hist=False, color='blue', label='Simulated')
+    plot = sns.distplot(sampler.get_sample(i), hist=False, color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')
     plot.set_ylabel('Relative frequency')
     plot.set_title(r'Traceplot of parameter $\theta_{}$'.format(i+1))
@@ -125,19 +123,6 @@ contour_grid[:, :, 1] = y_contour_range
 
 target = stats.multivariate_normal([0., 0.], [[1., 0.], [0., 1.]])
 
-plt.scatter(x=sampler.chain.get_sample(0), y=sampler.chain.get_sample(1), marker='+')
+plt.scatter(x=sampler.get_sample(0), y=sampler.get_sample(1), marker='+')
 plt.contour(x_contour_range, y_contour_range, target.pdf(contour_grid), cmap='copper')
 plt.title('Countours of target and scatterplot of simulated chain');
-
-# %% Plot KDE of target of simulated Markov chain
-
-plot = sns.kdeplot(sampler.chain.get_sample(0), sampler.chain.get_sample(1), shade=True)
-plot.set_title('KDE of simulated chain');
-
-# %% Plot KDEs of target and of marginals of simulated Markov chain
-
-plot = sns.jointplot(sampler.chain.get_sample(0), sampler.chain.get_sample(1), kind="kde")
-
-# %% Plot scatter of target and histograms of marginals of simulated Markov chain
-
-sns.jointplot(sampler.chain.get_sample(0), sampler.chain.get_sample(1), kind="scatter");
