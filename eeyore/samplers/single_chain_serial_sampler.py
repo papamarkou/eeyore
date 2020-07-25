@@ -13,13 +13,13 @@ class SingleChainSerialSampler(SerialSampler):
     def get_chain(self):
         return self.chain
 
-    def get_sample(self, i):
-        return self.get_chain().get_sample(i)
+    def get_sample(self, idx):
+        return self.get_chain().get_sample(idx)
 
     def set_current(self, theta, data=None):
         self.current = {key : None for key in self.keys}
         self.current['sample'] = theta
-        
+
         x, y = data or next(iter(self.dataloader))
 
         return x, y

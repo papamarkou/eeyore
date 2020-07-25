@@ -1,4 +1,4 @@
-MIT License
+eeyore is licensed under the MIT License:
 
 Copyright (c) 2019 Theodore Papamarkou
 

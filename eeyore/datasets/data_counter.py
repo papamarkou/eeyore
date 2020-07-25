@@ -76,5 +76,5 @@ class DataCounter:
     def reset(self):
         self.idx = 0
 
-    def increment_idx(self, i=1):
-        self.idx = self.idx + i
+    def increment_idx(self, incr=1):
+        self.idx = self.idx + incr

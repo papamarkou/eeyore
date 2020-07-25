@@ -80,8 +80,8 @@ class GAMC(SingleChainSerialSampler):
     def default_indicator(self):
         return self.current_kernel
 
-    def get_model(self, i=None):
-        return self.samplers[i or self.default_indicator()].model
+    def get_model(self, idx=None):
+        return self.samplers[idx or self.default_indicator()].model
 
     def current_sampler(self):
         return self.samplers[self.current_kernel]

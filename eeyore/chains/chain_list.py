@@ -25,8 +25,8 @@ class ChainList(Chain):
         else:
             self.vals = vals
 
-    def get_sample(self, i):
-        return [sample[i].item() for sample in self.vals['sample']]
+    def get_sample(self, idx):
+        return [sample[idx].item() for sample in self.vals['sample']]
 
     def get_samples(self):
         return torch.stack(self.vals['sample'])
@@ -34,11 +34,11 @@ class ChainList(Chain):
     def get_target_vals(self):
         return [target_val.item() for target_val in self.vals['target_val']]
 
-    def state(self, i=-1):
+    def state(self, idx=-1):
         current = {}
         for key, val in self.vals.items():
             try:
-                current[key] = val[i]
+                current[key] = val[idx]
             except IndexError:
                 print(f'WARNING: chain does not have values for {key}.')
                 pass
