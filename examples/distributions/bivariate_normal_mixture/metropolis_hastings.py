@@ -3,11 +3,14 @@
 # %% Import packages
 
 import matplotlib.pyplot as plt
+import multiprocessing as mp
 import numpy as np
 import scipy.stats as stats
 import seaborn as sns
 import torch
 
+from datetime import timedelta
+from timeit import default_timer as timer
 from torch.distributions import MultivariateNormal
 from torch.utils.data import DataLoader
 
@@ -17,15 +20,6 @@ from eeyore.kernels import IsoSEKernel, MultivariateNormalKernel
 from eeyore.models import Density
 from eeyore.samplers import MetropolisHastings
 from eeyore.stats import mmd
-
-# %% Set up empty data loader
-
-dataset = EmptyXYDataset()
-dataloader = DataLoader(dataset)
-
-# for data, label in dataloader:
-#     print("Data :", data)
-#     print("Label :", label)
 
 # %% Set up unnormalized target density
 
@@ -57,11 +51,15 @@ density = Density(log_pdf, 2, dtype=torch.float32)
 
 # %% Setup Metropolis-Hastings sampler
 
-theta0 = torch.tensor([0., 1.], dtype=torch.float32)
-density.set_params(theta0)
 # kernel = NormalKernel(torch.zeros(2, dtype=torch.float32), torch.ones(2, dtype=torch.float32))
 kernel = MultivariateNormalKernel(torch.zeros(2, dtype=torch.float32), torch.eye(2, dtype=torch.float32))
-sampler = MetropolisHastings(density, theta0, dataloader, symmetric=True, kernel=kernel)
+sampler = MetropolisHastings(
+    density,
+    theta0=torch.tensor([0., 0.], dtype=torch.float32),
+    dataloader=DataLoader(EmptyXYDataset()),
+    symmetric=True,
+    kernel=kernel
+)
 
 # %% Run Metropolis-Hastings sampler
 
@@ -69,16 +67,16 @@ sampler.run(num_epochs=11000, num_burnin_epochs=1000)
 
 # %% Compute acceptance rate
 
-sampler.chain.acceptance_rate()
+print('Acceptance rate: {}'.format(sampler.get_chain().acceptance_rate()))
 
 # %% Compute Monte Carlo mean
 
-sampler.chain.mean()
+print('Monte Carlo mean: {}'.format(sampler.get_chain().mean()))
 
 # %% Plot traces of simulated Markov chain
 
 for i in range(density.num_params()):
-    chain = sampler.chain.get_sample(i)
+    chain = sampler.get_sample(i)
     plt.figure()
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
@@ -87,20 +85,18 @@ for i in range(density.num_params()):
 
 # %% Plot histograms of marginals of simulated Markov chain
 
+x_hist_range = np.linspace(-7, 7, 100)
+
 for i in range(density.num_params()):
-    range_min = min([means[j][i].item() for j in range(2)])
-    range_max = max([means[j][i].item() for j in range(2)])
-    range_len = range_max - range_min
-    hist_range = np.linspace(range_min - 0.95 * abs(range_len), range_max + 0.95 * abs(range_len), 100)
     plt.figure()
-    plot = sns.distplot(sampler.chain.get_sample(i), hist=False, color='blue', label='Simulated')
+    plot = sns.distplot(sampler.get_sample(i), hist=False, color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')
     plot.set_ylabel('Relative frequency')
     plot.set_title(r'Traceplot of parameter $\theta_{}$'.format(i+1))
     sns.lineplot(
-        hist_range,
-        weights[0] * stats.norm.pdf(hist_range, means[0][i].item(), covs[0][i, i]) +
-        weights[1] * stats.norm.pdf(hist_range, means[1][i].item(), covs[1][i, i]),
+        x_hist_range,
+        weights[0] * stats.norm.pdf(x_hist_range, means[0][i].item(), covs[0][i, i]) +
+        weights[1] * stats.norm.pdf(x_hist_range, means[1][i].item(), covs[1][i, i]),
         color='red',
         label='Target'
     )
@@ -108,18 +104,7 @@ for i in range(density.num_params()):
 
 # %% Plot scatter of simulated Markov chain
 
-xmin = min([means[j][0].item() for j in range(2)])
-xmax = max([means[j][0].item() for j in range(2)])
-xlen = xmax - xmin
-
-ymin = min([means[j][1].item() for j in range(2)])
-ymax = max([means[j][1].item() for j in range(2)])
-ylen = ymax - ymin
-
-x_contour_range, y_contour_range = np.mgrid[
-    (xmin - 0.95 * abs(xlen)):(xmax + 0.95 * abs(xlen)):.01,
-    (ymin - 0.95 * abs(ylen)):(ymax + 0.95 * abs(ylen)):.01
-]
+x_contour_range, y_contour_range = np.mgrid[-5:5:.01, -5:5:.01]
 
 contour_grid = np.empty(x_contour_range.shape+(2,))
 contour_grid[:, :, 0] = x_contour_range
@@ -133,22 +118,9 @@ def target_scipy(theta):
         weights[1] * stats.multivariate_normal(means[1].cpu().numpy(), covs[1].cpu().numpy()).pdf(theta)
     )
 
-plt.scatter(x=sampler.chain.get_sample(0), y=sampler.chain.get_sample(1), marker='+')
+plt.scatter(x=sampler.get_sample(0), y=sampler.get_sample(1), marker='+')
 plt.contour(x_contour_range, y_contour_range, target_scipy(contour_grid), cmap='copper')
 plt.title('Countours of target and scatterplot of simulated chain');
-
-# %% Plot KDE of target of simulated Markov chain
-
-plot = sns.kdeplot(sampler.chain.get_sample(0), sampler.chain.get_sample(1), shade=True)
-plot.set_title('KDE of simulated chain');
-
-# %% Plot KDEs of target and of marginals of simulated Markov chain
-
-plot = sns.jointplot(sampler.chain.get_sample(0), sampler.chain.get_sample(1), kind="kde")
-
-# %% Plot scatter of target and histograms of marginals of simulated Markov chain
-
-sns.jointplot(sampler.chain.get_sample(0), sampler.chain.get_sample(1), kind="scatter");
 
 # %% Sample directly from mixture
 
@@ -170,18 +142,47 @@ def sample_mixture(n):
 
 mixture_sample = sample_mixture(num_samples_max)
 
-# %% Compute MMD between MCMC samples and samples generated directly from mixture
+# %% Compute MMD between MCMC samples and samples generated directly from mixture using multiprocessing
+
+# Step 1: Initialize multiprocessing pool
+
+pool = mp.Pool(mp.cpu_count())
+# pool = mp.Pool(4)
+
+# Step 2: `pool.starmap` the `mmd` function
+
+args = [(sampler.chain.vals['sample'][0:n], mixture_sample[0:n], IsoSEKernel()) for n in num_samples]
+
+start_time = timer()
+
+mmd_vals_mp = pool.starmap(mmd, args)
+
+end_time = timer()
+print("Time taken to compute MMD with multiprocessing: {}".format(timedelta(seconds=end_time-start_time)))
+
+# Step 3: Close the pool
+pool.close()    
+
+mmd_vals_mp = [mmd_val_mp.item() for mmd_val_mp in mmd_vals_mp]
+
+# Plot MMD between MCMC samples and samples generated directly from mixture
+
+plot = sns.lineplot(num_samples, mmd_vals_mp)
+plot.set_title('MMD btwn MCMC samples and sample() - multiprocessing');
+
+# %% Compute MMD between MCMC samples and samples generated directly from mixture without using multiprocessing
 
 mmd_vals = []
+
+start_time = timer()
 
 for n in num_samples:
     mmd_vals.append(mmd(sampler.chain.vals['sample'][0:n], mixture_sample[0:n], IsoSEKernel()).item())
 
-
-# In[16]:
-
+end_time = timer()
+print("Time taken to compute MMD without multiprocessing: {}".format(timedelta(seconds=end_time-start_time)))
 
 # Plot MMD between MCMC samples and samples generated directly from mixture
 
 plot = sns.lineplot(num_samples, mmd_vals)
-plot.set_title('MMD between MCMC samples and sample()');
+plot.set_title('MMD btwn MCMC samples and sample() - serial');
