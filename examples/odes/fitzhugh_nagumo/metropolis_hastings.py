@@ -82,7 +82,7 @@ num_post_burnin = num_iterations - num_burnin
 # Setup sampler
 theta0 = model.prior.sample()
 chain_list = ChainList(keys=['sample', 'target_val', 'accepted'])
-sampler = MetropolisHastings(model, theta0, dataloader, kernel=kernel, chain=chain_list)
+sampler = MetropolisHastings(model, theta0=theta0, dataloader=dataloader, kernel=kernel, chain=chain_list)
 
 # Run sampler
 start_time = timer()
@@ -99,7 +99,7 @@ print("Duration {}, acceptance rate {}".format(
 
 chain = torch.empty(num_post_burnin, model.num_params())
 for j in range(model.num_params()):
-    chain[:, j] = torch.tensor(sampler.chain.get_sample(j)).exp()
+    chain[:, j] = torch.tensor(sampler.get_sample(j)).exp()
 
 # %% Plot traces of simulated Markov chain
 
