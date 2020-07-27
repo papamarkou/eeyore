@@ -14,14 +14,6 @@ from eeyore.datasets import EmptyXYDataset
 from eeyore.models import Density
 from eeyore.samplers import MALA
 
-# %% Set up empty data loader
-
-dataloader = DataLoader(EmptyXYDataset())
-
-# for data, label in dataloader:
-#     print("Data :", data)
-#     print("Label :", label)
-
 # %% Set up unnormalized target density
 
 v = torch.tensor([2., 1.], dtype=torch.float64)
@@ -33,8 +25,12 @@ density = Density(log_pdf, 1, dtype=torch.float64)
 
 # %% Setup MALA sampler
 
-theta0 = torch.tensor([-1], dtype=torch.float64)
-sampler = MALA(density, theta0, dataloader, step=0.25)
+sampler = MALA(
+    density,
+    theta0=torch.tensor([-1], dtype=torch.float64),
+    dataloader=DataLoader(EmptyXYDataset()),
+    step=0.25
+)
 
 # %% Run MALA sampler
 
@@ -42,11 +38,11 @@ sampler.run(num_epochs=11000, num_burnin_epochs=1000)
 
 # %% Compute acceptance rate
 
-sampler.chain.acceptance_rate()
+print('Acceptance rate: {}'.format(sampler.get_chain().acceptance_rate()))
 
 # %% Compute Monte Carlo mean
 
-sampler.chain.mean()
+print('Monte Carlo mean: {}'.format(sampler.get_chain().mean()))
 
 # %% Plot traces of simulated Markov chain
 
