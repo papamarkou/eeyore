@@ -43,9 +43,10 @@ model.prior = Normal(
 # The solution is to use torch.float32 throught, and convert to torch.float64 only in softabs
 # However, in this XOR example even such solution seems to not work well with torch.symeig()
 
-theta0 = model.prior.sample()
 sampler = SMMALA(
-    model, theta0, dataloader,
+    model,
+    theta0=model.prior.sample(),
+    dataloader=dataloader,
     step=1.,
     transform=lambda hessian: softabs(hessian.to(torch.float64), 1000.).to(torch.float32)
 )
@@ -56,16 +57,16 @@ sampler.run(num_epochs=5500, num_burnin_epochs=500, verbose=True, verbose_step=5
 
 # %% Compute acceptance rate
 
-sampler.chain.acceptance_rate()
+print('Acceptance rate: {}'.format(sampler.get_chain().acceptance_rate()))
 
 # %% Compute Monte Carlo mean
 
-sampler.chain.mean()
+print('Monte Carlo mean: {}'.format(sampler.get_chain().mean()))
 
 # %% Plot traces of simulated Markov chain
 
 for i in range(model.num_params()):
-    chain = sampler.chain.get_sample(i)
+    chain = sampler.get_sample(i)
     plt.figure()
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
@@ -75,23 +76,23 @@ for i in range(model.num_params()):
 # %% Plot running means of simulated Markov chain
 
 for i in range(model.num_params()):
-    chain = sampler.chain.get_sample(i)
+    chain = sampler.get_sample(i)
     chain_mean = torch.empty(len(chain))
     chain_mean[0] = chain[0]
     for j in range(1, len(chain)):
         chain_mean[j] = (chain[j]+j*chain_mean[j-1])/(j+1)
-        
+
     plt.figure()
     sns.lineplot(range(len(chain)), chain_mean)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Running mean of parameter $\theta_{}$'.format(i+1))
+    plt.title(r'Running mean of parameter {}'.format(i+1))
 
-# %% Plot histograms of simulated Markov chain
+# %% Plot histograms of marginals of simulated Markov chain
 
 for i in range(model.num_params()):
     plt.figure()
-    sns.distplot(sampler.chain.get_sample(i), bins=20, norm_hist=True)
+    sns.distplot(sampler.get_sample(i), bins=20, norm_hist=True)
     plt.xlabel('Value range')
     plt.ylabel('Relative frequency')
-    plt.title(r'Histogram of parameter $\theta_{}$'.format(i+1))
+    plt.title(r'Histogram of parameter {}'.format(i+1))

@@ -33,8 +33,7 @@ model.prior = Normal(
 
 # %% Setup MALA sampler
 
-theta0 = model.prior.sample()
-sampler = MALA(model, theta0, dataloader, step=1.74)
+sampler = MALA(model, theta0=model.prior.sample(), dataloader=dataloader, step=1.74)
 
 # %% Run MALA sampler
 
@@ -42,16 +41,16 @@ sampler.run(num_epochs=11000, num_burnin_epochs=1000)
 
 # %% Compute acceptance rate
 
-print('Acceptance rate: {}'.format(sampler.chain.acceptance_rate()))
+print('Acceptance rate: {}'.format(sampler.get_chain().acceptance_rate()))
 
 # %% Compute Monte Carlo mean
 
-print('Monte Carlo mean: {}'.format(sampler.chain.mean()))
+print('Monte Carlo mean: {}'.format(sampler.get_chain().mean()))
 
 # %% Plot traces of simulated Markov chain
 
 for i in range(model.num_params()):
-    chain = sampler.chain.get_sample(i)
+    chain = sampler.get_sample(i)
     plt.figure()
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
@@ -61,23 +60,23 @@ for i in range(model.num_params()):
 # %% Plot running means of simulated Markov chain
 
 for i in range(model.num_params()):
-    chain = sampler.chain.get_sample(i)
+    chain = sampler.get_sample(i)
     chain_mean = torch.empty(len(chain))
     chain_mean[0] = chain[0]
     for j in range(1, len(chain)):
         chain_mean[j] = (chain[j]+j*chain_mean[j-1])/(j+1)
-        
+
     plt.figure()
     sns.lineplot(range(len(chain)), chain_mean)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Running mean of parameter $\theta_{}$'.format(i+1))
+    plt.title(r'Running mean of parameter {}'.format(i+1))
 
-# %% Plot histograms of simulated Markov chain
+# %% Plot histograms of marginals of simulated Markov chain
 
 for i in range(model.num_params()):
     plt.figure()
-    sns.distplot(sampler.chain.get_sample(i), bins=20, norm_hist=True)
+    sns.distplot(sampler.get_sample(i), bins=20, norm_hist=True)
     plt.xlabel('Value range')
     plt.ylabel('Relative frequency')
-    plt.title(r'Histogram of parameter $\theta_{}$'.format(i+1))
+    plt.title(r'Histogram of parameter {}'.format(i+1))

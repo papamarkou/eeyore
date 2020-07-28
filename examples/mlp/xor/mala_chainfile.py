@@ -42,8 +42,7 @@ chain = ChainFile(
 
 # %% Setup MALA sampler
 
-theta0 = model.prior.sample()
-sampler = MALA(model, theta0, dataloader, step=1.74, chain=chain)
+sampler = MALA(model, theta0=model.prior.sample(), dataloader=dataloader, step=1.74, chain=chain)
 
 # %% Run MALA sampler
 
@@ -55,11 +54,11 @@ chainlist, _ = sampler.chain.to_chainlist()
 
 # %% Compute acceptance rate
 
-chainlist.acceptance_rate()
+print('Acceptance rate: {}'.format(chainlist.acceptance_rate()))
 
 # %% Compute Monte Carlo mean
 
-chainlist.mean()
+print('Monte Carlo mean: {}'.format(chainlist.mean()))
 
 # %% Plot traces of simulated Markov chain
 
