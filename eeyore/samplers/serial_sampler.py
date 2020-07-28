@@ -40,7 +40,7 @@ class SerialSampler(Sampler):
 
         for i in range(self.counter.num_epochs):
             for _, (x, y) in enumerate(self.dataloader):
-                if verbose and (((self.counter.idx+1) % verbose_step) == 0):
+                if verbose and ((self.counter.idx % verbose_step) == 0):
                     start_time = timer()
 
                 self.draw(x, y, savestate=False if (self.counter.idx < self.counter.num_burnin_iters) else True)

@@ -43,7 +43,6 @@ density = Density(log_pdf, 2, dtype=torch.float32)
 
 # %% Setup Metropolis-Hastings sampler
 
-theta0 = torch.tensor([-1, 1], dtype=torch.float32)
 sampler = MetropolisHastings(
     density,
     theta0=torch.tensor([-1, 1], dtype=torch.float32),
