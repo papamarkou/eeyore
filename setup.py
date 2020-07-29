@@ -20,6 +20,8 @@ setup(
     download_url='{0}/archive/v{1}.tar.gz'.format(url, __version__),
     packages=find_packages(),
     license='MIT',
+    author='Theodore Papamarkou',
+    author_email='papamarkout@ornl.gov',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
