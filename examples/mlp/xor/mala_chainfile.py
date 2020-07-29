@@ -1,5 +1,5 @@
 # %% MALA sampling of MLP weights using XOR data
-# 
+#
 # Learn the XOR function by sampling the weights of an MLP via MALA and store chain in file.
 
 # %% Import packages
@@ -68,7 +68,7 @@ for i in range(model.num_params()):
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Traceplot of parameter $\theta_{}$'.format(i+1))
+    plt.title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
 
 # %% Plot running means of simulated Markov chain
 
@@ -78,12 +78,12 @@ for i in range(model.num_params()):
     chain_mean[0] = chain[0]
     for j in range(1, len(chain)):
         chain_mean[j] = (chain[j]+j*chain_mean[j-1])/(j+1)
-        
+
     plt.figure()
     sns.lineplot(range(len(chain)), chain_mean)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Running mean of parameter $\theta_{}$'.format(i+1))
+    plt.title(r'Running mean of $\theta_{{{0}}}$'.format(i+1))
 
 # %% Plot histograms of simulated Markov chain
 
@@ -92,4 +92,4 @@ for i in range(model.num_params()):
     sns.distplot(chainlist.get_sample(i), bins=20, norm_hist=True)
     plt.xlabel('Value range')
     plt.ylabel('Relative frequency')
-    plt.title(r'Histogram of parameter $\theta_{}$'.format(i+1))
+    plt.title(r'Histogram of $\theta_{{{0}}}$'.format(i+1))

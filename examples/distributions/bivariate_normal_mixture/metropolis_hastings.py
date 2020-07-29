@@ -31,7 +31,7 @@ means = [-2 * torch.ones(2), 2 * torch.ones(2)]
 # weights and covs are used in plot generation
 weights = [0.5, 0.5]
 covs = [1 * torch.eye(2), 1 * torch.eye(2)]
-     
+
 # def log_pdf(theta, x, y):
 #     return torch.log(target(
 #         theta,
@@ -81,7 +81,7 @@ for i in range(density.num_params()):
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Traceplot of parameter $\theta_{}$'.format(i+1))
+    plt.title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
 
 # %% Plot histograms of marginals of simulated Markov chain
 
@@ -92,7 +92,7 @@ for i in range(density.num_params()):
     plot = sns.distplot(sampler.get_sample(i), hist=False, color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')
     plot.set_ylabel('Relative frequency')
-    plot.set_title(r'Traceplot of parameter $\theta_{}$'.format(i+1))
+    plot.set_title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
     sns.lineplot(
         x_hist_range,
         weights[0] * stats.norm.pdf(x_hist_range, means[0][i].item(), covs[0][i, i]) +
@@ -130,14 +130,14 @@ num_samples_max = max(num_samples)
 
 def sample_mixture(n):
     samples = []
-    
+
     for i in range(n):
         w = torch.rand(1)
         if w < weights[0]:
             samples.append(MultivariateNormal(means[0], covariance_matrix=covs[0]).sample())
         else:
             samples.append(MultivariateNormal(means[1], covariance_matrix=covs[1]).sample())
-            
+
     return samples
 
 mixture_sample = sample_mixture(num_samples_max)
@@ -161,7 +161,7 @@ end_time = timer()
 print("Time taken to compute MMD with multiprocessing: {}".format(timedelta(seconds=end_time-start_time)))
 
 # Step 3: Close the pool
-pool.close()    
+pool.close()
 
 mmd_vals_mp = [mmd_val_mp.item() for mmd_val_mp in mmd_vals_mp]
 

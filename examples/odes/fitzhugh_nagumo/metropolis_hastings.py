@@ -113,4 +113,4 @@ for i in range(model.num_params()):
     plt.axhline(true_eta[i], color='red')
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Traceplot of parameter {}'.format(i+1))
+    plt.title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))

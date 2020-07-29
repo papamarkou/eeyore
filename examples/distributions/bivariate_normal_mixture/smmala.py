@@ -29,7 +29,7 @@ means = [-2 * torch.ones(2), 2 * torch.ones(2)]
 # weights and covs are used in plot generation
 weights = [0.5, 0.5]
 covs = [1 * torch.eye(2), 1 * torch.eye(2)]
-     
+
 # def log_pdf(theta, x, y):
 #     return torch.log(target(
 #         theta,
@@ -51,7 +51,7 @@ density = Density(log_pdf, 2, dtype=torch.float32)
 
 # softabs is used for avoiding issues with eigenvalue computation in softabs
 # See https://github.com/pytorch/pytorch/issues/24466
-# Relevant functions :np.linalg.eig(), torch.eig() and torch.symeig() 
+# Relevant functions :np.linalg.eig(), torch.eig() and torch.symeig()
 # If operations are carried out in torch.float64, Cholesky fails
 # The solution is to use torch.float32 throught, and convert to torch.float64 only in softabs
 
@@ -83,7 +83,7 @@ for i in range(density.num_params()):
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Traceplot of parameter $\theta_{}$'.format(i+1))
+    plt.title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
 
 # %% Plot histograms of marginals of simulated Markov chain
 
@@ -94,7 +94,7 @@ for i in range(density.num_params()):
     plot = sns.distplot(sampler.get_sample(i), hist=False, color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')
     plot.set_ylabel('Relative frequency')
-    plot.set_title(r'Traceplot of parameter $\theta_{}$'.format(i+1))
+    plot.set_title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
     sns.lineplot(
         x_hist_range,
         weights[0] * stats.norm.pdf(x_hist_range, means[0][i].item(), covs[0][i, i]) +

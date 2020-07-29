@@ -88,7 +88,7 @@ for j in range(sampler.get_model(idx=chain_id).num_params()):
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Traceplot of parameter {}'.format(j+1))
+    plt.title(r'Traceplot of $\theta_{{{0}}}$'.format(j+1))
 
 # %% Plot running means of simulated Markov chain
 
@@ -103,7 +103,7 @@ for j in range(sampler.get_model(idx=chain_id).num_params()):
     sns.lineplot(range(len(chain)), chain_mean)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Running mean of parameter {}'.format(j+1))
+    plt.title(r'Running mean of $\theta_{{{0}}}$'.format(j+1))
 
 # %% Plot histograms of simulated Markov chain
 
@@ -112,4 +112,4 @@ for j in range(sampler.get_model(idx=chain_id).num_params()):
     sns.distplot(sampler.get_sample(j, chain_idx=chain_id), bins=20, norm_hist=True)
     plt.xlabel('Value range')
     plt.ylabel('Relative frequency')
-    plt.title(r'Histogram of parameter {}'.format(j+1))
+    plt.title(r'Histogram of $\theta_{{{0}}}$'.format(j+1))

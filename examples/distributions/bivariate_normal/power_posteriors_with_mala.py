@@ -77,7 +77,7 @@ for i in range(density.num_params()):
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Traceplot of parameter $\theta_{}$'.format(i+1))
+    plt.title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
 
 # %% Plot histograms of marginals of simulated Markov chain
 
@@ -88,7 +88,7 @@ for i in range(density.num_params()):
     plot = sns.distplot(sampler.get_sample(i), hist=False, color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')
     plot.set_ylabel('Relative frequency')
-    plot.set_title(r'Traceplot of parameter $\theta_{}$'.format(i+1))
+    plot.set_title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
     sns.lineplot(x_hist_range, stats.norm.pdf(x_hist_range, 0, 1), color='red', label='Target')
     plot.legend()
 

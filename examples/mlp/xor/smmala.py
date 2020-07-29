@@ -1,5 +1,5 @@
 # %% SMMALA sampling of MLP weights using XOR data
-# 
+#
 # Learn the XOR function by sampling the weights of a multi-layer perceptron (MLP) via SMMALA.
 
 # %% Import packages
@@ -38,7 +38,7 @@ model.prior = Normal(
 
 # softabs is used for avoiding issues with Cholesky decomposition
 # See https://github.com/pytorch/pytorch/issues/24466
-# Relevant functions :np.linalg.eig(), torch.eig() and torch.symeig() 
+# Relevant functions :np.linalg.eig(), torch.eig() and torch.symeig()
 # If operations are carried out in torch.float64, Cholesky fails
 # The solution is to use torch.float32 throught, and convert to torch.float64 only in softabs
 # However, in this XOR example even such solution seems to not work well with torch.symeig()
@@ -71,7 +71,7 @@ for i in range(model.num_params()):
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Traceplot of parameter $\theta_{}$'.format(i+1))
+    plt.title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
 
 # %% Plot running means of simulated Markov chain
 
@@ -86,7 +86,7 @@ for i in range(model.num_params()):
     sns.lineplot(range(len(chain)), chain_mean)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
-    plt.title(r'Running mean of parameter {}'.format(i+1))
+    plt.title(r'Running mean of $\theta_{{{0}}}$'.format(i+1))
 
 # %% Plot histograms of marginals of simulated Markov chain
 
@@ -95,4 +95,4 @@ for i in range(model.num_params()):
     sns.distplot(sampler.get_sample(i), bins=20, norm_hist=True)
     plt.xlabel('Value range')
     plt.ylabel('Relative frequency')
-    plt.title(r'Histogram of parameter {}'.format(i+1))
+    plt.title(r'Histogram of $\theta_{{{0}}}$'.format(i+1))
