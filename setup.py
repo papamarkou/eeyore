@@ -14,10 +14,11 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='eeyore',
-    version='0.0.2',
+    version='0.0.4',
     description='MCMC methods for neural networks',
     long_description=long_description,
     url='https://github.com/papamarkou/eeyore',
+    download_url='https://github.com/papamarkou/eeyore/archive/v0.0.4.tar.gz',
     author='Theodore Papamarkou',
     author_email='papamarkout@ornl.gov',
     license='MIT',
