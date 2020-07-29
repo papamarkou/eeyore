@@ -1,6 +1,6 @@
 from codecs import open
 from os import path
-from setuptools import setup
+from setuptools import find_packages, setup
 
 from eeyore import __version__
 
@@ -18,6 +18,7 @@ setup(
     long_description=long_description,
     url=url,
     download_url='{0}/archive/v{1}.tar.gz'.format(url, __version__),
+    packages=find_packages(),
     license='MIT',
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -29,7 +30,6 @@ setup(
         'Programming Language :: Python :: 3.7'
     ],
     keywords=['Bayesian', 'deep learning', 'Markov chains', 'MCMC', 'Monte Carlo', 'neural networks'],
-    package_dir={'eeyore': 'eeyore'},
     install_requires=['numpy', 'torch>=1.3.0', 'torchdiffeq'],
     dependency_links=['git+https://github.com/rtqichen/torchdiffeq.git#egg=torchdiffeq'],
     package_data={'eeyore': ['data/*/x.csv', 'data/*/y.csv', 'data/*/readme.md']},

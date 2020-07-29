@@ -1,3 +1,4 @@
+build/
 dist/
 eeyore.egg-info/
 eeyore/__pycache__/
