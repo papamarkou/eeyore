@@ -1,11 +1,10 @@
-"""eeyore
-
-https://github.com/papamarkou/eeyore
-"""
-
-from setuptools import setup
 from codecs import open
 from os import path
+from setuptools import setup
+
+from eeyore import __version__
+
+url = 'https://github.com/papamarkou/eeyore'
 
 here = path.abspath(path.dirname(__file__))
 
@@ -14,13 +13,11 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='eeyore',
-    version='0.0.4',
+    version=__version__,
     description='MCMC methods for neural networks',
     long_description=long_description,
-    url='https://github.com/papamarkou/eeyore',
-    download_url='https://github.com/papamarkou/eeyore/archive/v0.0.4.tar.gz',
-    author='Theodore Papamarkou',
-    author_email='papamarkout@ornl.gov',
+    url=url,
+    download_url='{0}/archive/v{1}.tar.gz'.format(url, __version__),
     license='MIT',
     classifiers=[
         'Development Status :: 3 - Alpha',
