@@ -4,15 +4,15 @@ import numpy as np
 from pathlib import Path
 
 from .metropolis_hastings import MetropolisHastings
-from .serial_sampler import SerialSampler
+from .multi_chain_serial_sampler import MultiChainSerialSampler
 from eeyore.chains import ChainFile, ChainList
 from eeyore.datasets import DataCounter
 from eeyore.kernels import DEMCKernel
 from eeyore.stats import choose_from_subset
 
-class DEMC(SerialSampler):
-    def __init__(self, model, theta0, sigmas,
-        dataloader, data0=None, counter=None,
+class DEMC(MultiChainSerialSampler):
+    def __init__(self, model, sigmas, dataloader,
+        theta0=None, data0=None, counter=None,
         num_chains=10, c=None, schedule=lambda n, num_iterations: 1., storage='list',
         keys=['sample', 'target_val', 'accepted'], path=Path.cwd(), mode='a'):
         super(DEMC, self).__init__(counter or DataCounter.from_dataloader(dataloader))
@@ -23,7 +23,7 @@ class DEMC(SerialSampler):
 
         self.c = c or [2.38/np.sqrt(model.num_params()) for i in range(self.num_chains)]
 
-        self.init_samplers(theta0, data0 or next(iter(self.dataloader)), model, storage, keys, path, mode)
+        self.init_samplers(model, theta0, data0 or next(iter(self.dataloader)), storage, keys, path, mode)
 
     def init_kernel(self, i, model):
         kernel = DEMCKernel(c=self.c[i])
@@ -33,7 +33,7 @@ class DEMC(SerialSampler):
 
         return kernel
 
-    def init_chain(self, storage, keys, path, mode):
+    def init_chain(self, i, storage, keys, path, mode):
         if storage == 'list':
             chain = ChainList(keys=keys)
         elif storage == 'file':
@@ -44,17 +44,14 @@ class DEMC(SerialSampler):
 
         return chain
 
-    def init_samplers(self, theta0, data0, model, storage, keys, path, mode):
+    def init_samplers(self, model, theta0, data0, storage, keys, path, mode):
         self.samplers = []
         for i in range(self.num_chains):
             self.samplers.append(MetropolisHastings(
-                copy.deepcopy(model), theta0,
-                dataloader=None, data0=data0, counter=self.counter,
-                symmetric=True, kernel=self.init_kernel(i, model), chain=self.init_chain(storage, keys, path, mode)
+                copy.deepcopy(model),
+                theta0=theta0, dataloader=None, data0=data0, counter=self.counter,
+                symmetric=True, kernel=self.init_kernel(i, model), chain=self.init_chain(i, storage, keys, path, mode)
             ))
-
-    def get_chain(self, i):
-        return self.samplers[i].chain
 
     def set_temperature(self, n, num_iterations):
         temperature = self.schedule(n, num_iterations)
@@ -68,6 +65,10 @@ class DEMC(SerialSampler):
             self.samplers[j].current['sample'].clone().detach(), self.samplers[k].current['sample'].clone().detach()
         )
         self.samplers[i].kernel.set_density_params(self.samplers[i].current['sample'].clone().detach())
+
+    def reset(self, theta, data=None):
+        super().reset(theta, data=data, reset_counter=False, reset_chain=True)
+        self.counter.reset()
 
     def draw(self, x, y, savestate=False):
         self.set_temperature(self.counter.idx, self.counter.num_iters)

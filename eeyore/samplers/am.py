@@ -1,15 +1,15 @@
 import torch
 
-from .serial_sampler import SerialSampler
+from .single_chain_serial_sampler import SingleChainSerialSampler
 from eeyore.chains import ChainList
 from eeyore.datasets import DataCounter
 from eeyore.stats import recursive_mean
 
-class AM(SerialSampler):
-    def __init__(self, model, theta0,
-        dataloader=None, data0=None, counter=None,
+class AM(SingleChainSerialSampler):
+    def __init__(self, model,
+        theta0=None, dataloader=None, data0=None, counter=None,
         cov0=None, l=0.05, b=1., c=1., t0=2, transform=None,
-        chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
+        chain=ChainList()):
         super(AM, self).__init__(counter or DataCounter.from_dataloader(dataloader))
         self.model = model
         self.dataloader = dataloader
@@ -27,23 +27,34 @@ class AM(SerialSampler):
             self.cov0 = self.transform(self.cov0)
         self.num_accepted = 0
         self.keys = ['sample', 'target_val', 'accepted']
-        self.current = {key : None for key in self.keys}
         self.chain = chain
 
-        x, y = data0 or next(iter(self.dataloader))
-        self.reset(theta0.clone().detach(), x, y, cov=self.cov0.clone().detach())
+        if theta0 is not None:
+            self.set_all(theta0.clone().detach(), data=data0)
 
-    def reset(self, theta, x, y, cov=None):
-        self.current['sample'] = theta
+    def set_current(self, theta, data=None):
+        x, y = super().set_current(theta, data=data)
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
+
+    def set_cov(self, cov=None):
+        if cov is not None:
+            self.cov = cov
+        else:
+            self.cov = self.cov0.clone().detach()
         self.running_mean = torch.zeros(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
         self.cov_sum = torch.zeros(
             self.model.num_params(), self.model.num_params(), dtype=self.model.dtype, device=self.model.device
         )
-        if cov is not None:
-            self.cov = cov
 
-    def set_cov(self, n, offset=0):
+    def set_all(self, theta, data=None, cov=None):
+        super().set_all(theta, data=data)
+        self.set_cov(cov=cov)
+
+    def reset(self, theta, data=None, reset_counter=True, reset_chain=True):
+        super().reset(theta, data=data, reset_counter=reset_counter, reset_chain=reset_chain)
+        self.num_accepted = 0
+
+    def set_recursive_cov(self, n, offset=0):
         k = n - offset
         self.cov = (self.cov_sum - (k + 1) * torch.ger(self.running_mean, self.running_mean)) / k
 
@@ -81,7 +92,7 @@ class AM(SerialSampler):
             if (self.num_accepted == 0):
                 self.cov = self.cov0.clone().detach()
             else:
-                self.set_cov(self.counter.idx, offset=offset)
+                self.set_recursive_cov(self.counter.idx, offset=offset)
                 if self.transform is not None:
                     self.cov = self.transform(self.cov)
 

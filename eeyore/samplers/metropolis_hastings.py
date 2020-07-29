@@ -1,14 +1,14 @@
 import torch
 
-from .serial_sampler import SerialSampler
+from .single_chain_serial_sampler import SingleChainSerialSampler
 from eeyore.chains import ChainList
 from eeyore.datasets import DataCounter
 from eeyore.kernels import NormalKernel
 
-class MetropolisHastings(SerialSampler):
-    def __init__(self, model, theta0,
-        dataloader=None, data0=None, counter=None,
-        symmetric=True, kernel=None, chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
+class MetropolisHastings(SingleChainSerialSampler):
+    def __init__(self, model,
+        theta0=None, dataloader=None, data0=None, counter=None,
+        symmetric=True, kernel=None, chain=ChainList()):
         super(MetropolisHastings, self).__init__(counter or DataCounter.from_dataloader(dataloader))
         self.model = model
         self.dataloader = dataloader
@@ -16,18 +16,19 @@ class MetropolisHastings(SerialSampler):
 
         self.kernel = kernel or self.default_kernel(theta0.clone().detach())
         self.keys = ['sample', 'target_val', 'accepted']
-        self.current = {key : None for key in self.keys}
         self.chain = chain
 
-        x, y = data0 or next(iter(self.dataloader))
-        self.reset(theta0.clone().detach(), x, y)
+        if theta0 is not None:
+            self.set_current(theta0.clone().detach(), data=data0)
 
     def default_kernel(self, theta):
         return NormalKernel(theta, torch.ones(self.model.num_params()))
 
-    def reset(self, theta, x, y, sigma=None, scale_tril=None):
-        self.current['sample'] = theta
+    def set_current(self, theta, data=None):
+        x, y = super().set_current(theta, data=data)
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
+
+    def set_kernel_params(self, sigma=None, scale_tril=None):
         if sigma is not None:
             self.kernel.set_density_params(self.current['sample'].clone().detach(), sigma=sigma)
         elif scale_tril is not None:

@@ -9,15 +9,14 @@ from torch.distributions import Categorical
 from .gamc import GAMC
 from .mala import MALA
 from .metropolis_hastings import MetropolisHastings
-from .serial_sampler import SerialSampler
+from .multi_chain_serial_sampler import MultiChainSerialSampler
 from .smmala import SMMALA
 from eeyore.chains import ChainFile, ChainList
 from eeyore.datasets import DataCounter
-from eeyore.kernels import NormalKernel
 
-class PowerPosteriorSampler(SerialSampler):
-    def __init__(self, model, theta0,
-        dataloader, samplers, data0=None, counter=None,
+class PowerPosteriorSampler(MultiChainSerialSampler):
+    def __init__(self, model, dataloader, samplers,
+        theta0=None, data0=None, counter=None,
         temperature=None, between_step=10, b=0.5, storage='list', keys=['sample', 'target_val', 'accepted'],
         path=Path.cwd(), mode='a', check_input=False):
         super(PowerPosteriorSampler, self).__init__(counter or DataCounter.from_dataloader(dataloader))
@@ -34,7 +33,7 @@ class PowerPosteriorSampler(SerialSampler):
         if any(name == 'GAMC' for name in self.sampler_names) and (not self.use_gamc):
             raise ValueError
 
-        self.init_samplers(samplers, theta0, data0 or next(iter(self.dataloader)), model, storage, keys, path, mode)
+        self.init_samplers(model, samplers, theta0, data0 or next(iter(self.dataloader)), storage, keys, path, mode)
 
         self.set_temperature(temperature)
 
@@ -71,7 +70,7 @@ class PowerPosteriorSampler(SerialSampler):
         if not valid:
             raise ValueError
 
-    def init_chain(self, storage, keys, path, mode):
+    def init_chain(self, i, storage, keys, path, mode):
         if storage == 'list':
             chain = ChainList(keys=keys)
         elif storage == 'file':
@@ -82,33 +81,36 @@ class PowerPosteriorSampler(SerialSampler):
 
         return chain
 
-    def init_samplers(self, samplers, theta0, data0, model, storage, keys, path, mode):
+    def init_samplers(self, model, samplers, theta0, data0, storage, keys, path, mode):
         self.samplers = []
         for i in range(self.num_chains):
-            if self.sampler_names[i] == 'MetropolisHastings':
+            if samplers[i][0] == 'MetropolisHastings':
                 self.samplers.append(MetropolisHastings(
-                    copy.deepcopy(model), theta0,
-                    dataloader=None, data0=data0, counter=self.counter,
-                    chain=self.init_chain(storage, keys, path, mode), **(samplers[i][1])
+                    copy.deepcopy(model),
+                    theta0=theta0, dataloader=None, data0=data0, counter=self.counter,
+                    chain=self.init_chain(i, storage, keys, path, mode), **(samplers[i][1])
                 ))
-            elif self.sampler_names[i] == 'MALA':
+            elif samplers[i][0] == 'MALA':
                 self.samplers.append(MALA(
-                    copy.deepcopy(model), theta0,
-                    dataloader=None, data0=data0, counter=self.counter,
-                    chain=self.init_chain(storage, keys, path, mode), **(samplers[i][1])
+                    copy.deepcopy(model),
+                    theta0=theta0, dataloader=None, data0=data0, counter=self.counter,
+                    chain=self.init_chain(i, storage, keys, path, mode), **(samplers[i][1])
                 ))
-            elif self.sampler_names[i] == 'SMMALA':
+            elif samplers[i][0] == 'SMMALA':
                 self.samplers.append(SMMALA(
-                    copy.deepcopy(model), theta0,
-                    dataloader=None, data0=data0, counter=self.counter,
-                    chain=self.init_chain(storage, keys, path, mode), **(samplers[i][1])
+                    copy.deepcopy(model),
+                    theta0=theta0, dataloader=None, data0=data0, counter=self.counter,
+                    chain=self.init_chain(i, storage, keys, path, mode), **(samplers[i][1])
                 ))
-            elif self.sampler_names[i] == 'GAMC':
+            elif samplers[i][0] == 'GAMC':
                 self.samplers.append(GAMC(
-                    copy.deepcopy(model), theta0,
-                    dataloader=None, data0=data0, counter=self.counter,
-                    chain=self.init_chain(storage, keys, path, mode), **(samplers[i][1])
+                    copy.deepcopy(model),
+                    theta0=theta0, dataloader=None, data0=data0, counter=self.counter,
+                    chain=self.init_chain(i, storage, keys, path, mode), **(samplers[i][1])
                 ))
+
+    def default_indicator(self):
+        return  self.num_chains - 1
 
     def set_temperature(self, temperature):
         if (temperature is not None) and (self.num_chains != len(temperature)):
@@ -125,9 +127,6 @@ class PowerPosteriorSampler(SerialSampler):
                     self.samplers[i].samplers[j].model.temperature = self.temperature[i]
             else:
                 self.samplers[i].model.temperature = self.temperature[i]
-
-    def get_chain(self):
-        return self.samplers[self.num_chains-1].chain
 
     def from_seq_to_events(self, k, i):
         j = k if (k < i) else (k+1)
@@ -154,13 +153,13 @@ class PowerPosteriorSampler(SerialSampler):
     def sample_categorical(self, i):
         return self.from_seq_to_events(self.categoricals[i].sample().item(), i)
 
-    def reset(self, theta):
-        for sampler in self.samplers:
-            sampler.reset(theta)
+    def reset(self, theta, data=None):
+        super().reset(theta, data=data, reset_counter=False, reset_chain=True)
+        self.counter.reset()
 
     def within_chain_move(self, i, x, y):
         if self.sampler_names[i] == 'GAMC':
-            self.samplers[i].set_current_state(x, y)
+            self.samplers[i].reset_in_sampler_from_data(x, y, reset_counter=False, reset_chain=False)
         self.samplers[i].draw(x, y, savestate=False)
 
     def within_chain_moves(self, x, y):
@@ -180,19 +179,33 @@ class PowerPosteriorSampler(SerialSampler):
             state_copy = copy.deepcopy(
                 self.samplers[i].samplers[self.samplers[i].current_kernel].current['sample'].clone().detach()
             )
-            self.samplers[i].reset(
-                self.samplers[j].samplers[self.samplers[j].current_kernel].current['sample'].clone().detach(), x, y,
-                sampler_id=self.samplers[j].current_kernel
+            self.samplers[i].reset_in_sampler(
+                self.samplers[j].samplers[self.samplers[j].current_kernel].current['sample'].clone().detach(),
+                data=(x, y),
+                sampler_id=self.samplers[j].current_kernel,
+                reset_counter=False,
+                reset_chain=False
             )
-            self.samplers[j].reset(state_copy.clone().detach(), x, y, sampler_id=self.samplers[i].current_kernel)
+            self.samplers[j].reset_in_sampler(
+                state_copy.clone().detach(),
+                data=(x, y),
+                sampler_id=self.samplers[i].current_kernel,
+                reset_counter=False,
+                reset_chain=False
+            )
 
             indicator_copy = self.samplers[i].current_kernel
             self.samplers[i].current_kernel = self.samplers[j].current_kernel
             self.samplers[j].current_kernel = indicator_copy
         else:
             state_copy = copy.deepcopy(self.samplers[i].current['sample'].clone().detach())
-            self.samplers[i].reset(self.samplers[j].current['sample'].clone().detach(), x, y)
-            self.samplers[j].reset(state_copy.clone().detach(), x, y)
+            self.samplers[i].reset(
+                self.samplers[j].current['sample'].clone().detach(),
+                data=(x, y),
+                reset_counter=False,
+                reset_chain=False
+            )
+            self.samplers[j].reset(state_copy.clone().detach(), data=(x, y), reset_counter=False, reset_chain=False)
 
     def revert_states(self, sampler_i, sampler_j):
         sampler_i.model.set_params(sampler_i.current['sample'].clone().detach())

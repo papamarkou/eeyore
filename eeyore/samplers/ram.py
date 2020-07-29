@@ -1,13 +1,13 @@
 import torch
 
-from .serial_sampler import SerialSampler
+from .single_chain_serial_sampler import SingleChainSerialSampler
 from eeyore.chains import ChainList
 from eeyore.datasets import DataCounter
 
-class RAM(SerialSampler):
-    def __init__(self, model, theta0,
-        dataloader=None, data0=None, counter=None,
-        cov0=None, a=0.234, g=0.7, chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
+class RAM(SingleChainSerialSampler):
+    def __init__(self, model,
+        theta0=None, dataloader=None, data0=None, counter=None,
+        cov0=None, a=0.234, g=0.7, chain=ChainList()):
         super(RAM, self).__init__(counter or DataCounter.from_dataloader(dataloader))
         self.model = model
         self.dataloader = dataloader
@@ -19,17 +19,21 @@ class RAM(SerialSampler):
         else:
             self.cov0 = torch.eye(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
         self.keys = ['sample', 'target_val', 'accepted']
-        self.current = {key : None for key in self.keys}
         self.chain = chain
 
-        x, y = data0 or next(iter(self.dataloader))
-        self.reset(theta0.clone().detach(), x, y, cov=self.cov0)
+        if theta0 is not None:
+            self.set_all(theta0.clone().detach(), data=data0)
 
-    def reset(self, theta, x, y, cov=None):
-        self.current['sample'] = theta
+    def set_current(self, theta, data=None):
+        x, y = super().set_current(theta, data=data)
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
-        if cov is not None:
-            self.chol_cov = torch.cholesky(cov)
+
+    def set_cov(self, cov=None):
+        self.chol_cov = torch.cholesky(cov or self.cov0)
+
+    def set_all(self, theta, data=None, cov=None):
+        super().set_all(theta, data=data)
+        self.set_cov(cov=cov)
 
     def draw(self, x, y, savestate=False, offset=0):
         proposed = {key : None for key in self.keys}

@@ -1,13 +1,13 @@
 import numpy as np
 import torch
 
-from .serial_sampler import SerialSampler
+from .single_chain_serial_sampler import SingleChainSerialSampler
 from eeyore.chains import ChainList
 from eeyore.datasets import DataCounter
 
-class SMMALA(SerialSampler):
-    def __init__(self, model, theta0, dataloader=None, data0=None, counter=None, step=0.1, transform=None,
-    chain=ChainList(keys=['sample', 'target_val', 'accepted'])):
+class SMMALA(SingleChainSerialSampler):
+    def __init__(self, model, theta0=None, dataloader=None, data0=None, counter=None, step=0.1, transform=None,
+    chain=ChainList()):
         super(SMMALA, self).__init__(counter or DataCounter.from_dataloader(dataloader))
         self.model = model
         self.dataloader = dataloader
@@ -15,15 +15,13 @@ class SMMALA(SerialSampler):
         self.transform = transform
 
         self.keys = ['sample', 'target_val', 'grad_val', 'metric_val', 'inv_metric_val', 'first_term_val', 'accepted']
-        self.current = {key : None for key in self.keys}
         self.chain = chain
 
-        x, y = data0 or next(iter(self.dataloader))
-        self.reset(theta0.clone().detach(), x, y)
+        if theta0 is not None:
+            self.set_current(theta0.clone().detach(), data=data0)
 
-    def reset(self, theta, x, y):
-        self.current = {key : None for key in self.keys}
-        self.current['sample'] = theta
+    def set_current(self, theta, data=None):
+        x, y = super().set_current(theta, data=data)
         self.current['sample'].requires_grad_(True)
         self.current['target_val'], self.current['grad_val'], self.current['metric_val'] = \
             self.model.upto_metric_log_target(self.current['sample'].clone().detach(), x, y)

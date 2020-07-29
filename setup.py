@@ -14,10 +14,10 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='eeyore',
-    version='0.0.1',
-    description='Monte Carlo methods for neural networks',
+    version='0.0.2',
+    description='MCMC methods for neural networks',
     long_description=long_description,
-    url='https://github.com/scidom/eeyore',
+    url='https://github.com/papamarkou/eeyore',
     author='Theodore Papamarkou',
     author_email='papamarkout@ornl.gov',
     license='MIT',
@@ -30,7 +30,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7'
     ],
-    keywords=['Bayesian', 'deep learning', 'Monte Carlo', 'neural networks'],
+    keywords=['Bayesian', 'deep learning', 'Markov chains', 'MCMC', 'Monte Carlo', 'neural networks'],
     package_dir={'eeyore': 'eeyore'},
     install_requires=['numpy', 'torch>=1.3.0', 'torchdiffeq'],
     dependency_links=['git+https://github.com/rtqichen/torchdiffeq.git#egg=torchdiffeq'],
