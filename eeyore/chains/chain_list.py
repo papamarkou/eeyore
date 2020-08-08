@@ -13,6 +13,12 @@ class ChainList(Chain):
     def __init__(self, keys=None, vals=None):
         self.reset(keys=keys, vals=vals)
 
+    def reset(self, keys=None, vals=None):
+        if vals is None:
+            self.vals = {key : [] for key in keys or ['sample', 'target_val', 'accepted']}
+        else:
+            self.vals = vals
+
     def __repr__(self):
         return f"Markov chain containing {len(self.vals['sample'])} samples."
 
@@ -22,11 +28,8 @@ class ChainList(Chain):
     def num_params(self):
         return len(self.get_sample(0))
 
-    def reset(self, keys=None, vals=None):
-        if vals is None:
-            self.vals = {key : [] for key in keys or ['sample', 'target_val', 'accepted']}
-        else:
-            self.vals = vals
+    def get_param(self, idx):
+        return torch.stack([sample[idx] for sample in self.vals['sample']])
 
     def get_sample(self, idx):
         return self.vals['sample'][idx]
@@ -58,21 +61,6 @@ class ChainList(Chain):
         for key in self.vals.keys():
             self.vals[key].append(state[key])
 
-    def to_kanga(self, keys=None):
-        vals = {}
-
-        for key, val in self.vals.items():
-            if key == 'sample':
-                vals[key] = self.get_samples().detach().cpu().numpy()
-            elif key == 'target_val':
-                vals[key] = self.get_target_vals().detach().cpu().numpy()
-            elif key == 'grad_val':
-                vals[key] = self.get_grad_vals().detach().cpu().numpy()
-            elif key == 'accepted':
-                vals[key] = np.array(self.vals['accepted'])
-
-        return ChainArray(vals)
-
     def mean(self):
         """ Get the mean of the chain's samples """
         return self.get_samples().mean(0)
@@ -89,12 +77,29 @@ class ChainList(Chain):
         """ Load a previously saved chain """
         self.vals = torch.load(path)
 
-    def to_chainfile(self, path=Path.cwd(), mode='a'):
+    def to_chainfile(self, keys=None, path=Path.cwd(), mode='a'):
         from .chain_file import ChainFile
 
-        chainfile = ChainFile(keys=self.vals.keys(), path=path, mode=mode)
+        chainfile = ChainFile(keys=keys or self.vals.keys(), path=path, mode=mode)
 
         for i in range(len(self)):
             chainfile.update(self.state(i), reset=False, close=False)
 
         chainfile.close()
+
+    def to_kanga(self, keys=None):
+        keys = set(keys or self.vals.keys()) & set(['sample', 'target_val', 'grad_val', 'accepted'])
+
+        vals = {}
+
+        for key in keys:
+            if key == 'sample':
+                vals[key] = self.get_samples().detach().cpu().numpy()
+            elif key == 'target_val':
+                vals[key] = self.get_target_vals().detach().cpu().numpy()
+            elif key == 'grad_val':
+                vals[key] = self.get_grad_vals().detach().cpu().numpy()
+            elif key == 'accepted':
+                vals[key] = np.array(self.vals['accepted'])
+
+        return ChainArray(vals)

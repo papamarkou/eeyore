@@ -54,30 +54,28 @@ class ChainFile(Chain):
         return torch.tensor(list(map(torch_to_np_types[dtype], line.split(',')))).to(device=device)
 
     def line_to_val_element(self, line, key, dtype=torch.float64, device='cpu'):
-        if key == 'accepted':
-            return self.scalar_line_to_val_element(line, dtype=int)
-        elif key == 'target_val':
+        if key == 'target_val':
             return self.singleton_line_to_val_element(line, dtype=dtype, device=device)
         elif (key == 'sample') or (key == 'grad_val'):
             return self.vector_line_to_val_element(line, dtype=dtype, device=device)
+        elif key == 'accepted':
+            return self.scalar_line_to_val_element(line, dtype=int)
 
-    def to_chainlist(self, dtype=torch.float64, device='cpu'):
+    def to_chainlist(self, keys=None, dtype=torch.float64, device='cpu'):
         from .chain_list import ChainList
 
+        keys = set(keys or self.vals.keys()) & set(['sample', 'target_val', 'grad_val', 'accepted'])
+
         chainlist_keys = []
-        not_converted = []
         chainlist_vals = []
 
-        for key in self.vals.keys():
-            if key in ('target_val', 'sample', 'grad_val', 'accepted'):
-                chainlist_keys.append(key)
-                with open(self.path.joinpath(key+'.csv'), mode='r') as file:
-                    chainlist_vals.append([
-                        self.line_to_val_element(line, key, dtype=dtype, device=device) for line in file.readlines()
-                    ])
-            else:
-                not_converted.append(key)
+        for key in keys:
+            chainlist_keys.append(key)
+            with open(self.path.joinpath(key+'.csv'), mode='r') as file:
+                chainlist_vals.append([
+                    self.line_to_val_element(line, key, dtype=dtype, device=device) for line in file.readlines()
+                ])
 
         chainlist = ChainList(vals=dict(zip(chainlist_keys, chainlist_vals)))
 
-        return chainlist, not_converted
+        return chainlist

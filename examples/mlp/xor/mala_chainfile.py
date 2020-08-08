@@ -50,7 +50,7 @@ sampler.run(num_epochs=11000, num_burnin_epochs=1000)
 
 # %% Convert ChainFile instance to ChainList instance
 
-chainlist, _ = sampler.chain.to_chainlist()
+chainlist = sampler.chain.to_chainlist()
 
 # %% Compute acceptance rate
 
