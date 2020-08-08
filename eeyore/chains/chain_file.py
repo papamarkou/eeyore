@@ -69,7 +69,7 @@ class ChainFile(Chain):
         chainlist_vals = []
 
         for key in self.vals.keys():
-            if key in ('accepted', 'target_val', 'sample', 'grad_val'):
+            if key in ('target_val', 'sample', 'grad_val', 'accepted'):
                 chainlist_keys.append(key)
                 with open(self.path.joinpath(key+'.csv'), mode='r') as file:
                     chainlist_vals.append([

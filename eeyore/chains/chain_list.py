@@ -26,13 +26,13 @@ class ChainList(Chain):
             self.vals = vals
 
     def get_sample(self, idx):
-        return [sample[idx].item() for sample in self.vals['sample']]
+        return torch.stack([sample[idx] for sample in self.vals['sample']])
 
     def get_samples(self):
         return torch.stack(self.vals['sample'])
 
     def get_target_vals(self):
-        return [target_val.item() for target_val in self.vals['target_val']]
+        return torch.stack(self.vals['target_val'])
 
     def state(self, idx=-1):
         current = {}
@@ -51,8 +51,7 @@ class ChainList(Chain):
 
     def mean(self):
         """ Get the mean of the chain's samples """
-        samples = torch.stack(self.vals['sample'])
-        return samples.mean(0)
+        return self.get_samples().mean(0)
 
     def acceptance_rate(self):
         """ proportion of accepted samples """
