@@ -1,6 +1,9 @@
+import numpy as np
 import torch
 
 from pathlib import Path
+
+from kanga.chains import ChainArray
 
 from .chain import Chain
 
@@ -14,10 +17,10 @@ class ChainList(Chain):
         return f"Markov chain containing {len(self.vals['sample'])} samples."
 
     def __len__(self):
-        return len(self.vals['sample'])
+        return len(self.get_samples())
 
     def num_params(self):
-        return len(self.vals['sample'][0])
+        return len(self.get_sample(0))
 
     def reset(self, keys=None, vals=None):
         if vals is None:
@@ -26,13 +29,19 @@ class ChainList(Chain):
             self.vals = vals
 
     def get_sample(self, idx):
-        return torch.stack([sample[idx] for sample in self.vals['sample']])
+        return self.vals['sample'][idx]
 
     def get_samples(self):
         return torch.stack(self.vals['sample'])
 
     def get_target_vals(self):
         return torch.stack(self.vals['target_val'])
+
+    def get_grad_val(self, idx):
+        return self.vals['grad_val'][idx]
+
+    def get_grad_vals(self):
+        return torch.stack(self.vals['grad_val'])
 
     def state(self, idx=-1):
         current = {}
@@ -48,6 +57,21 @@ class ChainList(Chain):
         """ Update the chain """
         for key in self.vals.keys():
             self.vals[key].append(state[key])
+
+    def to_kanga(self, keys=None):
+        vals = {}
+
+        for key, val in self.vals.items():
+            if key == 'sample':
+                vals[key] = self.get_samples().detach().cpu().numpy()
+            elif key == 'target_val':
+                vals[key] = self.get_target_vals().detach().cpu().numpy()
+            elif key == 'grad_val':
+                vals[key] = self.get_grad_vals().detach().cpu().numpy()
+            elif key == 'accepted':
+                vals[key] = np.array(self.vals['accepted'])
+
+        return ChainArray(vals)
 
     def mean(self):
         """ Get the mean of the chain's samples """

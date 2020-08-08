@@ -13,6 +13,7 @@ from timeit import default_timer as timer
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
 
+from eeyore.chains import ChainList
 from eeyore.datasets import XYDataset
 from eeyore.models import logistic_regression
 from eeyore.samplers import SMMALA
@@ -47,8 +48,9 @@ sampler = SMMALA(
     model,
     theta0=model.prior.sample(),
     dataloader=dataloader,
-    step=0.1 # ,
+    step=0.1, # ,
     # transform=lambda hessian: softabs(hessian.to(torch.float64), 1000.).to(torch.float32)
+    chain=ChainList(keys=['sample', 'target_val', 'grad_val', 'accepted'])
 )
 
 # %% Run SMMALA sampler
@@ -59,6 +61,10 @@ sampler.run(num_epochs=11000, num_burnin_epochs=1000, verbose=True, verbose_step
 
 end_time = timer()
 print("Time taken: {}".format(timedelta(seconds=end_time-start_time)))
+
+# %%
+
+chain_array = sampler.get_chain().to_kanga()
 
 # %% Compute acceptance rate
 
