@@ -10,12 +10,12 @@ from .chain import Chain
 class ChainList(Chain):
     """ Monte Carlo chain to store samples in lists """
 
-    def __init__(self, keys=None, vals=None):
+    def __init__(self, keys=['sample', 'target_val', 'accepted'], vals=None):
         self.reset(keys=keys, vals=vals)
 
-    def reset(self, keys=None, vals=None):
+    def reset(self, keys=['sample', 'target_val', 'accepted'], vals=None):
         if vals is None:
-            self.vals = {key : [] for key in keys or ['sample', 'target_val', 'accepted']}
+            self.vals = {key : [] for key in keys}
         else:
             self.vals = vals
 

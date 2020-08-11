@@ -66,6 +66,8 @@ print("Time taken: {}".format(timedelta(seconds=end_time-start_time)))
 
 chain_array = sampler.get_chain().to_kanga()
 
+# chain_array.savecsv(keys=['sample', 'accepted'], fmt=['%.18e', '%d'])
+
 # %% Compute acceptance rate
 
 print('Acceptance rate: {}'.format(sampler.get_chain().acceptance_rate()))

@@ -31,7 +31,7 @@ class MultiChainSerialSampler(SerialSampler):
 
     def reset_chains(self):
         for sampler in self.samplers:
-            sampler.chain.reset()
+            sampler.chain.reset(keys=sampler.chain.vals.keys())
 
     def reset(self, theta, data=None, reset_counter=True, reset_chain=True):
         x, y = data or next(iter(self.dataloader))

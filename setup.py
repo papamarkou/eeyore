@@ -32,7 +32,7 @@ setup(
         'Programming Language :: Python :: 3.7'
     ],
     keywords=['Bayesian', 'deep learning', 'Markov chains', 'MCMC', 'Monte Carlo', 'neural networks'],
-    install_requires=['numpy', 'torch>=1.3.0', 'torchdiffeq', 'kanga>=0.0.3'],
+    install_requires=['numpy', 'torch>=1.3.0', 'torchdiffeq', 'kanga>=0.0.4'],
     dependency_links=['git+https://github.com/rtqichen/torchdiffeq.git#egg=torchdiffeq'],
     package_data={'eeyore': ['data/*/x.csv', 'data/*/y.csv', 'data/*/readme.md']},
     include_package_data=True,

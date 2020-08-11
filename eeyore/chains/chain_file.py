@@ -9,7 +9,7 @@ from eeyore.constants import torch_to_np_types
 class ChainFile(Chain):
     """ Monte Carlo chain to store samples in file """
 
-    def __init__(self, keys=None, path=Path.cwd(), mode='a'):
+    def __init__(self, keys=['sample', 'target_val', 'accepted'], path=Path.cwd(), mode='a'):
         self.path = path
         self.mode = mode
 
@@ -18,11 +18,8 @@ class ChainFile(Chain):
 
         self.reset(keys=keys)
 
-    def reset(self, keys=None):
-        self.vals = {
-            key : open(self.path.joinpath(key+'.csv'), self.mode)
-            for key in keys or ['sample', 'target_val', 'accepted']
-        }
+    def reset(self, keys=['sample', 'target_val', 'accepted']):
+        self.vals = {key : open(self.path.joinpath(key+'.csv'), self.mode) for key in keys}
 
     def close(self):
         for key in self.vals.keys():

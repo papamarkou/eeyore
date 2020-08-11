@@ -31,7 +31,7 @@ class SingleChainSerialSampler(SerialSampler):
         if reset_counter:
             self.counter.reset()
         if reset_chain:
-            self.chain.reset()
+            self.chain.reset(keys=self.chain.vals.keys())
         self.set_all(theta, data=data)
 
     def to_chainfile(self, path=Path.cwd(), mode='a'):
