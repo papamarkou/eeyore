@@ -1,42 +1,24 @@
+# Compute INSE Monte Carlo covariance estimate using inse_mc_cov function on eeyore
+
 # %% Load packages
 
 import numpy as np
 import torch
 
-from eeyore.stats import inse_mc_cov
+from kanga.stats import inse_mc_cov
 
 # %% Read chains
 
-chains_np = np.genfromtxt('chain01.csv', delimiter=',')
-
-x_np = chains_np
-
-x_np = x_np - x_np.mean(0)
-
-# %%
-
 chains = torch.as_tensor(np.genfromtxt('chain01.csv', delimiter=','))
 
-inse_mc_cov(chains)
+# %% Compute INSE Monte Carlo covariance estimate
 
-inse_mc_cov(chains, adjust=True)
+inse_mc_cov_val = inse_mc_cov(chains)
 
-# %%
+print('INSE Monte Carlo covariance estimate:\n{}'.format(inse_mc_cov_val))
 
-x = chains
+# %% Compute adjusted INSE Monte Carlo covariance estimate
 
-x = x - x.mean(0)
+adj_inse_mc_cov_val = inse_mc_cov(chains, adjust=True)
 
-# %%
-
-n_np, p_np = x_np.shape
-
-ub_np = int(np.floor(n_np / 2))
-sn_np = ub_np
-
-# %%
-
-n, p = x.shape
-
-ub = torch.floor(torch.tensor(n / 2, dtype=x.dtype)).int().item()
-sn = ub
+print('Adjusted INSE Monte Carlo covariance estimate:\n{}'.format(adj_inse_mc_cov_val))
