@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 
+import eeyore.stats as st
+
 from pathlib import Path
 
 from kanga.chains import ChainArray
@@ -65,9 +67,15 @@ class ChainList(Chain):
         """ Get the mean of the chain's samples """
         return self.get_samples().mean(0)
 
+    def mc_cov(self, method='inse', adjust=False):
+        return st.mc_cov(self.get_samples(), method=method, adjust=adjust)
+
     def acceptance_rate(self):
         """ proportion of accepted samples """
         return sum(self.vals['accepted'])/len(self.vals['accepted'])
+
+    def multi_ess(self, method='inse', adjust=False):
+        return st.multi_ess(self.get_samples(), method=method, adjust=adjust)
 
     def save(self, path):
         """ Save the chain to disk """

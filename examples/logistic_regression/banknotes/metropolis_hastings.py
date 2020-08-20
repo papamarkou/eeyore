@@ -73,6 +73,10 @@ print('Acceptance rate: {}'.format(sampler.get_chain().acceptance_rate()))
 
 print('Monte Carlo mean: {}'.format(sampler.get_chain().mean()))
 
+# %% Compute multivariate effective sample size (ESS)
+
+print('Multivariate ESS: {}'.format(sampler.get_chain().multi_ess()))
+
 # %% Plot traces of simulated Markov chain
 
 for i in range(model.num_params()):
