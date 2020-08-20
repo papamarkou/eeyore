@@ -1,5 +1,7 @@
 import torch
 
+# https://discuss.pytorch.org/t/covariance-and-gradient-support/16217
+
 def cov(x, rowvar=True):
     if x.dim() > 2:
         raise ValueError('x has more than 2 dimensions')

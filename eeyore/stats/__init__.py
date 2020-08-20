@@ -6,4 +6,5 @@ from .mc_cov import mc_cov
 from .mean import recursive_mean
 from .metrics import softabs
 from .multi_ess import multi_ess
+from .multi_rhat import multi_rhat
 from .random import choose, choose_from_subset
