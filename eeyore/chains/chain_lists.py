@@ -32,3 +32,33 @@ class ChainLists:
             chain_lists.append(ChainFile(keys=keys, path=path, mode=mode).to_chainlist(dtype=dtype, device=device))
 
         return selfclass.from_chain_list(chain_lists, keys=keys)
+
+    def __repr__(self):
+        return f"{len(self)} Markov chains, each containing {self.num_samples()} samples."
+
+    def __len__(self):
+        return self.num_chains()
+
+    def num_params(self):
+        return len(self.vals['sample'][0][0])
+
+    def num_samples(self):
+        return len(self.vals['sample'][0])
+
+    def num_chains(self):
+        return len(self.vals['sample'])
+
+    def get_samples(self):
+        return torch.stack([self.get_chain(i) for i in range(self.num_chains())])
+
+    def get_target_vals(self):
+        return torch.stack([self.get_chain(i, key='target_val') for i in range(self.num_chains())])
+
+    def get_grad_vals(self):
+        return torch.stack([self.get_chain(i, key='grad_val') for i in range(self.num_chains())])
+
+    def get_chain(self, idx, key='sample'):
+        return torch.stack(self.vals[key][idx])
+
+    def mean(self):
+        return self.get_samples().mean(1)

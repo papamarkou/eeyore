@@ -22,13 +22,16 @@ class ChainList(Chain):
             self.vals = vals
 
     def __repr__(self):
-        return f"Markov chain containing {len(self.vals['sample'])} samples."
+        return f"Markov chain containing {len(self)} samples."
 
     def __len__(self):
-        return len(self.get_samples())
+        return self.num_samples()
 
     def num_params(self):
         return len(self.get_sample(0))
+
+    def num_samples(self):
+        return len(self.vals['sample'])
 
     def get_param(self, idx):
         return torch.stack([sample[idx] for sample in self.vals['sample']])
