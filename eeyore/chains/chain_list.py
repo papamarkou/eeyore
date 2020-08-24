@@ -71,7 +71,10 @@ class ChainList(Chain):
         return self.get_samples().mean(0)
 
     def mc_cov(self, method='inse', adjust=False):
-        return st.mc_cov(self.get_samples(), method=method, adjust=adjust)
+        return st.mc_cov(self.get_samples(), method=method, adjust=adjust, rowvar=False)
+
+    def mc_cor(self, method='inse', adjust=False):
+        return st.mc_cor(self.get_samples(), method=method, adjust=adjust, rowvar=False)
 
     def acceptance_rate(self):
         """ proportion of accepted samples """
