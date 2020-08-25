@@ -1,5 +1,7 @@
 import torch
 
+import eeyore.stats as st
+
 from .chain_file import ChainFile
 
 class ChainLists:
@@ -49,7 +51,7 @@ class ChainLists:
         return len(self.vals['sample'])
 
     def get_samples(self):
-        return torch.stack([self.get_chain(i) for i in range(self.num_chains())])
+        return torch.stack([self.get_chain(i, key='sample') for i in range(self.num_chains())])
 
     def get_target_vals(self):
         return torch.stack([self.get_chain(i, key='target_val') for i in range(self.num_chains())])
@@ -62,3 +64,11 @@ class ChainLists:
 
     def mean(self):
         return self.get_samples().mean(1)
+
+    def mc_cov(self, method='inse', adjust=False):
+        return torch.stack([
+            st.mc_cov(self.get_chain(i, key='sample'), method=method, adjust=adjust, rowvar=False)
+            for i in range(self.num_chains())
+        ])
+
+    # Methods to add: mc_cor, acceptance, multi_ess, rhat
