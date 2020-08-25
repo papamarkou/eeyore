@@ -71,4 +71,7 @@ class ChainLists:
             for i in range(self.num_chains())
         ])
 
-    # Methods to add: mc_cor, acceptance, multi_ess, rhat
+    def mc_cov_summary(self, g=lambda m: torch.mean(m, dim=0), method='inse', adjust=False):
+        return g(self.mc_cov(method=method, adjust=adjust))
+
+    # Methods to add: mc_cor, mc_cor_summary, acceptance, multi_ess, multi_ess_summary, rhat
