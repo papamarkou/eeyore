@@ -68,6 +68,21 @@ class ChainLists:
     def mean_summary(self, g=lambda x: torch.mean(x, dim=0)):
         return g(self.mean())
 
+    def mc_se(self, cov_matrices=None, method='inse', adjust=False):
+        return torch.stack([
+            st.mc_se(
+                self.get_chain(i, key='sample'),
+                cov_matrix=None if cov_matrices is None else cov_matrices[i],
+                method=method,
+                adjust=adjust,
+                rowvar=False
+            )
+            for i in range(self.num_chains())
+        ])
+
+    def mc_se_summary(self, g=lambda x: torch.mean(x, dim=0), cov_matrices=None, method='inse', adjust=False):
+        return g(self.mc_se(cov_matrices=cov_matrices, method=method, adjust=adjust))
+
     def mc_cov(self, method='inse', adjust=False):
         return torch.stack([
             st.mc_cov(self.get_chain(i, key='sample'), method=method, adjust=adjust, rowvar=False)
@@ -111,22 +126,27 @@ class ChainLists:
 
     def summary(
         self,
-        keys=['mean', 'multi_ess', 'multi_rhat'],
+        keys=['mean', 'mcse', 'multi_ess', 'multi_rhat'],
         g_mean_summary=lambda x: torch.mean(x, dim=0),
+        g_mc_se_summary=lambda x: torch.mean(x, dim=0),
         g_acceptance_summary=lambda x: sum(x) / len(x),
         g_multi_ess_summary=lambda x: sum(x) / len(x),
         cov_matrices=None,
         method='inse',
         adjust=False):
         summaries = {}
-        
-        if ('multi_ess' in keys) or ('multi_rhat' in keys):
+
+        if any(item in keys for item in ['mcse', 'multi_ess', 'multi_rhat']):
             if cov_matrices is None:
                 cov_matrices = self.mc_cov(method=method, adjust=adjust)
 
         for key in keys:
             if key == 'mean':
                 summaries[key] = self.mean_summary(g=g_mean_summary)
+            elif key == 'mcse':
+                summaries[key] = self.mc_se_summary(
+                    g=g_mc_se_summary, cov_matrices=cov_matrices, method=method, adjust=adjust
+                )
             elif key == 'acceptance':
                 summaries[key] = self.acceptance_summary(g=g_acceptance_summary)
             elif key == 'multi_ess':
@@ -137,6 +157,3 @@ class ChainLists:
                 summaries[key], _, _ = self.multi_rhat(cov_matrices=cov_matrices, method=method, adjust=adjust)
 
         return summaries
-
-    # mcse
-    # Allow multi_ess and multi_rhat to take optional cov matrix as input

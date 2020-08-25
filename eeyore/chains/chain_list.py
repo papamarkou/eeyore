@@ -70,6 +70,9 @@ class ChainList(Chain):
         """ Get the mean of the chain's samples """
         return self.get_samples().mean(0)
 
+    def mc_se(self, cov_matrix=None, method='inse', adjust=False):
+        return st.mc_se(self.get_samples(), cov_matrix=cov_matrix, method=method, adjust=adjust, rowvar=False)
+
     def mc_cov(self, method='inse', adjust=False):
         return st.mc_cov(self.get_samples(), method=method, adjust=adjust, rowvar=False)
 

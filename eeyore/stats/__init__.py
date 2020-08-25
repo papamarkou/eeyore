@@ -6,6 +6,7 @@ from .inse_mc_cov import inse_mc_cov
 from .loss import binary_cross_entropy
 from .mc_cor import mc_cor
 from .mc_cov import mc_cov
+from .mc_se import mc_se
 from .metrics import softabs
 from .multi_ess import multi_ess
 from .multi_rhat import multi_rhat
