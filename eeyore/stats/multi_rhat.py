@@ -6,12 +6,15 @@ from .cov import cov
 from .mc_cov import mc_cov
 
 # x is a numpy array of 3 dimensions, (chain, MC iteration, parameter)
-def multi_rhat(x, method='inse', adjust=False):
+def multi_rhat(x, cov_matrices=None, method='inse', adjust=False):
     num_chains, num_iters, num_pars = x.shape
 
     w = torch.zeros([num_pars, num_pars])
     for i in range(num_chains):
-        w = w + mc_cov(x[i], method=method, adjust=adjust, rowvar=False)
+        if cov_matrices is None:
+            w = w + mc_cov(x[i], method=method, adjust=adjust, rowvar=False)
+        else:
+            w = w + cov_matrices[i]
     w = w / num_chains
 
     b = cov(x.mean(1), rowvar=False)
