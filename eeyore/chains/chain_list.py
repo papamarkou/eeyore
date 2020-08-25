@@ -22,13 +22,16 @@ class ChainList(Chain):
             self.vals = vals
 
     def __repr__(self):
-        return f"Markov chain containing {len(self.vals['sample'])} samples."
+        return f"Markov chain containing {len(self)} samples."
 
     def __len__(self):
-        return len(self.get_samples())
+        return self.num_samples()
 
     def num_params(self):
         return len(self.get_sample(0))
+
+    def num_samples(self):
+        return len(self.vals['sample'])
 
     def get_param(self, idx):
         return torch.stack([sample[idx] for sample in self.vals['sample']])
@@ -67,15 +70,21 @@ class ChainList(Chain):
         """ Get the mean of the chain's samples """
         return self.get_samples().mean(0)
 
+    def mc_se(self, cov_matrix=None, method='inse', adjust=False):
+        return st.mc_se(self.get_samples(), cov_matrix=cov_matrix, method=method, adjust=adjust, rowvar=False)
+
     def mc_cov(self, method='inse', adjust=False):
-        return st.mc_cov(self.get_samples(), method=method, adjust=adjust)
+        return st.mc_cov(self.get_samples(), method=method, adjust=adjust, rowvar=False)
+
+    def mc_cor(self, method='inse', adjust=False):
+        return st.mc_cor(self.get_samples(), method=method, adjust=adjust, rowvar=False)
 
     def acceptance_rate(self):
         """ proportion of accepted samples """
-        return sum(self.vals['accepted'])/len(self.vals['accepted'])
+        return sum(self.vals['accepted']) / self.num_samples()
 
-    def multi_ess(self, method='inse', adjust=False):
-        return st.multi_ess(self.get_samples(), method=method, adjust=adjust)
+    def multi_ess(self, cov_matrix=None, method='inse', adjust=False):
+        return st.multi_ess(self.get_samples(), cov_matrix=cov_matrix, method=method, adjust=adjust)
 
     def save(self, path):
         """ Save the chain to disk """
