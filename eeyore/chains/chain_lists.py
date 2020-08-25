@@ -65,6 +65,9 @@ class ChainLists:
     def mean(self):
         return self.get_samples().mean(1)
 
+    def mean_summary(self, g=lambda x: torch.mean(x, dim=0)):
+        return g(self.mean())
+
     def mc_cov(self, method='inse', adjust=False):
         return torch.stack([
             st.mc_cov(self.get_chain(i, key='sample'), method=method, adjust=adjust, rowvar=False)
@@ -74,4 +77,54 @@ class ChainLists:
     def mc_cov_summary(self, g=lambda m: torch.mean(m, dim=0), method='inse', adjust=False):
         return g(self.mc_cov(method=method, adjust=adjust))
 
-    # Methods to add: mc_cor, mc_cor_summary, acceptance, multi_ess, multi_ess_summary, rhat
+    def mc_cor(self, method='inse', adjust=False):
+        return torch.stack([
+            st.mc_cor(self.get_chain(i, key='sample'), method=method, adjust=adjust, rowvar=False)
+            for i in range(self.num_chains())
+        ])
+
+    def mc_cor_summary(self, g=lambda m: torch.mean(m, dim=0), method='inse', adjust=False):
+        return g(self.mc_cor(method=method, adjust=adjust))
+
+    def acceptance(self):
+        return [sum(self.vals['accepted'][i]) / self.num_samples() for i in range(self.num_chains())]
+
+    def acceptance_summary(self, g=lambda x: sum(x) / len(x)):
+        return g(self.acceptance())
+
+    def multi_ess(self, method='inse', adjust=False):
+        return [
+            st.multi_ess(self.get_chain(i, key='sample'), method=method, adjust=adjust) for i in range(self.num_chains())
+        ]
+
+    def multi_ess_summary(self, g=lambda x: sum(x) / len(x), method='inse', adjust=False):
+        return g(self.multi_ess(method=method, adjust=adjust))
+
+    def multi_rhat(self, method='inse', adjust=False):
+        return st.multi_rhat(self.get_samples(), method=method, adjust=adjust)
+
+    def summary(
+        self,
+        keys=['mean', 'multi_ess', 'multi_rhat'],
+        g_mean_summary=lambda x: torch.mean(x, dim=0),
+        g_acceptance_summary=lambda x: sum(x) / len(x),
+        g_multi_ess_summary=lambda x: sum(x) / len(x),
+        method='inse',
+        adjust=False):
+        summaries = {}
+        
+        for key in keys:
+            if key == 'mean':
+                summaries[key] = self.mean_summary(g=g_mean_summary)
+            elif key == 'acceptance':
+                summaries[key] = self.acceptance_summary(g=g_acceptance_summary)
+            elif key == 'multi_ess':
+                summaries[key] = self.multi_ess_summary(g=g_multi_ess_summary, method=method, adjust=adjust)
+            elif key == 'multi_rhat':
+                summaries[key], _, _ = self.multi_rhat(method=method, adjust=adjust)
+            
+
+        return summaries
+
+    # mcse
+    # Allow multi_ess and multi_rhat to take optional cov matrix as input

@@ -11,7 +11,7 @@ def multi_rhat(x, method='inse', adjust=False):
 
     w = torch.zeros([num_pars, num_pars])
     for i in range(num_chains):
-        w = w + mc_cov(x[i], method=method, adjust=adjust)
+        w = w + mc_cov(x[i], method=method, adjust=adjust, rowvar=False)
     w = w / num_chains
 
     b = cov(x.mean(1), rowvar=False)

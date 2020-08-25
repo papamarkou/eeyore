@@ -78,7 +78,7 @@ class ChainList(Chain):
 
     def acceptance_rate(self):
         """ proportion of accepted samples """
-        return sum(self.vals['accepted'])/len(self.vals['accepted'])
+        return sum(self.vals['accepted']) / self.num_samples()
 
     def multi_ess(self, method='inse', adjust=False):
         return st.multi_ess(self.get_samples(), method=method, adjust=adjust)
