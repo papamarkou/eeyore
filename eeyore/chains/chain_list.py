@@ -70,6 +70,12 @@ class ChainList(Chain):
         """ Get the mean of the chain's samples """
         return self.get_samples().mean(0)
 
+    def running_mean(self, idx):
+        return st.running_mean(self.get_param(idx))
+
+    def running_means(self):
+        return st.running_mean(self.get_samples(), dim=0)
+
     def mc_se(self, cov_matrix=None, method='inse', adjust=False):
         return st.mc_se(self.get_samples(), cov_matrix=cov_matrix, method=method, adjust=adjust, rowvar=False)
 
