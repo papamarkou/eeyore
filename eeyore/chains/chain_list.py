@@ -85,15 +85,18 @@ class ChainList(Chain):
     def mc_cov(self, method='inse', adjust=False):
         return st.mc_cov(self.get_samples(), method=method, adjust=adjust, rowvar=False)
 
-    def mc_cor(self, method='inse', adjust=False):
-        return st.mc_cor(self.get_samples(), method=method, adjust=adjust, rowvar=False)
+    def mc_cor(self, mc_cov_mat=None, method='inse', adjust=False):
+        if mc_cov_mat is None:
+            return st.mc_cor(self.get_samples(), method=method, adjust=adjust, rowvar=False)
+        else:
+            return st.cor_from_cov(mc_cov_mat)
 
     def acceptance_rate(self):
         """ proportion of accepted samples """
         return sum(self.vals['accepted']) / self.num_samples()
 
-    def multi_ess(self, cov_matrix=None, method='inse', adjust=False):
-        return st.multi_ess(self.get_samples(), cov_matrix=cov_matrix, method=method, adjust=adjust)
+    def multi_ess(self, mc_cov_mat=None, method='inse', adjust=False):
+        return st.multi_ess(self.get_samples(), mc_cov_mat=mc_cov_mat, method=method, adjust=adjust)
 
     def save(self, path):
         """ Save the chain to disk """
