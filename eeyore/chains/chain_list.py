@@ -76,8 +76,11 @@ class ChainList(Chain):
     def running_means(self):
         return st.running_mean(self.get_samples(), dim=0)
 
-    def mc_se(self, cov_matrix=None, method='inse', adjust=False):
-        return st.mc_se(self.get_samples(), cov_matrix=cov_matrix, method=method, adjust=adjust, rowvar=False)
+    def mc_se(self, mc_cov_mat=None, method='inse', adjust=False):
+        if mc_cov_mat is None:
+            return st.mc_se(self.get_samples(), method=method, adjust=adjust, rowvar=False)
+        else:
+            return st.mc_se_from_cov(mc_cov_mat)
 
     def mc_cov(self, method='inse', adjust=False):
         return st.mc_cov(self.get_samples(), method=method, adjust=adjust, rowvar=False)
