@@ -14,3 +14,4 @@ from .multi_rhat import multi_rhat
 from .random import choose, choose_from_subset
 from .recursive_cov import recursive_cov
 from .recursive_mean import recursive_mean
+from .running_mean import running_mean
