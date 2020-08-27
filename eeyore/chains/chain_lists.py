@@ -150,6 +150,6 @@ class ChainLists:
                     g=g_multi_ess_summary, mc_cov_mat=mc_cov_mat, method=method, adjust=adjust
                 )
             elif key == 'multi_rhat':
-                summaries[key], _, _ = self.multi_rhat(mc_cov_mat=mc_cov_mat, method=method, adjust=adjust)
+                summaries[key], _, _, _, _ = self.multi_rhat(mc_cov_mat=mc_cov_mat, method=method, adjust=adjust)
 
         return summaries

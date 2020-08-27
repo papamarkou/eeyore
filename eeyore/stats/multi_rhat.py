@@ -2,6 +2,8 @@
 
 import torch
 
+from eeyore.linalg import is_pos_def, nearest_pd
+
 from .cov import cov
 from .mc_cov import mc_cov
 
@@ -17,9 +19,21 @@ def multi_rhat(x, mc_cov_mat=None, method='inse', adjust=False):
             w = w + mc_cov_mat[i]
     w = w / num_chains
 
+    if not is_pos_def(w):
+        w = nearest_pd(w)
+        is_w_pd = False
+    else:
+        is_w_pd = True
+
     b = cov(x.mean(1), rowvar=False)
 
-    rhat = max(torch.symeig(torch.matmul(torch.inverse(w), b))[0]).item()
+    if not is_pos_def(b):
+        b = nearest_pd(b)
+        is_b_pd = False
+    else:
+        is_b_pd = True
+
+    rhat = torch.eig(torch.matmul(torch.inverse(w), b), eigenvectors=False)[0][:, 0].max().item()
     rhat = ((num_iters - 1) / num_iters) + ((num_chains + 1) / num_chains) * rhat
 
-    return rhat, w, b
+    return rhat, w, b, is_w_pd, is_b_pd
