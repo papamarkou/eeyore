@@ -134,14 +134,14 @@ class ChainLists:
         adjust=False):
         summaries = {}
 
-        if any(item in keys for item in ['mcse', 'multi_ess', 'multi_rhat']):
+        if any(item in keys for item in ['mc_se', 'multi_ess', 'multi_rhat']):
             if mc_cov_mat is None:
                 mc_cov_mat = self.mc_cov(method=method, adjust=adjust)
 
         for key in keys:
             if key == 'mean':
                 summaries[key] = self.mean_summary(g=g_mean_summary)
-            elif key == 'mcse':
+            elif key == 'mc_se':
                 summaries[key] = self.mc_se_summary(g=g_mc_se_summary, mc_cov_mat=mc_cov_mat, method=method, adjust=adjust)
             elif key == 'acceptance':
                 summaries[key] = self.acceptance_summary(g=g_acceptance_summary)
