@@ -96,7 +96,7 @@ chain_array = chain_list.to_kanga()
 for i in range(model.num_params()):
     ps.trace(
         chain_array.get_param(i),
-        title=r'Traceplot of $\theta_{{{0}}}$'.format(i+1),
+        title=r'Traceplot of $\theta_{{{}}}$'.format(i+1),
         xlabel='Iteration',
         ylabel='Parameter value'
     )
