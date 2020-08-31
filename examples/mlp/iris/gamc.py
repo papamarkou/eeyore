@@ -70,33 +70,29 @@ sampler.run(num_epochs=11000, num_burnin_epochs=1000, verbose=True, verbose_step
 end_time = timer()
 print("Time taken: {}".format(timedelta(seconds=end_time-start_time)))
 
-# %% For convenience, name the chain list
-
-chain_list = sampler.get_chain()
-
-# %% Compute acceptance rate
-
-print('Acceptance rate: {}'.format(chain_list.acceptance_rate()))
-
-# %% Compute Monte Carlo mean
-
-print('Monte Carlo mean: {}'.format(chain_list.mean()))
-
-# %% Compute Monte Carlo standard error
-
-print('Monte Carlo standard error: {}'.format(chain_list.mc_se()))
-
-# %% Compute multivariate ESS
-
-print('Multivariate ESS: {}'.format(chain_list.multi_ess()))
-
 # %% Import kanga package for visual MCMC summaries
 
 import kanga.plots as ps
 
 # %% Generate kanga ChainArray from eeyore ChainList
 
-chain_array = chain_list.to_kanga()
+chain_array = sampler.get_chain().to_kanga()
+
+# %% Compute acceptance rate
+
+print('Acceptance rate: {}'.format(chain_array.acceptance_rate()))
+
+# %% Compute Monte Carlo mean
+
+print('Monte Carlo mean: {}'.format(chain_array.mean()))
+
+# %% Compute Monte Carlo standard error
+
+print('Monte Carlo standard error: {}'.format(chain_array.mc_se()))
+
+# %% Compute multivariate ESS
+
+print('Multivariate ESS: {}'.format(chain_array.multi_ess()))
 
 # %% Plot traces of simulated Markov chain
 
