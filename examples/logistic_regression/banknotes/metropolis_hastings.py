@@ -37,7 +37,7 @@ model = logistic_regression.LogisticRegression(
 )
 model.prior = Normal(
     torch.zeros(model.num_params(), dtype=model.dtype),
-    torch.sqrt(torch.tensor(3, dtype=model.dtype)) * torch.ones(model.num_params(), dtype=model.dtype)
+    (3 * torch.ones(model.num_params(), dtype=model.dtype)).sqrt()
 )
 
 # %% Setup Metropolis-Hastings sampler
@@ -45,7 +45,7 @@ model.prior = Normal(
 proposal_scale = 0.5
 kernel = NormalKernel(
     torch.zeros(model.num_params(), dtype=model.dtype),
-    torch.tensor(proposal_scale, dtype=model.dtype) * torch.ones(model.num_params(), dtype=model.dtype)
+    proposal_scale * torch.ones(model.num_params(), dtype=model.dtype)
 )
 sampler = MetropolisHastings(
     model,
