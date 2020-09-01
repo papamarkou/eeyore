@@ -27,7 +27,7 @@ density = Density(log_pdf, 1, dtype=torch.float64)
 
 sampler = MALA(
     density,
-    theta0=torch.tensor([-1], dtype=torch.float64),
+    theta0=torch.tensor([-1], dtype=density.dtype),
     dataloader=DataLoader(EmptyXYDataset()),
     step=0.25
 )
@@ -36,22 +36,30 @@ sampler = MALA(
 
 sampler.run(num_epochs=11000, num_burnin_epochs=1000)
 
+# %% For convenience, name the chain list
+
+chain_list = sampler.get_chain()
+
 # %% Compute acceptance rate
 
-print('Acceptance rate: {}'.format(sampler.get_chain().acceptance_rate()))
+print('Acceptance rate: {}'.format(chain_list.acceptance_rate()))
 
 # %% Compute Monte Carlo mean
 
-print('Monte Carlo mean: {}'.format(sampler.get_chain().mean()))
+print('Monte Carlo mean: {}'.format(chain_list.mean()))
+
+# %% Compute Monte Carlo standard error
+
+print('Monte Carlo standard error: {}'.format(chain_list.mc_se()))
 
 # %% Plot traces of simulated Markov chain
 
-chain = sampler.chain.get_sample(0)
+chain = chain_list.get_param(0)
 plt.figure()
 sns.lineplot(range(len(chain)), chain)
 plt.xlabel('Iteration')
 plt.ylabel('Parameter value')
-plt.title(r'Traceplot of $\theta_{{{0}}}$'.format(1))
+plt.title(r'Traceplot of $\theta_{{{}}}$'.format(1))
 
 # %% Plot histograms of marginals of simulated Markov chain
 
@@ -59,12 +67,12 @@ x_hist_range = np.linspace(0.001, 10, 100)
 
 plt.figure()
 plot = sns.distplot(
-    torch.tensor(sampler.chain.get_sample(0)).exp(),
+    chain_list.get_param(0).exp(),
     hist=True, norm_hist=True, kde=False,
     color='blue', label='Simulated'
 )
 plot.set_xlabel('Parameter value')
 plot.set_ylabel('Relative frequency')
-plot.set_title(r'Traceplot of $\theta_{{{0}}}$'.format(1))
+plot.set_title(r'Traceplot of $\theta_{{{}}}$'.format(1))
 sns.lineplot(x_hist_range, stats.gamma.pdf(x_hist_range, v[0], scale=v[1]), color='red', label='Target')
 plot.legend()
