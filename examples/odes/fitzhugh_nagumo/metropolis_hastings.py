@@ -1,6 +1,6 @@
 # %% Sampling the parameters of the Fitzhugh Nagumo ODE system
 
-# %% Import packages
+# %% Import packages for MCMC simulation
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -64,11 +64,11 @@ dataloader = DataLoader(ode_data, batch_size=len(ode_data))
 
 # %% Setup proposal variance and proposal kernel for Metropolis-Hastings sampler
 
-proposal_var = 0.01
+proposal_scale = 0.01
 
 kernel = NormalKernel(
-    torch.zeros(model.num_params(), dtype=torch.float32),
-    torch.tensor([proposal_var], dtype=torch.float32)*torch.ones(model.num_params(), dtype=torch.float32)
+    torch.zeros(model.num_params(), dtype=model.dtype),
+    proposal_scale * torch.ones(model.num_params(), dtype=model.dtype)
 )
 
 # %% Set number of chains, of iterations and of burnin iterations
@@ -90,16 +90,14 @@ sampler.run(num_epochs=num_iterations, num_burnin_epochs=num_burnin, verbose=Tru
 end_time = timer()
 
 # Print initial value of ODE parameters, runtime and acceptance rate
-print("theta0 = {}".format(theta0.cpu().detach().numpy()))
+print("theta0 = {}".format(theta0))
 print("Duration {}, acceptance rate {}".format(
     timedelta(seconds=end_time-start_time), sampler.chain.acceptance_rate())
 )
 
-# %% Store all parameters in a single torch tensor
+# %% Transform simulated chains
 
-chain = torch.empty(num_post_burnin, model.num_params())
-for j in range(model.num_params()):
-    chain[:, j] = torch.tensor(sampler.get_sample(j)).exp()
+chain = sampler.get_chain().get_samples().exp()
 
 # %% Plot traces of simulated Markov chain
 

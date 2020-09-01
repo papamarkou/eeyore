@@ -13,6 +13,9 @@ class SingleChainSerialSampler(SerialSampler):
     def get_chain(self):
         return self.chain
 
+    def get_param(self, idx):
+        return self.get_chain().get_param(idx)
+
     def get_sample(self, idx):
         return self.get_chain().get_sample(idx)
 

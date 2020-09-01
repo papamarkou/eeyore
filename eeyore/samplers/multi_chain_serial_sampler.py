@@ -16,8 +16,11 @@ class MultiChainSerialSampler(SerialSampler):
     def get_chain(self, idx=None):
         return self.samplers[idx or self.default_indicator()].chain
 
-    def get_sample(self, param_idx, chain_idx=None):
-        return self.get_chain(idx=chain_idx).get_sample(idx=param_idx)
+    def get_param(self, param_idx, chain_idx=None):
+        return self.get_chain(idx=chain_idx).get_param(idx=param_idx)
+
+    def get_sample(self, sample_idx, chain_idx=None):
+        return self.get_chain(idx=chain_idx).get_sample(idx=sample_idx)
 
     def set_current(self, theta, data=None):
         x, y = data or next(iter(self.dataloader))
