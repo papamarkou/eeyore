@@ -2,7 +2,7 @@
 #
 # Sampling the weights of a multi-layer perceptron (MLP) using the iris data and power posterior algorithm.
 
-# %% Import packages for MCMC simulation and numerical MCMC summaries and diagnostics
+# %% Import packages for MCMC simulation
 
 import matplotlib.pyplot as plt
 import torch
