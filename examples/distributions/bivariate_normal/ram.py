@@ -32,16 +32,18 @@ from eeyore.samplers import RAM
 
 # Using log_pdf function based on MultivariateNormal torch distribution
 
-pdf = MultivariateNormal(torch.zeros(2), covariance_matrix=torch.eye(2))
+pdf_dtype = torch.float32
+
+pdf = MultivariateNormal(torch.zeros(2, dtype=pdf_dtype), covariance_matrix=torch.eye(2, dtype=pdf_dtype))
 
 def log_pdf(theta, x, y):
     return pdf.log_prob(theta)
 
-density = Density(log_pdf, 2, dtype=torch.float32)
+density = Density(log_pdf, 2, dtype=pdf.loc.dtype)
 
 # %% Setup RAM sampler
 
-sampler = RAM(density, theta0=torch.tensor([-1, 1], dtype=torch.float32), dataloader=DataLoader(EmptyXYDataset()))
+sampler = RAM(density, theta0=torch.tensor([-1, 1], dtype=density.dtype), dataloader=DataLoader(EmptyXYDataset()))
 
 # %% Run RAM sampler
 
@@ -55,10 +57,18 @@ print('Acceptance rate: {}'.format(sampler.get_chain().acceptance_rate()))
 
 print('Monte Carlo mean: {}'.format(sampler.get_chain().mean()))
 
+# %% Compute Monte Carlo standard error
+
+print('Monte Carlo standard error: {}'.format(sampler.get_chain().mc_se()))
+
+# %% Compute multivariate ESS
+
+print('Multivariate ESS: {}'.format(sampler.get_chain().multi_ess()))
+
 # %% Plot traces of simulated Markov chain
 
 for i in range(density.num_params()):
-    chain = sampler.get_sample(i)
+    chain = sampler.get_param(i)
     plt.figure()
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
@@ -71,7 +81,7 @@ x_hist_range = np.linspace(-4, 4, 100)
 
 for i in range(density.num_params()):
     plt.figure()
-    plot = sns.distplot(sampler.get_sample(i), hist=False, color='blue', label='Simulated')
+    plot = sns.distplot(sampler.get_param(i), hist=False, color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')
     plot.set_ylabel('Relative frequency')
     plot.set_title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
@@ -88,6 +98,6 @@ contour_grid[:, :, 1] = y_contour_range
 
 target = stats.multivariate_normal([0., 0.], [[1., 0.], [0., 1.]])
 
-plt.scatter(x=sampler.get_sample(0), y=sampler.get_sample(1), marker='+')
+plt.scatter(x=sampler.get_param(0), y=sampler.get_param(1), marker='+')
 plt.contour(x_contour_range, y_contour_range, target.pdf(contour_grid), cmap='copper')
 plt.title('Countours of target and scatterplot of simulated chain');

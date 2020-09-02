@@ -2,10 +2,8 @@
 #
 # Sampling logistic regression coefficients using the Swiss banknote data and RAM.
 
-# %% Import packages
+# %% Import packages for MCMC simulation and numerical MCMC summaries and diagnostics
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 import torch
 
 from datetime import timedelta
@@ -38,14 +36,14 @@ model = logistic_regression.LogisticRegression(
 )
 model.prior = Normal(
     torch.zeros(model.num_params(), dtype=model.dtype),
-    torch.sqrt(torch.tensor(1., dtype=model.dtype)) * torch.ones(model.num_params(), dtype=model.dtype)
+    torch.ones(model.num_params(), dtype=model.dtype)
 )
 
-# %% Setup Metropolis-Hastings sampler
+# %% Setup robust adaptive Metropolis sampler
 
 sampler = RAM(model, theta0=model.prior.sample(), dataloader=dataloader)
 
-# %% Run Metropolis-Hastings sampler
+# %% Run robust adaptive Metropolis sampler
 
 start_time = timer()
 
@@ -55,44 +53,62 @@ sampler.run(num_epochs=11000, num_burnin_epochs=1000, verbose=True, verbose_step
 end_time = timer()
 print("Time taken: {}".format(timedelta(seconds=end_time-start_time)))
 
+# %% For convenience, name the chain list
+
+chain_list = sampler.get_chain()
+
 # %% Compute acceptance rate
 
-print('Acceptance rate: {}'.format(sampler.get_chain().acceptance_rate()))
+print('Acceptance rate: {}'.format(chain_list.acceptance_rate()))
 
 # %% Compute Monte Carlo mean
 
-print('Monte Carlo mean: {}'.format(sampler.get_chain().mean()))
+print('Monte Carlo mean: {}'.format(chain_list.mean()))
+
+# %% Compute Monte Carlo standard error
+
+print('Monte Carlo standard error: {}'.format(chain_list.mc_se()))
+
+# %% Compute multivariate ESS
+
+print('Multivariate ESS: {}'.format(chain_list.multi_ess()))
+
+# %% Import kanga package for visual MCMC summaries
+
+import kanga.plots as ps
+
+# %% Generate kanga ChainArray from eeyore ChainList
+
+chain_array = chain_list.to_kanga()
 
 # %% Plot traces of simulated Markov chain
 
 for i in range(model.num_params()):
-    chain = sampler.get_sample(i)
-    plt.figure()
-    sns.lineplot(range(len(chain)), chain)
-    plt.xlabel('Iteration')
-    plt.ylabel('Parameter value')
-    plt.title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
+    ps.trace(
+        chain_array.get_param(i),
+        title=r'Traceplot of $\theta_{{{}}}$'.format(i+1),
+        xlabel='Iteration',
+        ylabel='Parameter value'
+    )
 
 # %% Plot running means of simulated Markov chain
 
 for i in range(model.num_params()):
-    chain = sampler.get_sample(i)
-    chain_mean = torch.empty(len(chain))
-    chain_mean[0] = chain[0]
-    for j in range(1, len(chain)):
-        chain_mean[j] = (chain[j]+j*chain_mean[j-1])/(j+1)
-
-    plt.figure()
-    sns.lineplot(range(len(chain)), chain_mean)
-    plt.xlabel('Iteration')
-    plt.ylabel('Parameter value')
-    plt.title(r'Running mean of $\theta_{{{0}}}$'.format(i+1))
+    ps.running_mean(
+        chain_array.get_param(i),
+        title=r'Running mean plot of parameter $\theta_{{{}}}$'.format(i+1),
+        xlabel='Iteration',
+        ylabel='Running mean'
+    )
 
 # %% Plot histograms of marginals of simulated Markov chain
 
-for i in range(model.num_params()):
-    plt.figure()
-    sns.distplot(sampler.get_sample(i), bins=20, norm_hist=True)
-    plt.xlabel('Value range')
-    plt.ylabel('Relative frequency')
-    plt.title(r'Histogram of $\theta_{{{0}}}$'.format(i+1))
+for i in range(model.num_params()):    
+    ps.hist(
+        chain_array.get_param(i),
+        bins=30,
+        density=True,
+        title=r'Histogram of parameter $\theta_{{{}}}$'.format(i+1),
+        xlabel='Parameter value',
+        ylabel='Parameter relative frequency'
+    )

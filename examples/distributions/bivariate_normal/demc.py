@@ -32,12 +32,14 @@ from eeyore.samplers import DEMC
 
 # Using log_pdf function based on MultivariateNormal torch distribution
 
-pdf = MultivariateNormal(torch.zeros(2), covariance_matrix=torch.eye(2))
+pdf_dtype = torch.float32
+
+pdf = MultivariateNormal(torch.zeros(2, dtype=pdf_dtype), covariance_matrix=torch.eye(2, dtype=pdf_dtype))
 
 def log_pdf(theta, x, y):
     return pdf.log_prob(theta)
 
-density = Density(log_pdf, 2, dtype=torch.float32)
+density = Density(log_pdf, 2, dtype=pdf.loc.dtype)
 
 # %% Set number of chains
 
@@ -49,7 +51,7 @@ sampler = DEMC(
     density,
     [torch.ones(2) for _ in range(num_chains)],
     DataLoader(EmptyXYDataset()),
-    theta0=torch.tensor([-1, 1], dtype=torch.float32),
+    theta0=torch.tensor([-1, 1], dtype=density.dtype),
     num_chains=num_chains,
     c=[1. for _ in range(num_chains)]
 )
@@ -70,10 +72,18 @@ print('Acceptance rate: {}'.format(sampler.get_chain(idx=chain_id).acceptance_ra
 
 print('Monte Carlo mean: {}'.format(sampler.get_chain(idx=chain_id).mean()))
 
+# %% Compute Monte Carlo standard error
+
+print('Monte Carlo standard error: {}'.format(sampler.get_chain(idx=chain_id).mc_se()))
+
+# %% Compute multivariate ESS
+
+print('Multivariate ESS: {}'.format(sampler.get_chain(idx=chain_id).multi_ess()))
+
 # %% Plot traces of simulated Markov chain
 
 for j in range(sampler.get_model(idx=chain_id).num_params()):
-    chain = sampler.get_sample(j, chain_idx=chain_id)
+    chain = sampler.get_param(j, chain_idx=chain_id)
     plt.figure()
     sns.lineplot(range(len(chain)), chain)
     plt.xlabel('Iteration')
@@ -86,7 +96,7 @@ x_hist_range = np.linspace(-4, 4, 100)
 
 for j in range(sampler.get_model(idx=chain_id).num_params()):
     plt.figure()
-    plot = sns.distplot(sampler.get_sample(j, chain_idx=chain_id), hist=False, color='blue', label='Simulated')
+    plot = sns.distplot(sampler.get_param(j, chain_idx=chain_id), hist=False, color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')
     plot.set_ylabel('Relative frequency')
     plot.set_title(r'Traceplot of $\theta_{{{0}}}$'.format(j+1))
@@ -103,6 +113,6 @@ contour_grid[:, :, 1] = y_contour_range
 
 target = stats.multivariate_normal([0., 0.], [[1., 0.], [0., 1.]])
 
-plt.scatter(x=sampler.get_sample(0, chain_idx=chain_id), y=sampler.get_sample(1, chain_idx=chain_id), marker='+')
+plt.scatter(x=sampler.get_param(0, chain_idx=chain_id), y=sampler.get_param(1, chain_idx=chain_id), marker='+')
 plt.contour(x_contour_range, y_contour_range, target.pdf(contour_grid), cmap='copper')
 plt.title('Countours of target and scatterplot of simulated chain');
