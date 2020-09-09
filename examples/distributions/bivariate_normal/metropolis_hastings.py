@@ -13,7 +13,7 @@ from torch.distributions import MultivariateNormal
 from torch.utils.data import DataLoader
 
 from eeyore.datasets import EmptyXYDataset
-from eeyore.models import Density
+from eeyore.models import DistributionModel
 from eeyore.kernels import IsoSEKernel # , NormalKernel
 from eeyore.samplers import MetropolisHastings
 from eeyore.stats import mmd
@@ -41,19 +41,19 @@ pdf = MultivariateNormal(torch.zeros(2, dtype=pdf_dtype), covariance_matrix=torc
 def log_pdf(theta, x, y):
     return pdf.log_prob(theta)
 
-density = Density(log_pdf, 2, dtype=pdf.loc.dtype)
+model = DistributionModel(log_pdf, 2, dtype=pdf.loc.dtype)
 
 # %% Setup Metropolis-Hastings sampler
 
 sampler = MetropolisHastings(
-    density,
-    theta0=torch.tensor([-1, 1], dtype=density.dtype),
+    model,
+    theta0=torch.tensor([-1, 1], dtype=model.dtype),
     dataloader=DataLoader(EmptyXYDataset()),
     symmetric=True
 )
-# num_params = density.num_params()
+# num_params = model.num_params()
 # kernel = NormalKernel(torch.zeros(num_params), np.sqrt(2)*torch.ones(num_params))
-# sampler = MetropolisHastings(density, theta0=torch.tensor([-1, 1], dtype=torch.float32), dataloader=dataloader, kernel)
+# sampler = MetropolisHastings(model, theta0=torch.tensor([-1, 1], dtype=torch.float32), dataloader=dataloader, kernel)
 
 # %% Run Metropolis-Hastings sampler
 
@@ -77,7 +77,7 @@ print('Multivariate ESS: {}'.format(sampler.get_chain().multi_ess()))
 
 # %% Plot traces of simulated Markov chain
 
-for i in range(density.num_params()):
+for i in range(model.num_params()):
     chain = sampler.get_param(i)
     plt.figure()
     sns.lineplot(range(len(chain)), chain)
@@ -89,7 +89,7 @@ for i in range(density.num_params()):
 
 x_hist_range = np.linspace(-4, 4, 100)
 
-for i in range(density.num_params()):
+for i in range(model.num_params()):
     plt.figure()
     plot = sns.distplot(sampler.get_param(i), hist=False, color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')

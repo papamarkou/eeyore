@@ -15,7 +15,7 @@ from torch.distributions import MultivariateNormal
 from torch.utils.data import DataLoader
 
 from eeyore.datasets import EmptyXYDataset
-from eeyore.models import Density
+from eeyore.models import DistributionModel
 from eeyore.samplers import PowerPosteriorSampler
 
 # %% Set up unnormalized target density
@@ -41,7 +41,7 @@ pdf = MultivariateNormal(torch.zeros(2, dtype=pdf_dtype), covariance_matrix=torc
 def log_pdf(theta, x, y):
     return pdf.log_prob(theta)
 
-density = Density(log_pdf, 2, dtype=pdf.loc.dtype)
+model = DistributionModel(log_pdf, 2, dtype=pdf.loc.dtype)
 
 # %% Setup PowerPosteriorSampler
 
@@ -50,10 +50,10 @@ num_chains = 5
 per_chain_samplers = [['MALA', {'step': 0.25}] for _ in range(num_chains)]
 
 sampler = PowerPosteriorSampler(
-    density,
+    model,
     DataLoader(EmptyXYDataset()),
     per_chain_samplers,
-    theta0=torch.tensor([-1, 1], dtype=density.dtype),
+    theta0=torch.tensor([-1, 1], dtype=model.dtype),
     between_step=1,
     check_input=True
 )
@@ -81,7 +81,7 @@ print('Multivariate ESS: {}'.format(sampler.get_chain().multi_ess()))
 
 # %% Plot traces of simulated Markov chain
 
-for i in range(density.num_params()):
+for i in range(model.num_params()):
     chain = sampler.get_param(i)
     plt.figure()
     sns.lineplot(range(len(chain)), chain)
@@ -93,7 +93,7 @@ for i in range(density.num_params()):
 
 x_hist_range = np.linspace(-4, 4, 100)
 
-for i in range(density.num_params()):
+for i in range(model.num_params()):
     plt.figure()
     plot = sns.distplot(sampler.get_param(i), hist=False, color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')

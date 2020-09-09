@@ -12,7 +12,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from eeyore.datasets import EmptyXYDataset
-from eeyore.models import Density
+from eeyore.models import DistributionModel
 from eeyore.samplers import SMMALA
 from eeyore.stats import softabs
 
@@ -46,7 +46,7 @@ def log_pdf(theta, x, y):
         + torch.exp(-0.5 * torch.dot(theta-means[1], theta-means[1]))
     )
 
-density = Density(log_pdf, 2, dtype=pdf_dtype)
+model = DistributionModel(log_pdf, 2, dtype=pdf_dtype)
 
 # %% Setup SMMALA sampler
 
@@ -57,11 +57,11 @@ density = Density(log_pdf, 2, dtype=pdf_dtype)
 # The solution is to use torch.float32 throught, and convert to torch.float64 only in softabs
 
 sampler = SMMALA(
-    density,
-    theta0=torch.tensor([0., 0.], dtype=density.dtype),
+    model,
+    theta0=torch.tensor([0., 0.], dtype=model.dtype),
     dataloader=DataLoader(EmptyXYDataset()),
     step=0.75,
-    transform=lambda hessian: softabs(hessian.to(torch.float64), 1000.).to(density.dtype)
+    transform=lambda hessian: softabs(hessian.to(torch.float64), 1000.).to(model.dtype)
 )
 
 # %% Run SMMALA sampler
@@ -90,7 +90,7 @@ print('Multivariate ESS: {}'.format(sampler.get_chain().multi_ess(mc_cov_mat=mc_
 
 # %% Plot traces of simulated Markov chain
 
-for i in range(density.num_params()):
+for i in range(model.num_params()):
     chain = sampler.get_param(i)
     plt.figure()
     sns.lineplot(range(len(chain)), chain)
@@ -102,7 +102,7 @@ for i in range(density.num_params()):
 
 x_hist_range = np.linspace(-7, 7, 100)
 
-for i in range(density.num_params()):
+for i in range(model.num_params()):
     plt.figure()
     plot = sns.distplot(sampler.get_param(i), hist=False, color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')

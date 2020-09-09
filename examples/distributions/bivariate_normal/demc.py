@@ -13,7 +13,7 @@ from torch.distributions import MultivariateNormal
 from torch.utils.data import DataLoader
 
 from eeyore.datasets import EmptyXYDataset
-from eeyore.models import Density
+from eeyore.models import DistributionModel
 from eeyore.samplers import DEMC
 
 # %% Set up unnormalized target density
@@ -39,7 +39,7 @@ pdf = MultivariateNormal(torch.zeros(2, dtype=pdf_dtype), covariance_matrix=torc
 def log_pdf(theta, x, y):
     return pdf.log_prob(theta)
 
-density = Density(log_pdf, 2, dtype=pdf.loc.dtype)
+model = DistributionModel(log_pdf, 2, dtype=pdf.loc.dtype)
 
 # %% Set number of chains
 
@@ -48,10 +48,10 @@ num_chains = 5
 # %% Setup DE-MC sampler
 
 sampler = DEMC(
-    density,
+    model,
     [torch.ones(2) for _ in range(num_chains)],
     DataLoader(EmptyXYDataset()),
-    theta0=torch.tensor([-1, 1], dtype=density.dtype),
+    theta0=torch.tensor([-1, 1], dtype=model.dtype),
     num_chains=num_chains,
     c=[1. for _ in range(num_chains)]
 )

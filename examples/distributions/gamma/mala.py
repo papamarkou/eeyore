@@ -11,7 +11,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from eeyore.datasets import EmptyXYDataset
-from eeyore.models import Density
+from eeyore.models import DistributionModel
 from eeyore.samplers import MALA
 
 # %% Set up unnormalized target density
@@ -21,13 +21,13 @@ v = torch.tensor([2., 1.], dtype=torch.float64)
 def log_pdf(theta, x, y):
     return (v[0] - 1) * theta - torch.exp(theta) / v[1] + theta # Jacobian
 
-density = Density(log_pdf, 1, dtype=torch.float64)
+model = DistributionModel(log_pdf, 1, dtype=torch.float64)
 
 # %% Setup MALA sampler
 
 sampler = MALA(
-    density,
-    theta0=torch.tensor([-1], dtype=density.dtype),
+    model,
+    theta0=torch.tensor([-1], dtype=model.dtype),
     dataloader=DataLoader(EmptyXYDataset()),
     step=0.25
 )

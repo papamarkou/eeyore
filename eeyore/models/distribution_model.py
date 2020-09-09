@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from .log_target_model import LogTargetModel
 
-class Density(LogTargetModel):
+class DistributionModel(LogTargetModel):
     def __init__(self, log_pdf, num_params, temperature=None, dtype=torch.float64, device='cpu', requires_grad=True):
         super().__init__(constraint=None, bounds=[None, None], temperature=temperature, dtype=dtype, device=device)
         self.log_pdf = log_pdf
@@ -14,7 +14,7 @@ class Density(LogTargetModel):
     def summary(self, hashsummary=False):
         print(self)
         print("-" * 80)
-        print(f"Number of density parameters: {self.num_params()}")
+        print(f"Number of distribution parameters: {self.num_params()}")
         print("-" * 80)
 
     def log_target(self, theta, x, y):
