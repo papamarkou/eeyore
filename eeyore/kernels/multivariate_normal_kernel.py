@@ -20,4 +20,4 @@ class MultivariateNormalKernel(NormalizedKernel):
 
     def k(self, x1, x2, sigma=None):
         self.set_density_params(x2, sigma=sigma)
-        return self.log_density(x1).exp()
+        return self.log_prob(x1).exp()
