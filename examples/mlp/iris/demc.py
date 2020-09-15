@@ -45,9 +45,6 @@ model.prior = Normal(
 
 num_chains = 100
 
-sigmas = [torch.tensor(model.num_params()*[0.0001], dtype=model.dtype) for i in range(num_chains)]
-c = [0.01 for _ in range(num_chains)]
-
 sampler = DEMC(
     model,
     [torch.tensor(model.num_params()*[0.0001], dtype=model.dtype) for i in range(num_chains)],
@@ -114,7 +111,7 @@ for i in range(model.num_params()):
 
 # %% Plot histograms of marginals of simulated Markov chain
 
-for i in range(model.num_params()):    
+for i in range(model.num_params()):
     ps.hist(
         chain_array.get_param(i),
         bins=30,
