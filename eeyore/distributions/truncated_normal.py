@@ -10,9 +10,11 @@ class TruncatedNormal(TruncatedDistribution):
     def __init__(self, loc, scale, lower_bound=-float('inf'), upper_bound=float('inf'), *args, **kwargs):
         super().__init__(Normal(loc, scale), lower_bound=lower_bound, upper_bound=upper_bound, *args, **kwargs)
 
+        self.a = (self.lower_bound - self.base_dist.loc) / self.base_dist.scale
+        self.b = (self.upper_bound - self.base_dist.loc) / self.base_dist.scale
+
     def sample_lower_bounded(self):
-        l = (self.lower_bound - self.base_dist.loc) / self.base_dist.scale
-        rate = 0.5 * (l + (l ** 2 + 4).sqrt())
+        rate = 0.5 * (self.a + (self.a ** 2 + 4).sqrt())
 
         while True:
             sample = Exponential(rate / self.base_dist.scale).sample() + self.lower_bound
@@ -23,8 +25,7 @@ class TruncatedNormal(TruncatedDistribution):
         return sample
 
     def sample_upper_bounded(self):
-        l = (self.base_dist.loc - self.upper_bound) / self.base_dist.scale
-        rate = 0.5 * (l + (l ** 2 + 4).sqrt())
+        rate = 0.5 * (-self.b + (self.b ** 2 + 4).sqrt())
 
         while True:
             sample = Exponential(rate / self.base_dist.scale).sample() - self.upper_bound
@@ -34,34 +35,15 @@ class TruncatedNormal(TruncatedDistribution):
 
         return -sample
 
-    def sample_std_doubly_bounded(self):
-        while True:
-            sample = Uniform(self.lower_bound, self.upper_bound).sample()
-
-            if ((self.lower_bound < 0) and (0 < self.upper_bound)):
-                ratio = (-0.5 * (sample ** 2)).exp()
-            elif self.upper_bound < 0:
-                ratio = (0.5 * (self.upper_bound ** 2 - sample ** 2)).exp()
-            elif 0 < self.lower_bound:
-                ratio = (0.5 * (self.lower_bound ** 2 - sample ** 2)).exp()
-
-            if torch.rand(1, dtype=self.base_dist.loc.dtype, device=self.base_dist.loc.device) <= ratio:
-                break
-
-        return sample
-
     def sample_doubly_bounded(self):
         while True:
-            a = (self.lower_bound - self.base_dist.loc) / self.base_dist.scale
-            b = (self.upper_bound - self.base_dist.loc) / self.base_dist.scale
+            sample = Uniform(self.a, self.b).sample()
 
-            sample = Uniform(a, b).sample()
-
-            if ((a < 0) and (0 < b)):
+            if ((self.a < 0) and (0 < self.b)):
                 ratio = (-0.5 * (sample ** 2)).exp()
-            elif b < 0:
+            elif self.b < 0:
                 ratio = (0.5 * (b ** 2 - sample ** 2)).exp()
-            elif 0 < a:
+            elif 0 < self.a:
                 ratio = (0.5 * (a ** 2 - sample ** 2)).exp()
 
             if torch.rand(1, dtype=self.base_dist.loc.dtype, device=self.base_dist.loc.device) <= ratio:
