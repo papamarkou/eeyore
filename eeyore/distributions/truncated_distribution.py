@@ -6,7 +6,8 @@ class TruncatedDistribution(Distribution):
     def __init__(self, base_dist, lower_bound=-float('inf'), upper_bound=float('inf'), *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.lower_bound, self.upper_bound = broadcast_all(lower_bound, upper_bound)
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
         self.base_dist = base_dist
         self.z = self.base_dist.cdf(self.upper_bound) - self.base_dist.cdf(self.lower_bound)
 
