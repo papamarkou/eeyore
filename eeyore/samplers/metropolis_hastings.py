@@ -28,9 +28,9 @@ class MetropolisHastings(SingleChainSerialSampler):
         x, y = super().set_current(theta, data=data)
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
 
-    def set_kernel_params(self, sigma=None, scale_tril=None):
-        if sigma is not None:
-            self.kernel.set_density_params(self.current['sample'].clone().detach(), sigma=sigma)
+    def set_kernel_params(self, scale=None, scale_tril=None):
+        if scale is not None:
+            self.kernel.set_density_params(self.current['sample'].clone().detach(), scale=scale)
         elif scale_tril is not None:
             self.kernel.set_density_params(
                 self.current['sample'].clone().detach(), scale_tril=scale_tril.clone().detach()

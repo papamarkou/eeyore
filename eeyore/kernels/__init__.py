@@ -7,3 +7,4 @@ from .normal_kernel import NormalKernel
 from .normalized_kernel import NormalizedKernel
 from .periodic_kernel import PeriodicKernel
 from .rq_kernel import RQKernel
+from .truncated_normal_kernel import TruncatedNormalKernel

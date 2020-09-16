@@ -11,12 +11,12 @@ from eeyore.kernels import DEMCKernel
 from eeyore.stats import choose_from_subset
 
 class DEMC(MultiChainSerialSampler):
-    def __init__(self, model, sigmas, dataloader,
+    def __init__(self, model, scales, dataloader,
         theta0=None, data0=None, counter=None,
         num_chains=10, c=None, schedule=lambda n, num_iterations: 1., storage='list',
         keys=['sample', 'target_val', 'accepted'], path=Path.cwd(), mode='a'):
         super(DEMC, self).__init__(counter or DataCounter.from_dataloader(dataloader))
-        self.sigmas = sigmas
+        self.scales = scales
         self.dataloader = dataloader
         self.num_chains = num_chains
         self.schedule = schedule
@@ -29,7 +29,7 @@ class DEMC(MultiChainSerialSampler):
         kernel = DEMCKernel(c=self.c[i])
         kernel.init_a_and_b(model.num_params(), model.dtype, model.device)
         kernel.init_density(model.num_params(), model.dtype, model.device)
-        kernel.density.scale = self.sigmas[i]
+        kernel.density.scale = self.scales[i]
 
         return kernel
 

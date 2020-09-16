@@ -10,8 +10,17 @@ class TruncatedNormal(TruncatedDistribution):
     def __init__(self, loc, scale, lower_bound=-float('inf'), upper_bound=float('inf'), *args, **kwargs):
         super().__init__(Normal(loc, scale), lower_bound=lower_bound, upper_bound=upper_bound, *args, **kwargs)
 
+        self.set_a_b()
+
+    def set_a(self):
         self.a = (self.lower_bound - self.base_dist.loc) / self.base_dist.scale
+
+    def set_b(self):
         self.b = (self.upper_bound - self.base_dist.loc) / self.base_dist.scale
+
+    def set_a_b(self):
+        self.set_a()
+        self.set_b()
 
     def sample_lower_bounded(self):
         rate = 0.5 * (self.a + (self.a ** 2 + 4).sqrt())

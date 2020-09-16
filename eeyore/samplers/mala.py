@@ -6,6 +6,7 @@ from scipy.stats import truncnorm
 from .single_chain_serial_sampler import SingleChainSerialSampler
 from eeyore.chains import ChainList
 from eeyore.datasets import DataCounter
+from eeyore.kernels import NormalKernel, TruncatedNormalKernel
 
 class MALA(SingleChainSerialSampler):
     def __init__(self, model,
@@ -16,11 +17,23 @@ class MALA(SingleChainSerialSampler):
         self.dataloader = dataloader
         self.step = step
 
+        self.kernel = kernel or self.default_kernel(theta0.clone().detach())
         self.keys = ['sample', 'target_val', 'grad_val', 'accepted']
         self.chain = chain
 
         if theta0 is not None:
             self.set_current(theta0.clone().detach(), data=data0)
+
+    def default_kernel(self, theta):
+        if (self.model.constraint is None) or (self.model.constraint == 'transformation'):
+            return NormalKernel(theta, np.sqrt(self.step) * torch.ones(self.model.num_params()))
+        elif self.model.constraint == 'truncation':
+            return TruncatedNormalKernel(
+                theta,
+                np.sqrt(self.step) * torch.ones(self.model.num_params()),
+                lower_bound=self.model.bounds[0],
+                upper_bound=self.model.bounds[1]
+            )
 
     def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)
@@ -32,13 +45,16 @@ class MALA(SingleChainSerialSampler):
 
         proposal_mean = self.current['sample'] + 0.5 * self.step * self.current['grad_val']
 
+        self.kernel.set_density_params(proposal_mean.clone().detach())
+
         if (self.model.constraint is None) or (self.model.constraint == 'transformation'):
             proposed['sample'] = \
                 proposal_mean + np.sqrt(self.step) * \
                 torch.randn(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
+            self.kernel.set_density_params(proposal_mean.clone().detach())
         elif self.model.constraint == 'truncation':
-            l = -np.inf if (self.model.bounds[0] is None) else self.model.bounds[0]
-            u = np.inf if (self.model.bounds[1] is None) else self.model.bounds[1]
+            # l = -np.inf if (self.model.bounds[0] is None) else self.model.bounds[0]
+            # u = np.inf if (self.model.bounds[1] is None) else self.model.bounds[1]
 
             loc = proposal_mean.detach().cpu().numpy()
             scale = np.sqrt(self.step)
@@ -47,6 +63,8 @@ class MALA(SingleChainSerialSampler):
             proposed['sample'] = \
                 torch.from_numpy(truncnorm.rvs(a=a, b=b, loc=loc, scale=scale, size=self.model.num_params()) \
                 ).to(dtype=self.model.dtype, device=self.model.device)
+
+        proposed['sample'] = self.kernel.sample()
 
         proposed['target_val'], proposed['grad_val'] = \
             self.model.upto_grad_log_target(proposed['sample'].clone().detach(), x, y)

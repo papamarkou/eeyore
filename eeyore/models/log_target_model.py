@@ -5,7 +5,8 @@ from torch.autograd import grad
 from .model import Model
 
 class LogTargetModel(Model):
-    def __init__(self, constraint=None, bounds=[None, None], temperature=None, dtype=torch.float64, device='cpu'):
+    def __init__(self,
+        constraint=None, bounds=[-float('inf'), float('inf')], temperature=None, dtype=torch.float64, device='cpu'):
         super().__init__(dtype=dtype, device=device)
         self.constraint = constraint
         self.bounds = bounds

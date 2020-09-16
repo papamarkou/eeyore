@@ -5,7 +5,8 @@ from eeyore.integrators import MCIntegrator
 
 class BayesianModel(LogTargetModel):
     """ Class representing a Bayesian Net """
-    def __init__(self, loss, constraint=None, bounds=[None, None], temperature=None, dtype=torch.float64, device='cpu'):
+    def __init__(self, loss,
+        constraint=None, bounds=[-float('inf'), float('inf')], temperature=None, dtype=torch.float64, device='cpu'):
         super().__init__(constraint=constraint, bounds=bounds, temperature=temperature, dtype=dtype, device=device)
         self.loss = loss
 
