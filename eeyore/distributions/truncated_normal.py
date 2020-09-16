@@ -27,14 +27,14 @@ class TruncatedNormal(TruncatedDistribution):
         rate = 0.5 * (l + (l ** 2 + 4).sqrt())
 
         while True:
-            sample = -Exponential(rate / self.base_dist.scale).sample() + self.upper_bound
-            ratio = (-0.5 * ((sample - self.base_dist.loc) / self.base_dist.scale - rate) ** 2).exp()
+            sample = Exponential(rate / self.base_dist.scale).sample() - self.upper_bound
+            ratio = (-0.5 * ((sample + self.base_dist.loc) / self.base_dist.scale - rate) ** 2).exp()
             if torch.rand(1, dtype=self.base_dist.loc.dtype, device=self.base_dist.loc.device) <= ratio:
                 break
 
-        return sample
+        return -sample
 
-    def sample_doubly_bounded(self):
+    def sample_std_doubly_bounded(self):
         while True:
             sample = Uniform(self.lower_bound, self.upper_bound).sample()
 
@@ -50,8 +50,27 @@ class TruncatedNormal(TruncatedDistribution):
 
         return sample
 
+    def sample_doubly_bounded(self):
+        while True:
+            a = (self.lower_bound - self.base_dist.loc) / self.base_dist.scale
+            b = (self.upper_bound - self.base_dist.loc) / self.base_dist.scale
+
+            sample = Uniform(a, b).sample()
+
+            if ((a < 0) and (0 < b)):
+                ratio = (-0.5 * (sample ** 2)).exp()
+            elif b < 0:
+                ratio = (0.5 * (b ** 2 - sample ** 2)).exp()
+            elif 0 < a:
+                ratio = (0.5 * (a ** 2 - sample ** 2)).exp()
+
+            if torch.rand(1, dtype=self.base_dist.loc.dtype, device=self.base_dist.loc.device) <= ratio:
+                break
+
+        return self.base_dist.loc + self.base_dist.scale * sample
+
     def sample(self):
-        if ((self.lower_bound == -float('inf')) and (self.upper_bound == float('inf'))):
+        if ((self.lower_bound != -float('inf')) and (self.upper_bound != float('inf'))):
             return self.sample_doubly_bounded()
         elif ((self.lower_bound != -float('inf')) and (self.upper_bound == float('inf'))):
             return self.sample_lower_bounded()
