@@ -14,7 +14,7 @@ class TruncatedNormalKernel(NormalizedKernel):
 
     def set_density_params(self, loc, scale=None, lower_bound=-float('inf'), upper_bound=float('inf')):
         """ Set the parameters of truncated normal probability density function """
-        self.density.loc = loc
+        self.density.base_dist.loc = loc
         if scale is not None:
-            self.density.scale = scale
+            self.density.base_dist.scale = scale
         self.density.set_a_b()
