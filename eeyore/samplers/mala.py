@@ -47,8 +47,6 @@ class MALA(SingleChainSerialSampler):
     def draw(self, x, y, savestate=False):
         proposed = {key : None for key in self.keys}
 
-        self.set_kernel(self.current)
-
         proposed['sample'] = self.kernel.sample()
 
         proposed['target_val'], proposed['grad_val'] = \
@@ -69,6 +67,7 @@ class MALA(SingleChainSerialSampler):
             self.current['accepted'] = 1
         else:
             self.model.set_params(self.current['sample'].clone().detach())
+            self.set_kernel(self.current)
             self.current['accepted'] = 0
 
         if savestate:

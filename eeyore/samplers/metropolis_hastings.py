@@ -13,30 +13,36 @@ class MetropolisHastings(SingleChainSerialSampler):
         self.model = model
         self.dataloader = dataloader
         self.symmetric = symmetric
+        if self.model.constraint == 'truncation':
+            self.symmetric = False
+        else:
+            self.symmetric = symmetric
 
-        self.kernel = kernel or self.default_kernel(theta0.clone().detach())
         self.keys = ['sample', 'target_val', 'accepted']
         self.chain = chain
 
         if theta0 is not None:
             self.set_current(theta0.clone().detach(), data=data0)
 
+        self.kernel = kernel or self.default_kernel(self.current)
+
     def default_kernel(self, theta):
         return NormalKernel(theta, torch.ones(self.model.num_params()))
+
+    def default_kernel(self, state):
+        loc = state['sample']
+        scale = torch.ones(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
+        if (self.model.constraint is None) or (self.model.constraint == 'transformation'):
+            return NormalKernel(loc, scale)
+        elif self.model.constraint == 'truncation':
+            return TruncatedNormalKernel(loc, scale, lower_bound=self.model.bounds[0], upper_bound=self.model.bounds[1])
 
     def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
 
-    def set_kernel_params(self, scale=None, scale_tril=None):
-        if scale is not None:
-            self.kernel.set_density_params(self.current['sample'].clone().detach(), scale=scale)
-        elif scale_tril is not None:
-            self.kernel.set_density_params(
-                self.current['sample'].clone().detach(), scale_tril=scale_tril.clone().detach()
-            )
-        else:
-            self.kernel.set_density_params(self.current['sample'].clone().detach())
+    def set_kernel(self, state, scale=None, scale_tril=None):
+        self.kernel.set_density_params(state['sample'].clone().detach())
 
     def draw(self, x, y, savestate=False):
         proposed = {key : None for key in self.keys}
@@ -46,20 +52,20 @@ class MetropolisHastings(SingleChainSerialSampler):
 
         log_rate = proposed['target_val'] - self.current['target_val']
         if not self.symmetric:
-            log_rate = log_rate - self.kernel.log_prob(proposed['sample'].clone().detach())
-            self.kernel.set_density_params(proposed['sample'].clone().detach())
-            log_rate = log_rate + self.kernel.log_prob(self.current['sample'].clone().detach())
+            log_rate = log_rate - self.kernel.log_prob(proposed['sample'])
+            self.set_kernel(proposed)
+            log_rate = log_rate + self.kernel.log_prob(self.current['sample'])
 
         if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
             self.current['sample'] = proposed['sample'].clone().detach()
             self.current['target_val'] = proposed['target_val'].clone().detach()
             if self.symmetric:
-                self.kernel.set_density_params(proposed['sample'].clone().detach())
+                self.set_kernel(proposed)
             self.current['accepted'] = 1
         else:
             self.model.set_params(self.current['sample'].clone().detach())
             if not self.symmetric:
-                self.kernel.set_density_params(self.current['sample'].clone().detach())
+                self.set_kernel(self.current)
             self.current['accepted'] = 0
 
         if savestate:
