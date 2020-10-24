@@ -83,7 +83,7 @@ plot.set_title('Traceplot of simulated parameter')
 sns.lineplot(x_hist_range, truncnorm.pdf(x_hist_range, a=a, b=b, loc=loc, scale=scale), color='red', label='Target')
 plot.legend()
 
-# %% Sample from one-sided truncated normal with upper bound
+# %% Sample from doubly truncated normal
 
 n = 10000
 
@@ -108,7 +108,7 @@ d = TruncatedNormal(
 for i in range(n):
     samples[i] = d.sample().item()
 
-# %% Plot simulated and true one-sided truncated normal with upper bound
+# %% Plot simulated and true doubly truncted normal
 
 x_hist_range = np.linspace(-20, 20, 100)
 
