@@ -27,12 +27,12 @@ class DEMCKernel(NormalizedKernel):
     def mean(self, theta):
         return theta + self.c * (self.a - self.b)
 
-    def set_density(self, theta, sigma):
+    def set_density(self, theta, scale):
         """ Set normal probability density function """
-        self.density = Normal(self.mean(theta), sigma)
+        self.density = Normal(self.mean(theta), scale)
 
-    def set_density_params(self, theta, sigma=None):
+    def set_density_params(self, theta, scale=None):
         """ Set the parameters of of normal probability density function """
         self.density.loc = self.mean(theta)
-        if sigma is not None:
-            self.density.scale = sigma
+        if scale is not None:
+            self.density.scale = scale

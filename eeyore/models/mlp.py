@@ -18,7 +18,7 @@ class Hyperparameters:
             raise ValueError
 
 class MLP(BayesianModel):
-    def __init__(self, loss, constraint=None, bounds=[None, None], temperature=None, prior=None,
+    def __init__(self, loss, constraint=None, bounds=[-float('inf'), float('inf')], temperature=None, prior=None,
     hparams=Hyperparameters(), savefile=None, dtype=torch.float64, device='cpu'):
         super().__init__(
             loss=loss, constraint=constraint, bounds=bounds, temperature=temperature, dtype=dtype, device=device)

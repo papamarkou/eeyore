@@ -8,8 +8,9 @@ from torchdiffeq import odeint
 from eeyore.models import BayesianModel
 
 class ODEModel(BayesianModel):
-    def __init__(self, odes, eta, z0, noise_var=None, known_noise_var=False, constraint=None, bounds=[None, None],
-        temperature=None, prior=None, savefile=None, dtype=torch.float64, device='cpu'):
+    def __init__(self, odes, eta, z0, noise_var=None, known_noise_var=False, constraint=None,
+        bounds=[-float('inf'), float('inf')], temperature=None, prior=None, savefile=None, dtype=torch.float64,
+        device='cpu'):
         super().__init__(
             loss=None, constraint=constraint, bounds=bounds, temperature=temperature, dtype=dtype, device=device
         )
