@@ -24,23 +24,44 @@ class HMC(SingleChainSerialSampler):
 
         self.transform = transform
 
-        self.keys = ['sample', 'target_val', 'grad_val', 'momentum', 'accepted']
+        self.keys = ['sample', 'target_val', 'grad_val', 'momentum', 'hamiltonian', 'accepted']
         self.chain = chain
 
         if theta0 is not None:
             self.set_current(theta0.clone().detach(), data=data0)
 
     def init_step(self, theta):
-        step = 1.
+        self.step = 1.
+
         current = {
             'sample': theta,
             'momentum': torch.randn(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
         }
-        proposed = {'sample': None, 'momentum': None}
+        current['target_val'] = self.model.log_target(current['sample'].clone().detach(), x, y)
+        current['hamiltonian'] = self.hamiltonian(-current['target_val'], current['momentum'])
 
-        step = 1.
         iterator = iter(self.dataloader)
         x, y = next(iterator)
+
+        proposed = {}
+        proposed['sample'], proposed['momentum'], proposed['target_val'], _ = \
+            self.leapfrog(current['sample'], current['momentum'], x, y)
+        proposed['hamiltonian'] = self.hamiltonian(-proposed['target_val'], proposed['momentum'])
+
+        ratio = torch.exp(current['hamiltonian'] - proposed['hamiltonian'])
+
+        a = 2 * (ratio > 0.5) - 1
+
+        while torch.pow(ratio, a) > torch.pow(2, -a):
+            self.step = torch.pow(2, a) * self.step
+
+            x, y = next(iterator)
+
+            proposed['sample'], proposed['momentum'], proposed['target_val'], _ = \
+                self.leapfrog(current['sample'], current['momentum'], x, y)
+            proposed['hamiltonian'] = self.hamiltonian(-proposed['target_val'], proposed['momentum'])
+
+            ratio = torch.exp(current['hamiltonian'] - proposed['hamiltonian'])
 
     def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)
@@ -93,17 +114,19 @@ class HMC(SingleChainSerialSampler):
         proposed = {key : None for key in self.keys}
 
         proposed['sample'] = self.current['sample'].clone().detach()
-
         proposed['momentum'] = torch.randn(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
+
         self.current['momentum'] = proposed['momentum'].clone().detach()
+        self.current['hamiltonian'] = self.hamiltonian(-self.current['target_val'], self.current['momentum'])
 
         proposed['sample'], proposed['momentum'], proposed['target_val'], proposed['grad_val'] = \
             self.leapfrog(proposed['sample'], proposed['momentum'], x, y)
+        proposed['hamiltonian'] = self.hamiltonian(-proposed['target_val'], proposed['momentum'])
 
-        rate = torch.min(torch.exp(
-            self.hamiltonian(-self.current['target_val'], self.current['momentum'])
-            - self.hamiltonian(-proposed['target_val'], proposed['momentum'])
-        ), torch.tensor([1.], dtype=self.model.dtype, device=self.model.device))
+        rate = torch.min(
+            torch.exp(self.current['hamiltonian'] - proposed['hamiltonian']),
+            torch.tensor([1.], dtype=self.model.dtype, device=self.model.device)
+        )
 
         if torch.rand(1, dtype=self.model.dtype, device=self.model.device) < rate:
             self.current['sample'] = proposed['sample'].clone().detach()
@@ -119,7 +142,7 @@ class HMC(SingleChainSerialSampler):
                 if self.counter.idx < self.counter.num_burnin_iters:
                     self.step, self.num_steps = self.tuner.tune(
                         rate.item(), self.counter.idx, return_e=self.counter.idx != self.counter.num_burnin_iters - 1
-                        )
+                    )
 
         if savestate:
             self.chain.detach_and_update(self.current)
