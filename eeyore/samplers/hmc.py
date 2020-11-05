@@ -12,8 +12,15 @@ class HMC(SingleChainSerialSampler):
         super(HMC, self).__init__(counter or DataCounter.from_dataloader(dataloader))
         self.model = model
         self.dataloader = dataloader
-        self.step = step
-        self.num_steps = num_steps
+
+        if self.tuner is not None:
+            if isinstance(self.tuner, HMCDATuner):
+                self.step = self.init_step()
+                self.num_steps = self.tuner.num_steps(self.step)
+        else:
+            self.step = step
+            self.num_steps = num_steps
+
         self.transform = transform
 
         self.keys = ['sample', 'target_val', 'grad_val', 'momentum', 'accepted']
@@ -21,6 +28,9 @@ class HMC(SingleChainSerialSampler):
 
         if theta0 is not None:
             self.set_current(theta0.clone().detach(), data=data0)
+
+    def init_step(self, theta):
+        pass
 
     def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)
@@ -80,11 +90,12 @@ class HMC(SingleChainSerialSampler):
         proposed['sample'], proposed['momentum'], proposed['target_val'], proposed['grad_val'] = \
             self.leapfrog(proposed['sample'], proposed['momentum'], x, y)
 
-        log_rate = \
-            self.hamiltonian(-self.current['target_val'], self.current['momentum']) \
+        rate = torch.min(torch.exp(
+            self.hamiltonian(-self.current['target_val'], self.current['momentum'])
             - self.hamiltonian(-proposed['target_val'], proposed['momentum'])
+        ), torch.tensor(1., dtype=self.model.dtype, device=self.model.device))
 
-        if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
+        if torch.rand(1, dtype=self.model.dtype, device=self.model.device) < rate:
             self.current['sample'] = proposed['sample'].clone().detach()
             self.current['target_val'] = proposed['target_val'].clone().detach()
             self.current['grad_val'] = proposed['grad_val'].clone().detach()
@@ -93,9 +104,12 @@ class HMC(SingleChainSerialSampler):
             self.model.set_params(self.current['sample'].clone().detach())
             self.current['accepted'] = 0
 
-        #if tuner is not None:
-        #    if isinstance(tuner, HMCDATuner):
-        #        pass
+        if self.tuner is not None:
+            if isinstance(self.tuner, HMCDATuner):
+                if self.counter.idx < self.counter.num_burnin_iters:
+                self.step, self.num_steps = self.tuner.tune(
+                    rate.item(), self.counter.idx, return_e=self.counter.idx != self.counter.num_burnin_iters - 1
+                )
 
         if savestate:
             self.chain.detach_and_update(self.current)
