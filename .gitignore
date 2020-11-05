@@ -14,6 +14,7 @@ eeyore/linalg/__pycache__/
 eeyore/models/__pycache__/
 eeyore/samplers/__pycache__/
 eeyore/stats/__pycache__/
+eeyore/tuners/__pycache__/
 examples/checks/autograd/.ipynb_checkpoints/
 examples/checks/distributions/.ipynb_checkpoints/
 examples/checks/mcmc/.ipynb_checkpoints/

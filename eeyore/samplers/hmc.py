@@ -12,10 +12,11 @@ class HMC(SingleChainSerialSampler):
         super(HMC, self).__init__(counter or DataCounter.from_dataloader(dataloader))
         self.model = model
         self.dataloader = dataloader
+        self.tuner = tuner
 
         if self.tuner is not None:
             if isinstance(self.tuner, HMCDATuner):
-                self.step = self.init_step()
+                self.step = self.init_step(theta0.clone().detach())
                 self.num_steps = self.tuner.num_steps(self.step)
         else:
             self.step = step
@@ -30,7 +31,16 @@ class HMC(SingleChainSerialSampler):
             self.set_current(theta0.clone().detach(), data=data0)
 
     def init_step(self, theta):
-        pass
+        step = 1.
+        current = {
+            'sample': theta,
+            'momentum': torch.randn(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
+        }
+        proposed = {'sample': None, 'momentum': None}
+
+        step = 1.
+        iterator = iter(self.dataloader)
+        x, y = next(iterator)
 
     def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)
@@ -93,7 +103,7 @@ class HMC(SingleChainSerialSampler):
         rate = torch.min(torch.exp(
             self.hamiltonian(-self.current['target_val'], self.current['momentum'])
             - self.hamiltonian(-proposed['target_val'], proposed['momentum'])
-        ), torch.tensor(1., dtype=self.model.dtype, device=self.model.device))
+        ), torch.tensor([1.], dtype=self.model.dtype, device=self.model.device))
 
         if torch.rand(1, dtype=self.model.dtype, device=self.model.device) < rate:
             self.current['sample'] = proposed['sample'].clone().detach()
@@ -107,9 +117,9 @@ class HMC(SingleChainSerialSampler):
         if self.tuner is not None:
             if isinstance(self.tuner, HMCDATuner):
                 if self.counter.idx < self.counter.num_burnin_iters:
-                self.step, self.num_steps = self.tuner.tune(
-                    rate.item(), self.counter.idx, return_e=self.counter.idx != self.counter.num_burnin_iters - 1
-                )
+                    self.step, self.num_steps = self.tuner.tune(
+                        rate.item(), self.counter.idx, return_e=self.counter.idx != self.counter.num_burnin_iters - 1
+                        )
 
         if savestate:
             self.chain.detach_and_update(self.current)

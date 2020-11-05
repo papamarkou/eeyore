@@ -3,6 +3,8 @@
 
 import numpy as np
 
+from .tuner import Tuner
+
 class HMCDATuner(Tuner):
     def __init__(self, l, e0, d=0.65):
         self.l = l
