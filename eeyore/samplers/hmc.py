@@ -18,12 +18,10 @@ class HMC(SingleChainSerialSampler):
             if isinstance(self.tuner, HMCDATuner):
                 if self.tuner.e0 is None:
                     self.init_step(theta0.clone().detach())
-                    # print("self.step initially = {}".format(self.step))
                     self.tuner.set_m(self.step)
                 else:
                     self.step = self.tuner.e0
 
-                # print("self.step before num_steps = {}".format(self.step))
                 self.num_steps = self.tuner.num_steps(self.step)
         else:
             self.step = step

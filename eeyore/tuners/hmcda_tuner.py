@@ -28,8 +28,6 @@ class HMCDATuner(Tuner):
         self.e_w = 1 / (iter ** self.k)
 
     def num_steps(self, e):
-        print("self.l = {}".format(self.l))
-        print("e = {}".format(e))
         return int(max(1, round(self.l / e)))
 
     def tune(self, rate, idx, return_e=True):
