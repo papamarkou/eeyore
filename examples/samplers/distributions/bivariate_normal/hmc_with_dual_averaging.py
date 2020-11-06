@@ -48,7 +48,7 @@ sampler = HMC(
     model,
     theta0=torch.tensor([-1, 1], dtype=model.dtype),
     dataloader=DataLoader(EmptyXYDataset()),
-    tuner=HMCDATuner(5.)
+    tuner=HMCDATuner(1., e0=2.)
 )
 
 # %% Run HMC sampler

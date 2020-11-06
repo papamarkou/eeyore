@@ -18,6 +18,8 @@ class HMC(SingleChainSerialSampler):
             if isinstance(self.tuner, HMCDATuner):
                 if self.tuner.e0 is None:
                     self.init_step(theta0.clone().detach())
+                    if self.tuner.eub is not None:
+                        self.step = min(self.tuner.eub, self.step)
                     self.tuner.set_m(self.step)
                 else:
                     self.step = self.tuner.e0
@@ -70,7 +72,7 @@ class HMC(SingleChainSerialSampler):
             current['target_val'] = self.model.log_target(current['sample'].clone().detach(), x, y)
             current['hamiltonian'] = self.hamiltonian(-current['target_val'], current['momentum'])
 
-            proposed['sample'], proposed['momentum'], proposed['target_val'], _ = \
+            _, proposed['momentum'], proposed['target_val'], _ = \
                 self.leapfrog(current['sample'], current['momentum'], x, y)
             proposed['hamiltonian'] = self.hamiltonian(-proposed['target_val'], proposed['momentum'])
 
