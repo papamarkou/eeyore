@@ -16,7 +16,14 @@ class HMC(SingleChainSerialSampler):
 
         if self.tuner is not None:
             if isinstance(self.tuner, HMCDATuner):
-                self.step = self.init_step(theta0.clone().detach())
+                if self.tuner.e0 is None:
+                    self.init_step(theta0.clone().detach())
+                    # print("self.step initially = {}".format(self.step))
+                    self.tuner.set_m(self.step)
+                else:
+                    self.step = self.tuner.e0
+
+                # print("self.step before num_steps = {}".format(self.step))
                 self.num_steps = self.tuner.num_steps(self.step)
         else:
             self.step = step
@@ -31,7 +38,11 @@ class HMC(SingleChainSerialSampler):
             self.set_current(theta0.clone().detach(), data=data0)
 
     def init_step(self, theta):
+        iterator = iter(self.dataloader)
+        x, y = next(iterator)
+
         self.step = 1.
+        self.num_steps = 1
 
         current = {
             'sample': theta,
@@ -39,9 +50,6 @@ class HMC(SingleChainSerialSampler):
         }
         current['target_val'] = self.model.log_target(current['sample'].clone().detach(), x, y)
         current['hamiltonian'] = self.hamiltonian(-current['target_val'], current['momentum'])
-
-        iterator = iter(self.dataloader)
-        x, y = next(iterator)
 
         proposed = {}
         proposed['sample'], proposed['momentum'], proposed['target_val'], _ = \
@@ -53,9 +61,16 @@ class HMC(SingleChainSerialSampler):
         a = 2 * (ratio > 0.5) - 1
 
         while torch.pow(ratio, a) > torch.pow(2, -a):
-            self.step = torch.pow(2, a) * self.step
+            try:
+                x, y = next(iterator)
+            except StopIteration:
+                iterator = iter(self.dataloader)
+                x, y = next(iterator)
 
-            x, y = next(iterator)
+            self.step = (torch.pow(2, a) * self.step).item()
+
+            current['target_val'] = self.model.log_target(current['sample'].clone().detach(), x, y)
+            current['hamiltonian'] = self.hamiltonian(-current['target_val'], current['momentum'])
 
             proposed['sample'], proposed['momentum'], proposed['target_val'], _ = \
                 self.leapfrog(current['sample'], current['momentum'], x, y)
