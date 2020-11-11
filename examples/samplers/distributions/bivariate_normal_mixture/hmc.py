@@ -86,7 +86,7 @@ print('Multivariate ESS: {}'.format(sampler.get_chain().multi_ess(mc_cov_mat=mc_
 for i in range(model.num_params()):
     chain = sampler.get_param(i)
     plt.figure()
-    sns.lineplot(range(len(chain)), chain)
+    sns.lineplot(x=range(len(chain)), y=chain)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
     plt.title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
@@ -97,13 +97,13 @@ x_hist_range = np.linspace(-7, 7, 100)
 
 for i in range(model.num_params()):
     plt.figure()
-    plot = sns.distplot(sampler.get_param(i), hist=False, color='blue', label='Simulated')
+    plot = sns.kdeplot(sampler.get_param(i), color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')
     plot.set_ylabel('Relative frequency')
     plot.set_title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
     sns.lineplot(
-        x_hist_range,
-        weights[0] * stats.norm.pdf(x_hist_range, means[0][i].item(), covs[0][i, i]) +
+        x=x_hist_range,
+        y=weights[0] * stats.norm.pdf(x_hist_range, means[0][i].item(), covs[0][i, i]) +
         weights[1] * stats.norm.pdf(x_hist_range, means[1][i].item(), covs[1][i, i]),
         color='red',
         label='Target'
