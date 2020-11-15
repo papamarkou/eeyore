@@ -11,7 +11,7 @@ from timeit import default_timer as timer
 from torch.utils.data import DataLoader
 
 from eeyore.chains import ChainList
-from eeyore.datasets import ODEDataset
+from eeyore.datasets import XYDataset
 from eeyore.kernels import NormalKernel
 from eeyore.models import ODEModel
 from eeyore.samplers import MetropolisHastings
@@ -59,12 +59,12 @@ plt.show()
 
 # %% Load ODE data
 
-ode_data = ODEDataset(t, y)
+ode_data = XYDataset(t, y)
 dataloader = DataLoader(ode_data, batch_size=len(ode_data))
 
 # %% Setup proposal variance and proposal kernel for Metropolis-Hastings sampler
 
-proposal_scale = 0.01
+proposal_scale = 0.005
 
 kernel = NormalKernel(
     torch.zeros(model.num_params(), dtype=model.dtype),
@@ -73,8 +73,8 @@ kernel = NormalKernel(
 
 # %% Set number of chains, of iterations and of burnin iterations
 
-num_iterations = 1100
-num_burnin = 100
+num_iterations = 11000
+num_burnin = 1000
 num_post_burnin = num_iterations - num_burnin
 
 # %% Run Metropolis-Hastings sampler
@@ -90,7 +90,7 @@ sampler.run(num_epochs=num_iterations, num_burnin_epochs=num_burnin, verbose=Tru
 end_time = timer()
 
 # Print initial value of ODE parameters, runtime and acceptance rate
-print("theta0 = {}".format(theta0))
+print("theta0.exp() = {}".format(theta0.exp()))
 print("Duration {}, acceptance rate {}".format(
     timedelta(seconds=end_time-start_time), sampler.chain.acceptance_rate())
 )
@@ -99,11 +99,16 @@ print("Duration {}, acceptance rate {}".format(
 
 chain = sampler.get_chain().get_samples().exp()
 
+# %% Compute Monte Carlo mean
+
+print('True value of parameters: {}'.format(true_eta))
+print('Monte Carlo mean: {}'.format(chain.mean(0)))
+
 # %% Plot traces of simulated Markov chain
 
 for i in range(model.num_params()):
     plt.figure()
-    sns.lineplot(range(num_post_burnin), chain[:, i])
+    sns.lineplot(x=range(num_post_burnin), y=chain[:, i])
     plt.ylim(
         0.95*min(torch.min(chain[:, i]).item(), true_eta[i]),
         1.05*max(torch.max(chain[:, i]).item(), true_eta[i])
