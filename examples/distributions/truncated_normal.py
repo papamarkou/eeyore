@@ -39,11 +39,11 @@ for i in range(n):
 x_hist_range = np.linspace(-4, 30, 100)
 
 plt.figure()
-plot = sns.distplot(samples, hist=True, norm_hist=True, kde=False, color='blue', label='Simulated')
+plot = sns.histplot(samples, stat='density', label='Simulated')
 plot.set_xlabel('Parameter value')
 plot.set_ylabel('Relative frequency')
 plot.set_title('Traceplot of simulated parameter')
-sns.lineplot(x_hist_range, truncnorm.pdf(x_hist_range, a=a, b=b, loc=loc, scale=scale), color='red', label='Target')
+sns.lineplot(x=x_hist_range, y=truncnorm.pdf(x_hist_range, a=a, b=b, loc=loc, scale=scale), color='red', label='Target')
 plot.legend()
 
 # %% Sample from one-sided truncated normal with upper bound
@@ -76,11 +76,11 @@ for i in range(n):
 x_hist_range = np.linspace(-30, 4, 100)
 
 plt.figure()
-plot = sns.distplot(samples, hist=True, norm_hist=True, kde=False, color='blue', label='Simulated')
+plot = sns.histplot(samples, stat='density', label='Simulated')
 plot.set_xlabel('Parameter value')
 plot.set_ylabel('Relative frequency')
 plot.set_title('Traceplot of simulated parameter')
-sns.lineplot(x_hist_range, truncnorm.pdf(x_hist_range, a=a, b=b, loc=loc, scale=scale), color='red', label='Target')
+sns.lineplot(x=x_hist_range, y=truncnorm.pdf(x_hist_range, a=a, b=b, loc=loc, scale=scale), color='red', label='Target')
 plot.legend()
 
 # %% Sample from doubly truncated normal
@@ -113,9 +113,9 @@ for i in range(n):
 x_hist_range = np.linspace(-20, 20, 100)
 
 plt.figure()
-plot = sns.distplot(samples, hist=True, norm_hist=True, kde=False, color='blue', label='Simulated')
+plot = sns.histplot(samples, stat='density', label='Simulated')
 plot.set_xlabel('Parameter value')
 plot.set_ylabel('Relative frequency')
 plot.set_title('Traceplot of simulated parameter')
-sns.lineplot(x_hist_range, truncnorm.pdf(x_hist_range, a=a, b=b, loc=loc, scale=scale), color='red', label='Target')
+sns.lineplot(x=x_hist_range, y=truncnorm.pdf(x_hist_range, a=a, b=b, loc=loc, scale=scale), color='red', label='Target')
 plot.legend()

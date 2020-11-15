@@ -76,7 +76,7 @@ print('Multivariate ESS: {}'.format(sampler.get_chain().multi_ess()))
 for i in range(model.num_params()):
     chain = sampler.get_param(i)
     plt.figure()
-    sns.lineplot(range(len(chain)), chain)
+    sns.lineplot(x=range(len(chain)), y=chain)
     plt.xlabel('Iteration')
     plt.ylabel('Parameter value')
     plt.title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
@@ -87,11 +87,11 @@ x_hist_range = np.linspace(-4, 4, 100)
 
 for i in range(model.num_params()):
     plt.figure()
-    plot = sns.distplot(sampler.get_param(i), hist=False, color='blue', label='Simulated')
+    plot = sns.kdeplot(sampler.get_param(i), color='blue', label='Simulated')
     plot.set_xlabel('Parameter value')
     plot.set_ylabel('Relative frequency')
     plot.set_title(r'Traceplot of $\theta_{{{0}}}$'.format(i+1))
-    sns.lineplot(x_hist_range, stats.norm.pdf(x_hist_range, 0, 1), color='red', label='Target')
+    sns.lineplot(x=x_hist_range, y=stats.norm.pdf(x_hist_range, 0, 1), color='red', label='Target')
     plot.legend()
 
 # %% Plot scatter of simulated Markov chain

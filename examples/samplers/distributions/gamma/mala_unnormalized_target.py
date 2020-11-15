@@ -56,7 +56,7 @@ print('Monte Carlo standard error: {}'.format(chain_list.mc_se()))
 
 chain = chain_list.get_param(0)
 plt.figure()
-sns.lineplot(range(len(chain)), chain)
+sns.lineplot(x=range(len(chain)), y=chain)
 plt.xlabel('Iteration')
 plt.ylabel('Parameter value')
 plt.title(r'Traceplot of $\theta_{{{}}}$'.format(1))
@@ -66,13 +66,9 @@ plt.title(r'Traceplot of $\theta_{{{}}}$'.format(1))
 x_hist_range = np.linspace(0.001, 10, 100)
 
 plt.figure()
-plot = sns.distplot(
-    chain_list.get_param(0).exp(),
-    hist=True, norm_hist=True, kde=False,
-    color='blue', label='Simulated'
-)
+plot = sns.histplot(chain_list.get_param(0).exp(), stat='density', label='Simulated')
 plot.set_xlabel('Parameter value')
 plot.set_ylabel('Relative frequency')
 plot.set_title(r'Traceplot of $\theta_{{{}}}$'.format(1))
-sns.lineplot(x_hist_range, stats.gamma.pdf(x_hist_range, v[0], scale=v[1]), color='red', label='Target')
+sns.lineplot(x=x_hist_range, y=stats.gamma.pdf(x_hist_range, v[0], scale=v[1]), color='red', label='Target')
 plot.legend()
