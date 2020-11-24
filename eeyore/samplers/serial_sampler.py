@@ -72,7 +72,7 @@ class SerialSampler(Sampler):
             if verbose:
                 print(verbose_msg.format(i+1, j, k))
 
-            run_path = Path(path).joinpath('run'+str(i+1).zfill(num_chains))
+            run_path = Path(path).joinpath('run'+str(i+1).zfill(len(str(num_chains))))
 
             try:
                 theta0 = self.get_model().prior.sample()
