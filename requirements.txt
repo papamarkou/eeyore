@@ -1,4 +1,4 @@
 numpy
 torch>=1.6.0
-git+https://github.com/rtqichen/torchdiffeq.git#egg=torchdiffeq
-kanga>=0.0.8
+torchdiffeq>=0.1.1
+kanga>=0.0.9
