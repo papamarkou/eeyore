@@ -1,5 +1,5 @@
-{% set name = "kanga" %}
-{% set version = "0.0.15" %}
+{% set name = "eeyore" %}
+{% set version = "0.0.11" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
-  sha256: 27ca7e82e06daef34ebb376076237fdc0caff3c3e1ae7295f5831b138057be67
+  sha256: 27861b0768a2c8cc54e4313913670cd0787176f37248e8e9f4dfb4162973c84d
 
 build:
   number: 0
@@ -18,26 +18,25 @@ requirements:
     - pip
     - python
   run:
-    - matplotlib >=3.3.3
+    - kanga >=0.0.15
     - numpy >=1.19.2
     - python
-    - scipy >=1.5.2
-    - seaborn >=0.11.0
-    - statsmodels >=0.12.0
+    - torch >=1.6.0
+    - torchdiffeq >=0.1.1
 
 test:
   imports:
-    - kanga
+    - eeyore
   commands:
     - pip check
   requires:
     - pip
 
 about:
-  home: "https://github.com/papamarkou/kanga"
+  home: "https://github.com/papamarkou/eeyore"
   license: MIT
   license_file: LICENSE.txt
-  summary: "MCMC diagnostics"
+  summary: "MCMC methods for neural networks"
 
 extra:
   recipe-maintainers:
