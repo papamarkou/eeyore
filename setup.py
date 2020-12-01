@@ -21,18 +21,17 @@ setup(
     packages=find_packages(),
     license='MIT',
     author='Theodore Papamarkou',
-    author_email='papamarkout@ornl.gov',
+    author_email='theodore.papamarkou@gmail.com',
     classifiers=[
-        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7'
+        'Programming Language :: Python :: 3'
     ],
     keywords=['Bayesian', 'deep learning', 'Markov chains', 'MCMC', 'Monte Carlo', 'neural networks'],
-    install_requires=['numpy', 'torch>=1.6.0', 'torchdiffeq>=0.1.1', 'kanga>=0.0.9'],
+    python_requires='>=3.6',
+    install_requires=['numpy>=1.19.2', 'torch>=1.6.0', 'torchdiffeq>=0.1.1', 'kanga>=0.0.15'],
     package_data={'eeyore': ['data/*/x.csv', 'data/*/y.csv', 'data/*/readme.md']},
     include_package_data=True,
     zip_safe=False

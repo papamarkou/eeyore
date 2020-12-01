@@ -1,0 +1,44 @@
+{% set name = "kanga" %}
+{% set version = "0.0.15" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
+  sha256: 27ca7e82e06daef34ebb376076237fdc0caff3c3e1ae7295f5831b138057be67
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+  host:
+    - pip
+    - python
+  run:
+    - matplotlib >=3.3.3
+    - numpy >=1.19.2
+    - python
+    - scipy >=1.5.2
+    - seaborn >=0.11.0
+    - statsmodels >=0.12.0
+
+test:
+  imports:
+    - kanga
+  commands:
+    - pip check
+  requires:
+    - pip
+
+about:
+  home: "https://github.com/papamarkou/kanga"
+  license: MIT
+  license_file: LICENSE.txt
+  summary: "MCMC diagnostics"
+
+extra:
+  recipe-maintainers:
+    - papamarkou
