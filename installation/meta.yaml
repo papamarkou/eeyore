@@ -21,8 +21,9 @@ requirements:
     - kanga >=0.0.15
     - numpy >=1.19.2
     - python
-    - torch >=1.6.0
+    - pytorch
     - torchdiffeq >=0.1.1
+    - torchvision
 
 test:
   imports:
