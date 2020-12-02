@@ -16,7 +16,6 @@ conda install -c conda-forge numpy
 conda install pytorch torchvision torchaudio cpuonly -c pytorch # Linux, Windows
 conda install pytorch torchvision torchaudio -c pytorch # Mac
 conda install -c conda-forge torchdiffeq
-conda install -c papamarkou -c conda-forge kanga
 
 # conda install -c conda-forge spyder
 

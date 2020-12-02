@@ -2,6 +2,9 @@
 
 MCMC methods for neural networks.
 
+eeyore can be installed using anaconda or pip. The anaconda installation does not include ODE modelling functionalilty based
+on torchdiffeq.
+
 To install eeyore using anaconda, firstly add the required channels by running
 ```
 conda config --add channels pytorch

@@ -18,18 +18,16 @@ requirements:
     - pip
     - python
   run:
+    - cpuonly
     - kanga >=0.0.15
     - numpy >=1.19.2
     - python
     - pytorch
-    - torchdiffeq >=0.1.1
     - torchvision
 
 test:
   imports:
     - eeyore
-  commands:
-    - pip check
   requires:
     - pip
 
