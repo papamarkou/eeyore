@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from eeyore.chains import ChainList
 from eeyore.datasets import XYDataset
 from eeyore.kernels import NormalKernel
-from eeyore.models import ODEModel
+from eeyore.models.ode_model import ODEModel
 from eeyore.samplers import MetropolisHastings
 
 # %% Set time points
