@@ -3,12 +3,12 @@
 # Start up script for setting up environment on Ubuntu 20.04 LTS
 
 export PKGNAME='eeyore'
-
+export PYVERSION='3.6'
 export CONDADIR="$HOME/opt/continuum/miniconda/miniconda3"
-
+export PYPKGDIR="$HOME/opt/python/packages"
 export CONDABIN="$CONDADIR/bin/conda"
-
 export CONDASCRIPT='Miniconda3-latest-Linux-x86_64.sh'
+export PKGURL="https://github.com/papamarkou/$PKGNAME.git"
 
 sudo apt-get update
 
@@ -19,9 +19,15 @@ chmod u+x $CONDASCRIPT
 
 $SHELL $CONDASCRIPT -b -p $CONDADIR
 
-$CONDABIN create -n $PKGNAME -y -c papamarkou -c pytorch -c conda-forge python=3.8 $PKGNAME
+$CONDABIN create -n $PKGNAME -y python=$PYVERSION
 
 $CONDABIN init $(basename $SHELL)
 $CONDABIN config --set auto_activate_base false
+
+mkdir -p $PYPKGDIR
+cd $PYPKGDIR
+git clone $PKGURL
+cd $PKGNAME
+python setup.py develop --user
 
 rm $CONDASCRIPT

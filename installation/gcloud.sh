@@ -9,4 +9,4 @@ gcloud compute instances create \
   --image-family=ubuntu-2004-lts \
   --no-restart-on-failure \
   --maintenance-policy=terminate \
-  --metadata-from-file startup-script=gstartup.sh
+  --metadata-from-file startup-script=gdev.sh
