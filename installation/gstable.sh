@@ -4,6 +4,7 @@
 
 export METAUSER='theodore'
 export BASEDIR="/home/$METAUSER"
+export BINDIR="$BASEDIR/bin"
 export PKGNAME='eeyore'
 export PYVERSION='3.6'
 export CONDADIR="$BASEDIR/opt/continuum/miniconda/miniconda3"
@@ -23,5 +24,9 @@ su - $METAUSER -c "$CONDABIN create -n $PKGNAME -y -c papamarkou -c pytorch -c c
 
 su - $METAUSER -c "$CONDABIN init $(basename $SHELL)"
 su - $METAUSER -c "$CONDABIN config --set auto_activate_base false"
+
+su - $METAUSER -c "mkdir -p $BINDIR"
+su - $METAUSER -c "ln -s $CONDABIN $BINDIR"
+su - $METAUSER -c "echo \"export PATH=$BINDIR:$PATH\" >> $BASEDIR/.bashrc"
 
 su - $METAUSER -c "rm $CONDASCRIPT"

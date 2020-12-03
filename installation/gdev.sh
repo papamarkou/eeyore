@@ -4,10 +4,12 @@
 
 export METAUSER='theodore'
 export BASEDIR="/home/$METAUSER"
+export BINDIR="$BASEDIR/bin"
 export PKGNAME='eeyore'
 export PYVERSION='3.6'
 export CONDADIR="$BASEDIR/opt/continuum/miniconda/miniconda3"
 export PYPKGDIR="$BASEDIR/opt/python/packages"
+export CONDAENV="$CONDADIR/envs/$PKGNAME"
 export CONDABIN="$CONDADIR/bin/conda"
 export CONDASCRIPT='Miniconda3-latest-Linux-x86_64.sh'
 export PKGURL="https://github.com/papamarkou/$PKGNAME.git"
@@ -26,11 +28,14 @@ su - $METAUSER -c "$CONDABIN create -n $PKGNAME -y python=$PYVERSION"
 su - $METAUSER -c "$CONDABIN init $(basename $SHELL)"
 su - $METAUSER -c "$CONDABIN config --set auto_activate_base false"
 
+su - $METAUSER -c "mkdir -p $BINDIR"
+su - $METAUSER -c "ln -s $CONDABIN $BINDIR"
+su - $METAUSER -c "echo \"export PATH=$BINDIR:$PATH\" >> $BASEDIR/.bashrc"
+
 su - $METAUSER -c "mkdir -p $PYPKGDIR;
 cd $PYPKGDIR;
 git clone $PKGURL;
 cd $PKGNAME;
-$CONDABIN activate $PKGNAME;
-python setup.py develop --user"
+$CONDABIN run -p $CONDAENV python setup.py develop --user"
 
 rm $CONDASCRIPT

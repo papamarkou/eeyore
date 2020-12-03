@@ -24,10 +24,14 @@ $CONDABIN create -n $PKGNAME -y python=$PYVERSION
 $CONDABIN init $(basename $SHELL)
 $CONDABIN config --set auto_activate_base false
 
+source $HOME/.bashrc
+
 mkdir -p $PYPKGDIR
 cd $PYPKGDIR
 git clone $PKGURL
 cd $PKGNAME
+conda activate $PKGNAME
 python setup.py develop --user
+conda deactivate
 
 rm $CONDASCRIPT
