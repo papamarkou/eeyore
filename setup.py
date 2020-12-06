@@ -31,7 +31,7 @@ setup(
     ],
     keywords=['Bayesian', 'deep learning', 'Markov chains', 'MCMC', 'Monte Carlo', 'neural networks'],
     python_requires='>=3.6',
-    install_requires=['numpy>=1.19.2', 'torch>=1.6.0', 'torchdiffeq>=0.1.1', 'kanga>=0.0.15'],
+    install_requires=['numpy>=1.19.2', 'torch>=1.6.0', 'torchdiffeq>=0.1.1', 'kanga>=0.0.17'],
     package_data={'eeyore': ['data/*/x.csv', 'data/*/y.csv', 'data/*/readme.md']},
     include_package_data=True,
     zip_safe=False

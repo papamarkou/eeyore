@@ -13,6 +13,7 @@ export CONDAENV="$CONDADIR/envs/$PKGNAME"
 export CONDABIN="$CONDADIR/bin/conda"
 export CONDASCRIPT='Miniconda3-latest-Linux-x86_64.sh'
 export PKGURL="https://github.com/papamarkou/$PKGNAME.git"
+export PKGDEVREQS="$PYPKGDIR/$PKGNAME/installation/requirements.txt"
 
 sudo apt-get update
 
