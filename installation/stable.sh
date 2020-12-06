@@ -3,7 +3,7 @@
 # Start up script for setting up environment on Ubuntu 20.04 LTS
 
 export PKGNAME='eeyore'
-export PYVERSION='3.6'
+export PYVERSION='3.7'
 export CONDADIR="$HOME/opt/continuum/miniconda/miniconda3"
 export CONDABIN="$CONDADIR/bin/conda"
 export CONDASCRIPT='Miniconda3-latest-Linux-x86_64.sh'
@@ -22,4 +22,4 @@ $CONDABIN create -n $PKGNAME -y -c papamarkou -c pytorch -c conda-forge python=$
 $CONDABIN init $(basename $SHELL)
 $CONDABIN config --set auto_activate_base false
 
-rm $CONDASCRIPT
+rm $HOME/$CONDASCRIPT

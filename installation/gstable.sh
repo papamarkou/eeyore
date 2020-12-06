@@ -6,7 +6,7 @@ export METAUSER='theodore'
 export BASEDIR="/home/$METAUSER"
 export BINDIR="$BASEDIR/bin"
 export PKGNAME='eeyore'
-export PYVERSION='3.6'
+export PYVERSION='3.7'
 export CONDADIR="$BASEDIR/opt/continuum/miniconda/miniconda3"
 export CONDABIN="$CONDADIR/bin/conda"
 export CONDASCRIPT='Miniconda3-latest-Linux-x86_64.sh'
@@ -29,4 +29,4 @@ su - $METAUSER -c "mkdir -p $BINDIR"
 su - $METAUSER -c "ln -s $CONDABIN $BINDIR"
 su - $METAUSER -c "echo \"export PATH=$BINDIR:$PATH\" >> $BASEDIR/.bashrc"
 
-su - $METAUSER -c "rm $CONDASCRIPT"
+su - $METAUSER -c "rm $BASEDIR/$CONDASCRIPT"

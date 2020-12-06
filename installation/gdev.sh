@@ -32,10 +32,8 @@ su - $METAUSER -c "mkdir -p $BINDIR"
 su - $METAUSER -c "ln -s $CONDABIN $BINDIR"
 su - $METAUSER -c "echo \"export PATH=$BINDIR:$PATH\" >> $BASEDIR/.bashrc"
 
-su - $METAUSER -c "mkdir -p $PYPKGDIR;
-cd $PYPKGDIR;
-git clone $PKGURL;
-cd $PKGNAME;
-$CONDABIN run -p $CONDAENV python setup.py develop --user"
+su - $METAUSER -c "mkdir -p $PYPKGDIR"
+su - $METAUSER -c "git -C $PYPKGDIR clone $PKGURL"
+su - $METAUSER -c "$CONDABIN run -p $CONDAENV pip install -e $PYPKGDIR/$PKGNAME -r $PKGDEVREQS"
 
-rm $CONDASCRIPT
+su - $METAUSER -c "rm $BASEDIR/$CONDASCRIPT"

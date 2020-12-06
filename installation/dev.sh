@@ -26,8 +26,6 @@ $CONDABIN create -n $PKGNAME -y python=$PYVERSION
 $CONDABIN init $(basename $SHELL)
 $CONDABIN config --set auto_activate_base false
 
-source $HOME/.bashrc
-
 mkdir -p $PYPKGDIR
 git -C $PYPKGDIR clone $PKGURL
 $CONDABIN run -p $CONDAENV pip install -e $PYPKGDIR/$PKGNAME -r $PKGDEVREQS
