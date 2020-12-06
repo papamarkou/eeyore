@@ -6,6 +6,7 @@ export PKGNAME='eeyore'
 export PYVERSION='3.7'
 export CONDADIR="$HOME/opt/continuum/miniconda/miniconda3"
 export PYPKGDIR="$HOME/opt/python/packages"
+export CONDAENV="$CONDADIR/envs/$PKGNAME"
 export CONDABIN="$CONDADIR/bin/conda"
 export CONDASCRIPT='Miniconda3-latest-Linux-x86_64.sh'
 export PKGURL="https://github.com/papamarkou/$PKGNAME.git"
@@ -29,8 +30,6 @@ source $HOME/.bashrc
 
 mkdir -p $PYPKGDIR
 git -C $PYPKGDIR clone $PKGURL
-conda activate $PKGNAME
-pip install -e $PYPKGDIR/$PKGNAME -r $PKGDEVREQS
-conda deactivate
+$CONDABIN run -p $CONDAENV pip install -e $PYPKGDIR/$PKGNAME -r $PKGDEVREQS
 
 rm $HOME/$CONDASCRIPT
