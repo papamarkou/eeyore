@@ -1,7 +1,7 @@
 #!/bin/bash
 
 gcloud compute instances create \
-  preemptible01  \
+  preemptible01 \
   --machine-type=e2-medium \
   --zone=us-central1-b  \
   --preemptible \

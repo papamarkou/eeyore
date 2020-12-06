@@ -24,7 +24,7 @@ anaconda login
 ```
 cd $HOME
 conda skeleton pypi eeyore
-conda build --python 3.6 eeyore
+conda build --python 3.7 eeyore
 ```
 
 ### Upload to anaconda
