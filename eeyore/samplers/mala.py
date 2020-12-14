@@ -30,6 +30,10 @@ class MALA(SingleChainSerialSampler):
         self.current['target_val'], self.current['grad_val'] = \
             self.model.upto_grad_log_target(self.current['sample'].clone().detach(), x, y)
 
+    def reset(self, theta, data=None, reset_counter=True, reset_chain=True):
+        super().reset(theta, data=data, reset_counter=reset_counter, reset_chain=reset_chain)
+        self.set_kernel(self.current)
+
     def kernel_mean(self, state):
         return state['sample'] + 0.5 * self.step * state['grad_val']
 
