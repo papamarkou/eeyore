@@ -17,7 +17,7 @@ from eeyore.datasets import DataCounter
 class PowerPosteriorSampler(MultiChainSerialSampler):
     def __init__(self, model, dataloader, samplers,
         theta0=None, data0=None, counter=None,
-        temperature=None, between_step=10, b=0.5, storage='list', keys=['sample', 'target_val', 'accepted'],
+        temperature=None, between_step=10, b=0.5, storage='list', keys=['sample', 'target_val'],
         path=Path.cwd(), mode='a', check_input=False):
         super(PowerPosteriorSampler, self).__init__(counter or DataCounter.from_dataloader(dataloader))
         self.between_step = between_step
@@ -153,8 +153,8 @@ class PowerPosteriorSampler(MultiChainSerialSampler):
     def sample_categorical(self, i):
         return self.from_seq_to_events(self.categoricals[i].sample().item(), i)
 
-    def reset(self, theta, data=None):
-        super().reset(theta, data=data, reset_counter=False, reset_chain=True)
+    def reset(self, theta, data=None, reset_counter=True, reset_chain=True):
+        super().reset(theta, data=data, reset_counter=reset_counter, reset_chain=reset_chain)
         self.counter.reset()
 
     def within_chain_move(self, i, x, y):
