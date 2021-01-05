@@ -6,6 +6,7 @@
 
 import torch
 import torch.nn as nn
+import unittest
 
 from eeyore.constants import loss_functions
 from eeyore.datasets import XYDataset
@@ -78,7 +79,7 @@ result05 = cross_entropy_loss(data, labels)
 
 # %% Run tests
 
-class TestLogLiks:
+class TestLogLiks(unittest.TestCase):
     def test_result01_vs_result02(self):
         assert torch.equal(result01, result02)
 

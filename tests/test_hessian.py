@@ -20,6 +20,7 @@
 # %% Import packages
 
 import torch
+import unittest
 
 from torch.autograd import grad
 
@@ -65,7 +66,7 @@ theta = torch.tensor([2., 3.], dtype=torch.float, requires_grad=True)
 
 gradf_val, hessf_val = autograd_gradhessf(theta, f)
 
-class TestDerivatives:
+class TestDerivatives(unittest.TestCase):
     def test_grad(self):
         assert torch.equal(analytical_gradf(theta), gradf_val)
         

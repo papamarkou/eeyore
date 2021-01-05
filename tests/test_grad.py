@@ -15,6 +15,7 @@
 # %% Import packages
 
 import torch
+import unittest
 
 # %% Define function f whose gradient is computed
 
@@ -28,10 +29,11 @@ def analytical_gradf(theta):
 
 # %% Run tests
 
-def test_grad():
-    theta = torch.tensor([2., 3.], dtype=torch.float, requires_grad=True)
+class TestDerivatives(unittest.TestCase):
+    def test_grad(self):
+        theta = torch.tensor([2., 3.], dtype=torch.float, requires_grad=True)
     
-    f_val = f(theta)
-    f_val.backward()
+        f_val = f(theta)
+        f_val.backward()
 
-    assert torch.equal(analytical_gradf(theta), theta.grad)
+        assert torch.equal(analytical_gradf(theta), theta.grad)

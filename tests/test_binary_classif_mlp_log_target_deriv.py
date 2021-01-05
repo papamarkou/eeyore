@@ -5,6 +5,7 @@
 # %% Import packages
 
 import torch
+import unittest
 
 from torch.autograd import grad
 from torch.distributions import Normal
@@ -158,7 +159,7 @@ mlt_result02 = -torch.cat(hlt_val, 0).reshape(9, 9)
 
 # %% Run target tests
 
-class TestTargets:
+class TestTargets(unittest.TestCase):
     def test_lt_result01_vs_log_lik_plus_log_prior(self):
         assert torch.equal(lt_result01, log_lik_plus_log_prior)
         
@@ -167,7 +168,7 @@ class TestTargets:
 
 # %% Run gradient tests
 
-class TestGradients:        
+class TestGradients(unittest.TestCase):        
     def test_glt_result01_vs_glt_result02(self):
         assert torch.equal(glt_result01, glt_result02)
 
@@ -185,6 +186,6 @@ class TestGradients:
 
 # %% Run Hessian tests
 
-class TestHessians:
+class TestHessians(unittest.TestCase):
     def test_mlt_result01_vs_mlt_result02(self):
         assert torch.equal(mlt_result01, mlt_result02)

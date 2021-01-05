@@ -7,6 +7,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import unittest
 
 from eeyore.constants import loss_functions
 from eeyore.datasets import XYDataset
@@ -161,7 +162,7 @@ result07 = log_lik(logit(out_of_forward04), labels)
 
 # %% Run tests
 
-class TestLogLiks:
+class TestLogLiks(unittest.TestCase):
     def test_result01_vs_result02a(self):
         assert torch.equal(result01, result02a)
         
