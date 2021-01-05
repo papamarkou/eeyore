@@ -49,6 +49,9 @@ class BayesianModel(LogTargetModel):
 
         return log_lik_val
 
+    def set_params_and_lik(self, theta, x, y):
+        return torch.exp(self.set_params_and_log_lik(theta, x, y))
+
     def log_prior(self):
         log_prior_val = torch.sum(self.prior.log_prob(self.get_params()))
         if self.temperature is not None:
@@ -71,12 +74,12 @@ class BayesianModel(LogTargetModel):
         return log_lik_val + log_prior_val
 
     def predictive_posterior(self, theta, x, y): #, integration='mc'):
-        integrator = MCIntegrator(f=self.set_params_and_log_lik, samples=theta) # if interation == 'mc':
+        integrator = MCIntegrator(f=self.set_params_and_lik, samples=theta) # if interation == 'mc':
         return integrator.integrate(x, y)
 
     def predictive_posterior_from_dataset(
         self, theta, dataset, num_points, shuffle=True, verbose=False, verbose_step=1):
-        integrator = MCIntegrator(f=self.set_params_and_log_lik, samples=theta) # if interation == 'mc':
+        integrator = MCIntegrator(f=self.set_params_and_lik, samples=theta) # if interation == 'mc':
         return integrator.integrate_from_dataset(
             dataset, num_points, shuffle=shuffle, verbose=verbose, verbose_step=verbose_step
         )
