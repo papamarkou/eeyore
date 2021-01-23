@@ -73,13 +73,13 @@ class BayesianModel(LogTargetModel):
 
         return log_lik_val + log_prior_val
 
-    def predictive_posterior(self, theta, x, y): #, integration='mc'):
-        integrator = MCIntegrator(f=self.set_params_and_lik, samples=theta) # if interation == 'mc':
+    def predictive_posterior(self, theta, x, y):
+        integrator = MCIntegrator(f=lambda s, x, y : self.set_params_and_lik(s.clone().detach(), x, y), samples=theta)
         return integrator.integrate(x, y)
 
     def predictive_posterior_from_dataset(
         self, theta, dataset, num_points, shuffle=True, verbose=False, verbose_step=1):
-        integrator = MCIntegrator(f=self.set_params_and_lik, samples=theta) # if interation == 'mc':
+        integrator = MCIntegrator(f=lambda s, x, y : self.set_params_and_lik(s.clone().detach(), x, y), samples=theta)
         return integrator.integrate_from_dataset(
             dataset, num_points, shuffle=shuffle, verbose=verbose, verbose_step=verbose_step
         )
