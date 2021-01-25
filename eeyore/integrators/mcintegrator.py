@@ -14,12 +14,20 @@ class MCIntegrator(Integrator):
         self.samples = samples
 
     def integrate(self, x, y):
-        integral = 0
-        for sample in self.samples:
-            integral = integral + self.f(sample, x, y)
-        integral = integral / len(self.samples)
+        integral = 0.
+        num_kept_samples = 1
+        num_dropped_samples = 0
 
-        return integral
+        for sample in self.samples:
+            integrand = self.f(sample, x, y)
+
+            if torch.isnan(integrand):
+                num_dropped_samples = num_dropped_samples + 1
+            else:
+                integral = ((num_kept_samples - 1) * integral + integrand) / num_kept_samples
+                num_kept_samples = num_kept_samples + 1
+
+        return integral, num_dropped_samples
 
     def integrate_from_dataset(
         self, dataset, num_points, shuffle=True, dtype=torch.float64, device='cpu', verbose=False, verbose_step=1):
@@ -31,6 +39,7 @@ class MCIntegrator(Integrator):
 
         integrals = torch.empty(num_points, dtype=dtype, device=device)
         indices = torch.empty(num_points, dtype=torch.int64, device=device)
+        nums_dropped_samples = torch.empty(num_points, dtype=torch.int64, device=device)
 
         for _ in range(counter.num_epochs):
             for _, (x, y, idx) in enumerate(dataloader):
@@ -40,8 +49,10 @@ class MCIntegrator(Integrator):
                 if verbose and (((counter.idx+1) % verbose_step) == 0):
                     start_time = timer()
 
-                integrals[counter.idx] = self.integrate(x, y).item()
+                integral, num_dropped_samples = self.integrate(x, y)
+                integrals[counter.idx] = integral.item()
                 indices[counter.idx] = idx.clone().detach()
+                nums_dropped_samples[counter.idx] = num_dropped_samples
 
                 if verbose and (((counter.idx+1) % verbose_step) == 0):
                     end_time = timer()
@@ -49,7 +60,7 @@ class MCIntegrator(Integrator):
 
                 counter.increment_idx()
 
-        return integrals, indices
+        return integrals, indices, nums_dropped_samples
 
     def set_verbose_msg(self, counter):
         return "Iteration {:" \
