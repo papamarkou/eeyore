@@ -26,9 +26,6 @@ class MetropolisHastings(SingleChainSerialSampler):
 
         self.kernel = kernel or self.default_kernel(self.current)
 
-    def default_kernel(self, theta):
-        return NormalKernel(theta, torch.ones(self.model.num_params()))
-
     def default_kernel(self, state):
         loc = state['sample']
         scale = torch.ones(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
@@ -51,6 +48,9 @@ class MetropolisHastings(SingleChainSerialSampler):
     def draw(self, x, y, savestate=False):
         proposed = {key : None for key in self.keys}
 
+        if self.counter.num_batches != 1:
+            self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
+
         proposed['sample'] = self.kernel.sample()
         proposed['target_val'] = self.model.log_target(proposed['sample'].clone().detach(), x, y)
 
@@ -62,7 +62,8 @@ class MetropolisHastings(SingleChainSerialSampler):
 
         if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
             self.current['sample'] = proposed['sample'].clone().detach()
-            self.current['target_val'] = proposed['target_val'].clone().detach()
+            if self.counter.num_batches == 1:
+                self.current['target_val'] = proposed['target_val'].clone().detach()
             if self.symmetric:
                 self.set_kernel(proposed)
             self.current['accepted'] = 1

@@ -6,7 +6,7 @@ class DataCounter:
         self.reset()
 
     def set_num_batches(self, drop_last=False):
-        self.num_batches = self.sample_size / self.batch_size
+        self.num_batches = self.sample_size // self.batch_size
         if (self.sample_size % self.batch_size != 0) and not drop_last:
             self.num_batches = self.num_batches + 1
 
