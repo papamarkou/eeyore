@@ -1,5 +1,5 @@
 # %% Evaluation of MLP log-likelihood for multiclass classification
-# 
+#
 # Confirm PyTorch and manually coded MLP log-likelihood coincide
 
 # %% Import packages
@@ -62,32 +62,37 @@ result04 = -nn.NLLLoss(reduction='sum')(nn.Softmax(dim=1)(model(data)).log(), to
 
 def cross_entropy_loss(data, labels):
     n = labels.size(dim=0)
-    
+
     logit = model(data)
-    
+
     softmax_vals = nn.Softmax(dim=1)(logit).log()
     labels_argmax = torch.argmax(labels, 1)
-    
+
     result = 0
     for i in range(n):
         result = result + softmax_vals[i, labels_argmax[i]]
     result = result
-        
+
     return result
 
 result05 = cross_entropy_loss(data, labels)
 
-# %% Run tests
+# %% Class for running tests
 
 class TestLogLiks(unittest.TestCase):
     def test_result01_vs_result02(self):
-        assert torch.equal(result01, result02)
+        self.assertEqual(result01.item(), result02.item())
 
     def test_result01_vs_result03(self):
-        assert torch.equal(result01, result03)
+        self.assertEqual(result01.item(), result03.item())
 
     def test_result01_vs_result04(self):
-        assert torch.equal(result01, result04)
+        self.assertEqual(result01.item(), result04.item())
 
     def test_result01_vs_result05(self):
-        assert torch.equal(result01, result05)
+        self.assertAlmostEqual(result01.item(), result05.item(), places=12)
+
+# %% Enable running the tests from the command line
+
+if __name__ == '__main__':
+    unittest.main()

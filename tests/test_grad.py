@@ -27,7 +27,7 @@ def f(theta):
 def analytical_gradf(theta):
     return torch.tensor([3*(theta[0]**2)*(theta[1]**4), 4*(theta[0]**3)*(theta[1]**3)], dtype=torch.float)
 
-# %% Run tests
+# %% Class for running tests
 
 class TestDerivatives(unittest.TestCase):
     def test_grad(self):
@@ -36,4 +36,9 @@ class TestDerivatives(unittest.TestCase):
         f_val = f(theta)
         f_val.backward()
 
-        assert torch.equal(analytical_gradf(theta), theta.grad)
+        self.assertTrue(torch.equal(analytical_gradf(theta), theta.grad))
+
+# %% Enable running the tests from the command line
+
+if __name__ == '__main__':
+    unittest.main()

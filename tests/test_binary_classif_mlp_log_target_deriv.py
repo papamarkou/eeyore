@@ -157,35 +157,40 @@ for i in range(9):
 
 mlt_result02 = -torch.cat(hlt_val, 0).reshape(9, 9)
 
-# %% Run target tests
+# %% Class for running target tests
 
 class TestTargets(unittest.TestCase):
     def test_lt_result01_vs_log_lik_plus_log_prior(self):
-        assert torch.equal(lt_result01, log_lik_plus_log_prior)
+        self.assertEqual(lt_result01.item(), log_lik_plus_log_prior.item())
         
     def test_lt_result01_vs_lt_result02(self):
-        assert torch.equal(lt_result01, lt_result02)
+        self.assertEqual(lt_result01.item(), lt_result02.item())
 
-# %% Run gradient tests
+# %% Class for running gradient tests
 
 class TestGradients(unittest.TestCase):        
     def test_glt_result01_vs_glt_result02(self):
-        assert torch.equal(glt_result01, glt_result02)
+        self.assertTrue(torch.equal(glt_result01, glt_result02))
 
     def test_glt_result01_vs_glt_result03(self):
-        assert torch.equal(glt_result01, glt_result03)
+        self.assertTrue(torch.equal(glt_result01, glt_result03))
 
     def test_glt_result01_vs_glt_result04(self):
-        assert torch.equal(glt_result01, glt_result04)
+        self.assertTrue(torch.equal(glt_result01, glt_result04))
 
     def test_glt_result01_vs_glt_result05(self):
-        assert torch.equal(glt_result01, glt_result05)
+        self.assertTrue(torch.equal(glt_result01, glt_result05))
 
     def test_glt_result01_vs_glt_result06(self):
-        assert torch.equal(glt_result01, glt_result06)
+        self.assertTrue(torch.equal(glt_result01, glt_result06))
 
-# %% Run Hessian tests
+# %% Class for running Hessian tests
 
 class TestHessians(unittest.TestCase):
     def test_mlt_result01_vs_mlt_result02(self):
-        assert torch.equal(mlt_result01, mlt_result02)
+        self.assertTrue(torch.equal(mlt_result01, mlt_result02))
+
+# %% Enable running the tests from the command line
+
+if __name__ == '__main__':
+    unittest.main()

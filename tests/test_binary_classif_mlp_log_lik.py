@@ -160,26 +160,31 @@ out_of_forward04 = forward04(data)
 
 result07 = log_lik(logit(out_of_forward04), labels)
 
-# %% Run tests
+# %% Class for running tests
 
 class TestLogLiks(unittest.TestCase):
     def test_result01_vs_result02a(self):
-        assert torch.equal(result01, result02a)
+        self.assertEqual(result01.item(), result02a.item())
         
     def test_result01_vs_result02b(self):
-        assert torch.equal(result01, result02b)    
+        self.assertEqual(result01.item(), result02b.item())
 
     def test_result01_vs_result03(self):
-        assert torch.equal(result01, result03)
+        self.assertEqual(result01.item(), result03.item())
 
     def test_result01_vs_result04(self):
-        assert torch.equal(result01, result04)
+        self.assertEqual(result01.item(), result04.item())
 
     def test_result01_vs_result05(self):
-        assert torch.equal(result01, result05)
+        self.assertEqual(result01.item(), result05.item())
 
     def test_result01_vs_result06(self):
-        assert torch.equal(result01, result06)
+        self.assertEqual(result01.item(), result06.item())
 
     def test_result01_vs_result07(self):
-        assert torch.equal(result01, result07)
+        self.assertEqual(result01.item(), result07.item())
+
+# %% Enable running the tests from the command line
+
+if __name__ == '__main__':
+    unittest.main()

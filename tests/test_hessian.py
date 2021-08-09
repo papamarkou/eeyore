@@ -60,7 +60,7 @@ def autograd_gradhessf(theta, f):
     
     return gradf_val, hessf_val
 
-# %% Run tests
+# %% Class for running tests
 
 theta = torch.tensor([2., 3.], dtype=torch.float, requires_grad=True)
 
@@ -68,7 +68,12 @@ gradf_val, hessf_val = autograd_gradhessf(theta, f)
 
 class TestDerivatives(unittest.TestCase):
     def test_grad(self):
-        assert torch.equal(analytical_gradf(theta), gradf_val)
+        self.assertTrue(torch.equal(analytical_gradf(theta), gradf_val))
         
     def test_hess(self):
-        assert torch.equal(analytical_hessf(theta), hessf_val)
+        self.assertTrue(torch.equal(analytical_hessf(theta), hessf_val))
+
+# %% Enable running the tests from the command line
+
+if __name__ == '__main__':
+    unittest.main()
