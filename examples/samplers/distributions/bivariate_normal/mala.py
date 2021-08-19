@@ -1,4 +1,4 @@
-# %% Sampling from a bivariate normal density via MALA
+# Sampling from a bivariate normal density via MALA
 
 # %% Import packages
 

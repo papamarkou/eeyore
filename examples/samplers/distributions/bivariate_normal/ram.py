@@ -1,4 +1,4 @@
-# %% Sampling from a bivariate normal density via RAM
+# Sampling from a bivariate normal density via RAM
 
 # %% Import packages
 

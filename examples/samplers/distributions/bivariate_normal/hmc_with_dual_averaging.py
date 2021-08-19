@@ -1,4 +1,4 @@
-# %% Sampling from a bivariate normal density via HMC
+# Sampling from a bivariate normal density via HMC
 
 # %% Import packages
 

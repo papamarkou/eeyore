@@ -1,4 +1,4 @@
-# %% Sampling from a bivariate normal mixture via RAM
+# Sampling from a bivariate normal mixture via RAM
 
 # %% Import packages
 

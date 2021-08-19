@@ -1,4 +1,4 @@
-# %% Sampling from an unnormalized Gamma density via MALA
+# Sampling from an unnormalized Gamma density via MALA
 
 # %% Import packages
 

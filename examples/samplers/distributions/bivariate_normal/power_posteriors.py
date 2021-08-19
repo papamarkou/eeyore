@@ -1,4 +1,4 @@
-# %% Sampling from a bivariate normal density via power posterior sampler
+# Sampling from a bivariate normal density via power posterior sampler
 
 # %% Import packages
 

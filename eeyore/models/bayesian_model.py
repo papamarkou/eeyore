@@ -5,9 +5,8 @@ from eeyore.integrators import MCIntegrator
 
 class BayesianModel(LogTargetModel):
     """ Class representing a Bayesian Net """
-    def __init__(self, loss,
-        constraint=None, bounds=[-float('inf'), float('inf')], temperature=None, dtype=torch.float64, device='cpu'):
-        super().__init__(constraint=constraint, bounds=bounds, temperature=temperature, dtype=dtype, device=device)
+    def __init__(self, loss, temperature=None, dtype=torch.float64, device='cpu'):
+        super().__init__(temperature=temperature, dtype=dtype, device=device)
         self.loss = loss
 
     def default_prior(self):
@@ -37,16 +36,8 @@ class BayesianModel(LogTargetModel):
 
     def set_params_and_log_lik(self, theta, x, y):
         """ Set parameters and evaluate log-likelihood """
-        if self.constraint is not None:
-            self.transform_params(theta)
-        else:
-            self.set_params(theta)
-
+        self.set_params(theta)
         log_lik_val = self.log_lik(x, y)
-
-        if self.constraint is not None:
-            self.set_params(theta)
-
         return log_lik_val
 
     def set_params_and_lik(self, theta, x, y):
@@ -60,17 +51,8 @@ class BayesianModel(LogTargetModel):
 
     def log_target(self, theta, x, y):
         self.set_params(theta)
-
         log_prior_val = self.log_prior()
-
-        if self.constraint is not None:
-            self.transform_params(theta)
-
         log_lik_val = self.log_lik(x, y)
-
-        if self.constraint is not None:
-            self.set_params(theta)
-
         return log_lik_val + log_prior_val
 
     def predictive_posterior(self, theta, x, y):

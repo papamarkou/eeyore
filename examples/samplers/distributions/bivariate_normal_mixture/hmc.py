@@ -1,4 +1,4 @@
-# %% Sampling from a bivariate normal mixture via HMC
+# Sampling from a bivariate normal mixture via HMC
 
 # %% Import packages
 

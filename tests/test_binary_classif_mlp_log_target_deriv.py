@@ -1,4 +1,4 @@
-# %% Evaluation of grad and of Hessian of MLP log-target for binary classification
+# %% Evaluation of grad of MLP log-target for binary classification
 # 
 # Confirm PyTorch and manually coded grad and Hessian of MLP log-target coincide
 
@@ -135,28 +135,6 @@ glp_val, = grad(lp_val, theta)
 
 glt_result04 = gll_val+glp_val
 
-# %% Compute Hessian of MLP log-target using eeyore API version
-
-theta = theta0.clone().detach()
-
-lt_val05, glt_result05, mlt_result01 = model.upto_metric_log_target(theta, data, labels)
-
-# %% Compute Hessian of MLP log-target calling grad() on manually coded log_target()
-
-theta = theta0.clone().detach()
-theta.requires_grad_(True)
-
-lt_val06 = log_target(theta, data, labels)
-
-glt_result06, = grad(lt_val06, theta, create_graph=True)
-
-hlt_val = []
-for i in range(9):
-    deriv_i_wrt_grad = grad(glt_result06[i], theta, retain_graph=True)
-    hlt_val.append(torch.cat([h.view(-1) for h in deriv_i_wrt_grad]))
-
-mlt_result02 = -torch.cat(hlt_val, 0).reshape(9, 9)
-
 # %% Class for running target tests
 
 class TestTargets(unittest.TestCase):
@@ -177,18 +155,6 @@ class TestGradients(unittest.TestCase):
 
     def test_glt_result01_vs_glt_result04(self):
         self.assertTrue(torch.equal(glt_result01, glt_result04))
-
-    def test_glt_result01_vs_glt_result05(self):
-        self.assertTrue(torch.equal(glt_result01, glt_result05))
-
-    def test_glt_result01_vs_glt_result06(self):
-        self.assertTrue(torch.equal(glt_result01, glt_result06))
-
-# %% Class for running Hessian tests
-
-class TestHessians(unittest.TestCase):
-    def test_mlt_result01_vs_mlt_result02(self):
-        self.assertTrue(torch.equal(mlt_result01, mlt_result02))
 
 # %% Enable running the tests from the command line
 

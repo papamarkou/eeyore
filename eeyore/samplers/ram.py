@@ -29,7 +29,7 @@ class RAM(SingleChainSerialSampler):
         self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
 
     def set_cov(self, cov=None):
-        self.chol_cov = torch.cholesky(cov or self.cov0)
+        self.chol_cov = torch.linalg.cholesky(cov or self.cov0)
 
     def set_all(self, theta, data=None, cov=None):
         super().set_all(theta, data=data)
@@ -53,7 +53,7 @@ class RAM(SingleChainSerialSampler):
             self.current['accepted'] = 0
 
         h = min(1, self.model.num_params() * (self.counter.idx + 1 - offset) ** (-self.g))
-        self.chol_cov = torch.cholesky(self.chol_cov @ (
+        self.chol_cov = torch.linalg.cholesky(self.chol_cov @ (
             torch.eye(self.model.num_params(), dtype=self.model.dtype, device=self.model.device) + \
             h * (min(1, torch.exp(log_rate).item()) - self.a
             ) * torch.ger(randn_sample, randn_sample) / \

@@ -7,7 +7,6 @@ from eeyore.linalg import is_pos_def, nearest_pd
 from .cov import cov
 from .mc_cov import mc_cov
 
-# x is a numpy array of 3 dimensions, (chain, MC iteration, parameter)
 def multi_rhat(x, mc_cov_mat=None, method='inse', adjust=False):
     num_chains, num_iters, num_pars = x.shape
 
@@ -33,7 +32,9 @@ def multi_rhat(x, mc_cov_mat=None, method='inse', adjust=False):
     else:
         is_b_pd = True
 
-    rhat = torch.eig(torch.matmul(torch.inverse(w), b), eigenvectors=False)[0][:, 0].max().item()
+    eigvals = torch.linalg.eigvals(torch.matmul(torch.inverse(w), b))
+    eigvals_argmax = eigvals.real.argmax().item()
+    rhat = eigvals.real[eigvals_argmax].item()
     rhat = ((num_iters - 1) / num_iters) + ((num_chains + 1) / num_chains) * rhat
 
-    return rhat, w, b, is_w_pd, is_b_pd
+    return rhat, eigvals.imag[eigvals_argmax].item(), w, b, is_w_pd, is_b_pd

@@ -1,4 +1,4 @@
-# %% Sampling from a bivariate normal mixture via AM
+# Sampling from a bivariate normal mixture via AM
 
 # %% Import packages
 

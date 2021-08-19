@@ -5,7 +5,7 @@ from .log_target_model import LogTargetModel
 
 class DistributionModel(LogTargetModel):
     def __init__(self, log_pdf, num_params, temperature=None, dtype=torch.float64, device='cpu', requires_grad=True):
-        super().__init__(constraint=None, temperature=temperature, dtype=dtype, device=device)
+        super().__init__(temperature=temperature, dtype=dtype, device=device)
         self.log_pdf = log_pdf
         self.theta = nn.Parameter(
             data=torch.empty(num_params, dtype=self.dtype, device=self.device), requires_grad=requires_grad

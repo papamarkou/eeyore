@@ -13,10 +13,7 @@ class MetropolisHastings(SingleChainSerialSampler):
         self.model = model
         self.dataloader = dataloader
         self.symmetric = symmetric
-        if self.model.constraint == 'truncation':
-            self.symmetric = False
-        else:
-            self.symmetric = symmetric
+        self.symmetric = symmetric
 
         self.keys = ['sample', 'target_val', 'accepted']
         self.chain = chain
@@ -29,10 +26,7 @@ class MetropolisHastings(SingleChainSerialSampler):
     def default_kernel(self, state):
         loc = state['sample']
         scale = torch.ones(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
-        if (self.model.constraint is None) or (self.model.constraint == 'transformation'):
-            return NormalKernel(loc, scale)
-        elif self.model.constraint == 'truncation':
-            return TruncatedNormalKernel(loc, scale, lower_bound=self.model.bounds[0], upper_bound=self.model.bounds[1])
+        return NormalKernel(loc, scale)
 
     def set_current(self, theta, data=None):
         x, y = super().set_current(theta, data=data)

@@ -1,4 +1,4 @@
-# %% Sampling from a bivariate normal mixture via Metropolis-Hastings
+# Sampling from a bivariate normal mixture via Metropolis-Hastings
 
 # %% Import packages
 

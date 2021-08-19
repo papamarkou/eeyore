@@ -13,10 +13,9 @@ class Hyperparameters:
         self.activation = activation
 
 class LogisticRegression(BayesianModel):
-    def __init__(self, loss, constraint=None, bounds=[-float('inf'), float('inf')], temperature=None, prior=None,
-    hparams=Hyperparameters(), savefile=None, dtype=torch.float64, device='cpu'):
-        super().__init__(
-            loss=loss, constraint=constraint, bounds=bounds, temperature=temperature, dtype=dtype, device=device)
+    def __init__(self, loss, temperature=None, prior=None, hparams=Hyperparameters(), savefile=None, dtype=torch.float64,
+    device='cpu'):
+        super().__init__(loss, temperature=temperature, dtype=dtype, device=device)
         self.hp = hparams
         self.linear = nn.Linear(self.hp.input_size, self.hp.output_size, bias=self.hp.bias).to(
             dtype=self.dtype, device=self.device

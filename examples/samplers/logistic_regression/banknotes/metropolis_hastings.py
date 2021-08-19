@@ -1,6 +1,6 @@
-# %% Metropolis-Hastings sampling of logistic regression coefficients using Swiss banknote data
+# Metropolis-Hastings sampling of logistic regression coefficients using Swiss banknote data
 #
-# Sampling logistic regression coefficients using the Swiss banknote data and Metropolis-Hastings algorithm.
+# Sampling logistic regression coefficients using the Swiss banknote data and Metropolis-Hastings algorithm
 
 # %% Import packages for MCMC simulation and numerical MCMC summaries and diagnostics
 
@@ -10,6 +10,8 @@ from datetime import timedelta
 from timeit import default_timer as timer
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
+
+import kanga.plots as ps
 
 from eeyore.datasets import XYDataset
 from eeyore.kernels import NormalKernel
@@ -82,10 +84,6 @@ print('Monte Carlo standard error: {}'.format(chain_list.mc_se()))
 # %% Compute multivariate ESS
 
 print('Multivariate ESS: {}'.format(chain_list.multi_ess()))
-
-# %% Import kanga package for visual MCMC summaries
-
-import kanga.plots as ps
 
 # %% Generate kanga ChainArray from eeyore ChainList
 

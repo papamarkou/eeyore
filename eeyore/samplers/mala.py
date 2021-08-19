@@ -1,12 +1,10 @@
 import numpy as np
 import torch
 
-from scipy.stats import truncnorm
-
 from .single_chain_serial_sampler import SingleChainSerialSampler
 from eeyore.chains import ChainList
 from eeyore.datasets import DataCounter
-from eeyore.kernels import NormalKernel, TruncatedNormalKernel
+from eeyore.kernels import NormalKernel
 
 class MALA(SingleChainSerialSampler):
     def __init__(self, model,
@@ -40,10 +38,7 @@ class MALA(SingleChainSerialSampler):
     def default_kernel(self, state):
         loc = self.kernel_mean(state)
         scale = torch.full([self.model.num_params()], np.sqrt(self.step), dtype=self.model.dtype, device=self.model.device)
-        if (self.model.constraint is None) or (self.model.constraint == 'transformation'):
-            return NormalKernel(loc, scale)
-        elif self.model.constraint == 'truncation':
-            return TruncatedNormalKernel(loc, scale, lower_bound=self.model.bounds[0], upper_bound=self.model.bounds[1])
+        return NormalKernel(loc, scale)
 
     def set_kernel(self, state):
         self.kernel.set_density_params(self.kernel_mean(state))

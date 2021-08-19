@@ -1,6 +1,4 @@
 from .am import AM
-from .demc import DEMC
-from .gamc import GAMC
 from .hmc import HMC
 from .mala import MALA
 from .metropolis_hastings import MetropolisHastings
@@ -10,4 +8,3 @@ from .ram import RAM
 from .sampler import Sampler
 from .serial_sampler import SerialSampler
 from .single_chain_serial_sampler import SingleChainSerialSampler
-from .smmala import SMMALA

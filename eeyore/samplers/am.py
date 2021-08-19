@@ -67,7 +67,7 @@ class AM(SingleChainSerialSampler):
                 proposed['sample'] = self.current['sample'].clone().detach() + self.c * randn_sample
             else:
                 proposed['sample'] = \
-                    self.current['sample'].clone().detach() + self.b * torch.cholesky(self.cov) @ randn_sample
+                    self.current['sample'].clone().detach() + self.b * torch.linalg.cholesky(self.cov) @ randn_sample
         else:
             proposed['sample'] = self.current['sample'].clone().detach() + self.c * randn_sample
         proposed['target_val'] = self.model.log_target(proposed['sample'].clone().detach(), x, y)

@@ -8,7 +8,7 @@ from eeyore.tuners import HMCDATuner
 class HMC(SingleChainSerialSampler):
     def __init__(self, model,
         theta0=None, dataloader=None, data0=None, counter=None,
-        step=0.1, num_steps=10, tuner=None, transform=None, chain=ChainList()):
+        step=0.1, num_steps=10, tuner=None, chain=ChainList()):
         super(HMC, self).__init__(counter or DataCounter.from_dataloader(dataloader))
         self.model = model
         self.dataloader = dataloader
@@ -28,8 +28,6 @@ class HMC(SingleChainSerialSampler):
         else:
             self.step = step
             self.num_steps = num_steps
-
-        self.transform = transform
 
         self.keys = ['sample', 'target_val', 'grad_val', 'momentum', 'hamiltonian', 'accepted']
         self.chain = chain

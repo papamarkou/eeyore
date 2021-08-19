@@ -1,6 +1,8 @@
-# %% RAM sampling of MLP weights using iris data
+# MALA sampling of MLP weights using Iris data
 #
-# Sampling the weights of a multi-layer perceptron (MLP) using the iris data and RAM.
+# Sampling the weights of a multi-layer perceptron (MLP) using the Iris data and MALA
+# Run the simulation on a GPU
+# Store output chain in a list
 
 # %% Import packages for MCMC simulation
 
@@ -12,18 +14,24 @@ from timeit import default_timer as timer
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
 
+import kanga.plots as ps
+
 from eeyore.constants import loss_functions
 from eeyore.datasets import XYDataset
 from eeyore.models import mlp
-from eeyore.samplers import RAM
+from eeyore.samplers import MALA
+
+# %% Set device to be GPU
+
+device = 'cuda:0'
 
 # %% Avoid issuing memory warning due to number of plots
 
 plt.rcParams.update({'figure.max_open_warning': 0})
 
-# %% Load iris data
+# %% Load Iris data
 
-iris = XYDataset.from_eeyore('iris', yndmin=1, dtype=torch.float64, yonehot=True)
+iris = XYDataset.from_eeyore('iris', yndmin=1, dtype=torch.float32, device=device, yonehot=True)
 dataloader = DataLoader(iris, batch_size=len(iris), shuffle=True)
 
 # %% Setup MLP model
@@ -32,29 +40,32 @@ hparams = mlp.Hyperparameters(dims=[4, 3, 3], activations=[torch.sigmoid, None])
 model = mlp.MLP(
     loss=loss_functions['multiclass_classification'],
     hparams=hparams,
-    dtype=torch.float64
+    dtype=torch.float32,
+    device=device
 )
 model.prior = Normal(
-    torch.zeros(model.num_params(), dtype=model.dtype),
-    (3 * torch.ones(model.num_params(), dtype=model.dtype)).sqrt()
+    torch.zeros(model.num_params(), dtype=model.dtype, device=device),
+    (3 * torch.ones(model.num_params(), dtype=model.dtype, device=device)).sqrt()
 )
 
-# %% Setup RAM sampler
+# %% Setup MALA sampler
 
-sampler = RAM(model, theta0=model.prior.sample(), dataloader=dataloader)
+sampler = MALA(
+    model,
+    theta0=model.prior.sample(),
+    dataloader=dataloader,
+    step=0.003
+)
 
-# %% Run RAM sampler
+
+# %% Run MALA sampler
 
 start_time = timer()
 
-sampler.run(num_epochs=11000, num_burnin_epochs=1000)
+sampler.run(num_epochs=11000, num_burnin_epochs=1000, verbose=True, verbose_step=1000)
 
 end_time = timer()
 print("Time taken: {}".format(timedelta(seconds=end_time-start_time)))
-
-# %% Import kanga package for visual MCMC summaries
-
-import kanga.plots as ps
 
 # %% Generate kanga ChainArray from eeyore ChainList
 
@@ -98,7 +109,7 @@ for i in range(model.num_params()):
 
 # %% Plot histograms of marginals of simulated Markov chain
 
-for i in range(model.num_params()):    
+for i in range(model.num_params()):
     ps.hist(
         chain_array.get_param(i),
         bins=30,

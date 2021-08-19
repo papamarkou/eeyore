@@ -1,28 +1,43 @@
-# %% MALA sampling of MLP weights using XOR data
+# MALA sampling of MLP weights using Iris data
 #
-# Learn the XOR function by sampling the weights of an MLP via MALA and store chain in list.
+# Sampling the weights of a multi-layer perceptron (MLP) using the Iris data and MALA
+# Run the simulation on a CPU
+# Store output chain in a list
 
 # %% Import packages for MCMC simulation
 
+import matplotlib.pyplot as plt
 import torch
 
+from datetime import timedelta
+from timeit import default_timer as timer
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
+
+import kanga.plots as ps
 
 from eeyore.constants import loss_functions
 from eeyore.datasets import XYDataset
 from eeyore.models import mlp
 from eeyore.samplers import MALA
 
-# %% Load XOR data
+# %% Avoid issuing memory warning due to number of plots
 
-xor = XYDataset.from_eeyore('xor', dtype=torch.float64)
-dataloader = DataLoader(xor, batch_size=len(xor))
+plt.rcParams.update({'figure.max_open_warning': 0})
+
+# %% Load Iris data
+
+iris = XYDataset.from_eeyore('iris', yndmin=1, dtype=torch.float32, yonehot=True)
+dataloader = DataLoader(iris, batch_size=len(iris), shuffle=True)
 
 # %% Setup MLP model
 
-hparams = mlp.Hyperparameters(dims=[2, 2, 1])
-model = mlp.MLP(loss=loss_functions['binary_classification'], hparams=hparams)
+hparams = mlp.Hyperparameters(dims=[4, 3, 3], activations=[torch.sigmoid, None])
+model = mlp.MLP(
+    loss=loss_functions['multiclass_classification'],
+    hparams=hparams,
+    dtype=torch.float32
+)
 model.prior = Normal(
     torch.zeros(model.num_params(), dtype=model.dtype),
     (3 * torch.ones(model.num_params(), dtype=model.dtype)).sqrt()
@@ -30,15 +45,21 @@ model.prior = Normal(
 
 # %% Setup MALA sampler
 
-sampler = MALA(model, theta0=model.prior.sample(), dataloader=dataloader, step=1.74)
+sampler = MALA(
+    model,
+    theta0=model.prior.sample(),
+    dataloader=dataloader,
+    step=0.003
+)
 
 # %% Run MALA sampler
 
-sampler.run(num_epochs=11000, num_burnin_epochs=1000)
+start_time = timer()
 
-# %% Import kanga package for visual MCMC summaries
+sampler.run(num_epochs=11000, num_burnin_epochs=1000, verbose=True, verbose_step=1000)
 
-import kanga.plots as ps
+end_time = timer()
+print("Time taken: {}".format(timedelta(seconds=end_time-start_time)))
 
 # %% Generate kanga ChainArray from eeyore ChainList
 
@@ -82,7 +103,7 @@ for i in range(model.num_params()):
 
 # %% Plot histograms of marginals of simulated Markov chain
 
-for i in range(model.num_params()):    
+for i in range(model.num_params()):
     ps.hist(
         chain_array.get_param(i),
         bins=30,

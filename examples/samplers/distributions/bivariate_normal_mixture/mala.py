@@ -1,4 +1,4 @@
-# %% Sampling from a bivariate normal mixture via MALA
+# Sampling from a bivariate normal mixture via MALA
 
 # %% Import packages
 

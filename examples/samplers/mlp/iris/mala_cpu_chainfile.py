@@ -1,6 +1,8 @@
-# %% Power posterior sampling of MLP weights using iris data
+# MALA sampling of MLP weights using Iris data
 #
-# Sampling the weights of a multi-layer perceptron (MLP) using the iris data and power posterior algorithm.
+# Sampling the weights of a multi-layer perceptron (MLP) using the Iris data and MALA
+# Run the simulation on a CPU
+# Store output chain in a file
 
 # %% Import packages for MCMC simulation
 
@@ -8,60 +10,59 @@ import matplotlib.pyplot as plt
 import torch
 
 from datetime import timedelta
+from pathlib import Path
 from timeit import default_timer as timer
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
 
+import kanga.plots as ps
+
+from eeyore.chains import ChainFile
 from eeyore.constants import loss_functions
 from eeyore.datasets import XYDataset
 from eeyore.models import mlp
-from eeyore.samplers import GAMC
-from eeyore.stats import softabs
+from eeyore.samplers import MALA
 
 # %% Avoid issuing memory warning due to number of plots
 
 plt.rcParams.update({'figure.max_open_warning': 0})
 
-# %% Load iris data
+# %% Load Iris data
 
 iris = XYDataset.from_eeyore('iris', yndmin=1, dtype=torch.float32, yonehot=True)
 dataloader = DataLoader(iris, batch_size=len(iris), shuffle=True)
 
 # %% Setup MLP model
 
-# Use torch.float64 to avoid numerical issues associated with eigenvalue computation in softabs
-# See https://github.com/pytorch/pytorch/issues/24466
-
 hparams = mlp.Hyperparameters(dims=[4, 3, 3], activations=[torch.sigmoid, None])
-
 model = mlp.MLP(
     loss=loss_functions['multiclass_classification'],
     hparams=hparams,
     dtype=torch.float32
 )
-
 model.prior = Normal(
     torch.zeros(model.num_params(), dtype=model.dtype),
     (3 * torch.ones(model.num_params(), dtype=model.dtype)).sqrt()
 )
 
-# %% Setup GAMC sampler
+# %% Setup chain
 
-per_chain_samplers = [
-    ['AM', {
-        'l': 0.01, 'b': 2., 'c': 0.025,
-        'transform': lambda hessian: softabs(hessian.to(torch.float64), 1000.).to(torch.float32)
-    }],
-    # ['RAM', {}],
-    ['SMMALA', {
-        'step': 0.01,
-        'transform': lambda hessian: softabs(hessian.to(torch.float64), 1000.).to(torch.float32)
-    }]
-]
+chain = ChainFile(
+    keys=['sample', 'target_val', 'grad_val', 'accepted'],
+    path=Path.cwd().joinpath('output')
+)
 
-sampler = GAMC(model, per_chain_samplers, theta0=model.prior.sample(), dataloader=dataloader)
+# %% Setup MALA sampler
 
-# %% Run GAMC sampler
+sampler = MALA(
+    model,
+    theta0=model.prior.sample(),
+    dataloader=dataloader,
+    step=0.003,
+    chain=chain
+)
+
+# %% Run MALA sampler
 
 start_time = timer()
 
@@ -70,13 +71,13 @@ sampler.run(num_epochs=11000, num_burnin_epochs=1000, verbose=True, verbose_step
 end_time = timer()
 print("Time taken: {}".format(timedelta(seconds=end_time-start_time)))
 
-# %% Import kanga package for visual MCMC summaries
+# %% Convert ChainFile instance to ChainList instance
 
-import kanga.plots as ps
+chain_list = sampler.chain.to_chainlist()
 
 # %% Generate kanga ChainArray from eeyore ChainList
 
-chain_array = sampler.get_chain().to_kanga()
+chain_array = chain_list.to_kanga()
 
 # %% Compute acceptance rate
 
@@ -116,7 +117,7 @@ for i in range(model.num_params()):
 
 # %% Plot histograms of marginals of simulated Markov chain
 
-for i in range(model.num_params()):    
+for i in range(model.num_params()):
     ps.hist(
         chain_array.get_param(i),
         bins=30,
