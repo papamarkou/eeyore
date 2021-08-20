@@ -61,6 +61,9 @@ class AM(SingleChainSerialSampler):
     def draw(self, x, y, savestate=False, offset=0):
         proposed = {key : None for key in self.keys}
 
+        if self.counter.num_batches != 1:
+            self.current['target_val'] = self.model.log_target(self.current['sample'].clone().detach(), x, y)
+
         randn_sample = torch.randn(self.model.num_params(), dtype=self.model.dtype, device=self.model.device)
         if (self.counter.idx + 1 - offset > self.t0):
             if torch.rand(1, dtype=self.model.dtype, device=self.model.device) < self.l:
@@ -76,7 +79,8 @@ class AM(SingleChainSerialSampler):
 
         if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
             self.current['sample'] = proposed['sample'].clone().detach()
-            self.current['target_val'] = proposed['target_val'].clone().detach()
+            if self.counter.num_batches == 1:
+                self.current['target_val'] = proposed['target_val'].clone().detach()
             self.current['accepted'] = 1
             if (self.counter.idx > 0):
                 self.num_accepted = self.num_accepted + 1

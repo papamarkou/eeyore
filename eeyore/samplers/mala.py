@@ -46,6 +46,10 @@ class MALA(SingleChainSerialSampler):
     def draw(self, x, y, savestate=False):
         proposed = {key : None for key in self.keys}
 
+        if self.counter.num_batches != 1:
+            self.current['target_val'], self.current['grad_val'] = \
+                self.model.upto_grad_log_target(self.current['sample'].clone().detach(), x, y)
+
         proposed['sample'] = self.kernel.sample()
 
         proposed['target_val'], proposed['grad_val'] = \
@@ -61,8 +65,9 @@ class MALA(SingleChainSerialSampler):
 
         if torch.log(torch.rand(1, dtype=self.model.dtype, device=self.model.device)) < log_rate:
             self.current['sample'] = proposed['sample'].clone().detach()
-            self.current['target_val'] = proposed['target_val'].clone().detach()
-            self.current['grad_val'] = proposed['grad_val'].clone().detach()
+            if self.counter.num_batches == 1:
+                self.current['target_val'] = proposed['target_val'].clone().detach()
+                self.current['grad_val'] = proposed['grad_val'].clone().detach()
             self.current['accepted'] = 1
         else:
             self.model.set_params(self.current['sample'].clone().detach())
