@@ -36,7 +36,7 @@ setup(
         'Markov chain Monte Carlo',
         'posterior predictive distribution'
     ],
-    python_requires='>=3.7',
+    python_requires='>=3.6',
     install_requires=['numpy>=1.19.2', 'torch>=1.9.0', 'kanga>=0.0.17'],
     package_data={'eeyore': ['data/*/x.csv', 'data/*/y.csv', 'data/*/readme.md']},
     include_package_data=True,
