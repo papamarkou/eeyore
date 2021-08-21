@@ -7,29 +7,26 @@ package:
 
 source:
   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
-  sha256: enter-sha256-key-here
+  sha256: 735ef6454c5167855dd17c781b4c9200ef7befd8c7fbfc0f370b67d84e8bc72b
 
 build:
+  noarch: python
   number: 0
   script: "{{ PYTHON }} -m pip install . -vv"
 
 requirements:
   host:
     - pip
-    - python
+    - python>=3.7
   run:
-    - cpuonly
-    - kanga >=0.0.17
-    - numpy >=1.19.2
-    - python
-    - pytorch
-    - torchvision
+    - kanga>=0.0.17
+    - numpy>=1.19.2
+    - python>=3.7
+    - pytorch-cpu>=1.9.0
 
 test:
   imports:
     - eeyore
-  requires:
-    - pip
 
 about:
   home: "https://github.com/papamarkou/eeyore"
