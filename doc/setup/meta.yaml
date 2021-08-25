@@ -1,5 +1,5 @@
 {% set name = "eeyore" %}
-{% set version = "0.0.18" %}
+{% set version = "0.0.19" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
-  sha256: 735ef6454c5167855dd17c781b4c9200ef7befd8c7fbfc0f370b67d84e8bc72b
+  sha256: sha256-key
 
 build:
   noarch: python
@@ -19,7 +19,7 @@ requirements:
     - pip
     - python >=3.6
   run:
-    - kanga >=0.0.17
+    - kanga >=0.0.19
     - numpy >=1.19.2
     - python >=3.6
     - pytorch-cpu >=1.9.0
