@@ -13,7 +13,6 @@ class MetropolisHastings(SingleChainSerialSampler):
         self.model = model
         self.dataloader = dataloader
         self.symmetric = symmetric
-        self.symmetric = symmetric
 
         self.keys = ['sample', 'target_val', 'accepted']
         self.chain = chain
