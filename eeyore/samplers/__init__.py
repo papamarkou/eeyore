@@ -1,4 +1,6 @@
 from .am import AM
+from .dmcl import DMCL
+from .gibbs import Gibbs
 from .hmc import HMC
 from .mala import MALA
 from .metropolis_hastings import MetropolisHastings

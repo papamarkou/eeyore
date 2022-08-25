@@ -9,6 +9,7 @@ eeyore/data/__pycache__/
 eeyore/datasets/__pycache__/
 eeyore/distributions/__pycache__/
 eeyore/integrators/__pycache__/
+eeyore/itertools/__pycache__/
 eeyore/kernels/__pycache__/
 eeyore/linalg/__pycache__/
 eeyore/models/__pycache__/

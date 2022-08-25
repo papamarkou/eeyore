@@ -92,8 +92,11 @@ class ChainList(Chain):
             return st.cor_from_cov(mc_cov_mat)
 
     def acceptance_rate(self):
-        """ proportion of accepted samples """
+        """ Proportion of accepted samples """
         return sum(self.vals['accepted']) / self.num_samples()
+
+    def block_acceptance_rate(self):
+        return torch.stack(self.vals['accepted']).sum(axis=0) / self.num_samples()
 
     def multi_ess(self, mc_cov_mat=None, method='inse', adjust=False):
         return st.multi_ess(self.get_samples(), mc_cov_mat=mc_cov_mat, method=method, adjust=adjust)
@@ -106,13 +109,17 @@ class ChainList(Chain):
         """ Load a previously saved chain """
         self.vals = torch.load(path)
 
-    def to_chainfile(self, keys=None, path=Path.cwd(), mode='a'):
+    def to_chainfile(self,
+        keys=None,
+        path=Path.cwd(),
+        mode='a',
+        fmt={'sample': '%.18e', 'target_val': '%.18e', 'grad_val': '%.18e', 'accepted': '%d'}):
         from .chain_file import ChainFile
 
         chainfile = ChainFile(keys=keys or self.vals.keys(), path=path, mode=mode)
 
         for i in range(len(self)):
-            chainfile.update(self.state(i), reset=False, close=False)
+            chainfile.update(self.state(i), reset=False, close=False, fmt=fmt)
 
         chainfile.close()
 

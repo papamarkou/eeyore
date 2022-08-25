@@ -25,16 +25,19 @@ class ChainFile(Chain):
         for key in self.vals.keys():
             self.vals[key].close()
 
-    def update(self, state, reset=True, close=True):
+    def update(self, state,
+        reset=True, close=True, fmt={'sample': '%.18e', 'target_val': '%.18e', 'grad_val': '%.18e', 'accepted': '%d'}):
         """ Update the chain """
         if reset:
             self.reset(keys=self.vals.keys())
 
         for key in self.vals.keys():
             if isinstance(state[key], torch.Tensor):
-                np.savetxt(self.vals[key], state[key].detach().cpu().numpy().ravel()[np.newaxis], delimiter=',')
+                np.savetxt(
+                    self.vals[key], state[key].detach().cpu().numpy().ravel()[np.newaxis], fmt=fmt[key], delimiter=','
+                )
             elif isinstance(state[key], np.ndarray):
-                np.savetxt(self.vals[key], state[key].ravel()[np.newaxis], delimiter=',')
+                np.savetxt(self.vals[key], state[key].ravel()[np.newaxis], fmt=fmt[key], delimiter=',')
             else:
                 self.vals[key].write(str(state[key])+'\n')
 
