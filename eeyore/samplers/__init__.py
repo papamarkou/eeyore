@@ -1,5 +1,4 @@
 from .am import AM
-from .dmcl import DMCL
 from .gibbs import Gibbs
 from .hmc import HMC
 from .mala import MALA

@@ -46,14 +46,14 @@ class Gibbs(SingleChainSerialSampler):
         blocks = []
 
         for b in range(self.model.num_par_blocks()):
-            indices, l, n = self.model.par_block_indices(b)
+            indices = self.model.par_block_indices(b)
 
             if self.node_subblock_size[b] is None:
                 indices = [indices]
             else:
                 indices = list(chunk_evenly(indices, self.node_subblock_size[b]))
 
-            blocks.append([l, n, indices])
+            blocks.append(indices)
 
         return blocks
 
@@ -71,7 +71,7 @@ class Gibbs(SingleChainSerialSampler):
         proposed['sample'] = self.current['sample'].clone().detach()
 
         for b in range(self.model.num_par_blocks()):
-            indices, _, _ = self.model.par_block_indices(b)
+            indices = self.model.par_block_indices(b)
 
             if self.node_subblock_size[b] is None:
                 indices = [indices]

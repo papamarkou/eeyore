@@ -86,7 +86,7 @@ class MLP(BayesianModel):
 
         return s
 
-    def par_block_indices(self, b):
+    def annotated_par_block_indices(self, b):
         l, n = self.layer_and_node_from_par_block(b)
         s = self.starting_par_block_idx(l)
 
@@ -96,3 +96,8 @@ class MLP(BayesianModel):
             indices.append(s+self.hp.dims[l]*self.hp.dims[l+1]+n)
 
         return indices, l, n
+
+    def par_block_indices(self, b):
+        indices, _, _ = self.annotated_par_block_indices(b)
+
+        return indices

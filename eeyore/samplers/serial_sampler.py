@@ -57,6 +57,7 @@ class SerialSampler(Sampler):
         num_epochs,
         num_burnin_epochs,
         path,
+        init=None,
         check_conditions=None,
         verbose=False,
         verbose_step=100,
@@ -73,9 +74,10 @@ class SerialSampler(Sampler):
                 print(verbose_msg.format(i+1, j, k))
 
             run_path = Path(path).joinpath('run'+str(i+1).zfill(len(str(num_chains))))
+            run_path.mkdir(parents=True, exist_ok=True)
 
             try:
-                theta0 = self.get_model().prior.sample()
+                theta0 = self.get_model().prior.sample() if init is None else init[i]
                 self.reset(theta0.clone().detach(), data=None, reset_counter=True, reset_chain=True)
 
                 start_time = timer()
@@ -108,7 +110,9 @@ class SerialSampler(Sampler):
                         print('; runtime = {}'.format(timedelta(seconds=runtime)), end='')
                     print('\n')
             except RuntimeError as error:
-                with open(run_path.joinpath('errors', 'error'+str(k+1).zfill(num_chains)), 'w') as file:
+                error_path = run_path.joinpath('errors')
+                error_path.mkdir(parents=True, exist_ok=True)
+                with open(error_path.joinpath('error'+str(k+1).zfill(num_chains)+'.txt'), 'w') as file:
                     file.write("{}\n".format(error))
 
                 k = k + 1

@@ -104,7 +104,7 @@ class TestGibbsBlocking(unittest.TestCase):
 
     def test_example01_par_block_indices(self):
         self.assertEqual(
-            [model01.par_block_indices(b) for b in range(model01.num_par_blocks())],
+            [model01.annotated_par_block_indices(b) for b in range(model01.num_par_blocks())],
             [([0, 1, 4], 0, 0), ([2, 3, 5], 0, 1), ([6, 7, 8], 1, 0)]
         )
 
@@ -125,7 +125,7 @@ class TestGibbsBlocking(unittest.TestCase):
 
     def test_example02_par_block_indices(self):
         self.assertEqual(
-            [model02.par_block_indices(b) for b in range(model02.num_par_blocks())],
+            [model02.annotated_par_block_indices(b) for b in range(model02.num_par_blocks())],
             [
                 ([0, 1, 6], 0, 0),
                 ([2, 3, 7], 0, 1),
@@ -155,7 +155,7 @@ class TestGibbsBlocking(unittest.TestCase):
 
     def test_example03_par_block_indices(self):
         self.assertEqual(
-            [model03.par_block_indices(b) for b in range(model03.num_par_blocks())],
+            [model03.annotated_par_block_indices(b) for b in range(model03.num_par_blocks())],
             [
                 ([0, 1], 0, 0),
                 ([2, 3], 0, 1),
@@ -185,7 +185,7 @@ class TestGibbsBlocking(unittest.TestCase):
 
     def test_example04_par_block_indices(self):
         self.assertEqual(
-            [model04.par_block_indices(b) for b in range(model04.num_par_blocks())],
+            [model04.annotated_par_block_indices(b) for b in range(model04.num_par_blocks())],
             [
                 ([0, 1], 0, 0),
                 ([2, 3], 0, 1),
@@ -215,7 +215,7 @@ class TestGibbsBlocking(unittest.TestCase):
 
     def test_example05_par_block_indices(self):
         self.assertEqual(
-            [model05.par_block_indices(b) for b in range(model05.num_par_blocks())],
+            [model05.annotated_par_block_indices(b) for b in range(model05.num_par_blocks())],
             [
                 ([0, 1], 0, 0),
                 ([2, 3], 0, 1),
@@ -245,7 +245,7 @@ class TestGibbsBlocking(unittest.TestCase):
 
     def test_example06_par_block_indices(self):
         self.assertEqual(
-            [model06.par_block_indices(b) for b in range(model06.num_par_blocks())],
+            [model06.annotated_par_block_indices(b) for b in range(model06.num_par_blocks())],
             [
                 ([0, 1], 0, 0),
                 ([2, 3], 0, 1),
@@ -275,7 +275,7 @@ class TestGibbsBlocking(unittest.TestCase):
 
     def test_example07_par_block_indices(self):
         self.assertEqual(
-            [model07.par_block_indices(b) for b in range(model07.num_par_blocks())],
+            [model07.annotated_par_block_indices(b) for b in range(model07.num_par_blocks())],
             [
                 ([0, 1, 6], 0, 0),
                 ([2, 3, 7], 0, 1),
@@ -306,7 +306,7 @@ class TestGibbsBlocking(unittest.TestCase):
 
     def test_example08_par_block_indices(self):
         self.assertEqual(
-            [model08.par_block_indices(b) for b in range(model08.num_par_blocks())],
+            [model08.annotated_par_block_indices(b) for b in range(model08.num_par_blocks())],
             [
                 ([0, 1], 0, 0),
                 ([2, 3], 0, 1),
@@ -337,7 +337,7 @@ class TestGibbsBlocking(unittest.TestCase):
 
     def test_example09_par_block_indices(self):
         self.assertEqual(
-            [model09.par_block_indices(b) for b in range(model09.num_par_blocks())],
+            [model09.annotated_par_block_indices(b) for b in range(model09.num_par_blocks())],
             [
                 ([0, 1], 0, 0),
                 ([2, 3], 0, 1),
@@ -409,7 +409,7 @@ class TestGibbsBlocking(unittest.TestCase):
 
     def test_example10_par_block_indices(self):
         self.assertEqual(
-            [model10.par_block_indices(b) for b in range(model10.num_par_blocks())],
+            [model10.annotated_par_block_indices(b) for b in range(model10.num_par_blocks())],
             [
                 (list(range(   0,  784)) + [7840], 0, 0),
                 (list(range( 784, 1568)) + [7841], 0, 1),
@@ -456,7 +456,7 @@ class TestGibbsBlocking(unittest.TestCase):
 
     def test_example10_par_subblocks(self):
         self.assertEqual(
-            [list(chunk_evenly(model10.par_block_indices(b)[0], 10)) for b in range(model10.hp.dims[1])],
+            [list(chunk_evenly(model10.annotated_par_block_indices(b)[0], 10)) for b in range(model10.hp.dims[1])],
             [
                 [
                     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
